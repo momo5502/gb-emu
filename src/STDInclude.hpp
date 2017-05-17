@@ -22,4 +22,5 @@ using namespace std::literals;
 
 #include "Utils/Utils.hpp"
 
+#include "MMU.hpp"
 #include "CPU.hpp"

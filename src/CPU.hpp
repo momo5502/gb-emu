@@ -75,7 +75,8 @@ public:
 	CPU();
 	~CPU();
 
-	void stackPush(unsigned short value);
+	void stackPushWord(unsigned short value);
+	void stackPushByte(unsigned char value);
 
 	void loadProgram(std::string data);
 	bool execute();
@@ -84,8 +85,10 @@ public:
 
 private:
 	Operation operations[256];
-	std::basic_string<unsigned char> data;
 	unsigned int ticks;
+
+	// Emulated memory management unit
+	MMU mmu;
 
 	void setupOperations();
 };
