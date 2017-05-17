@@ -18,4 +18,8 @@
 #include <fstream>
 #pragma warning(pop)
 
+using namespace std::literals;
+
 #include "Utils/Utils.hpp"
+
+#include "CPU.hpp"
