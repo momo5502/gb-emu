@@ -3,6 +3,7 @@
 namespace Utils
 {
 	const char *VA(const char *fmt, ...);
+	bool ReadFile(std::string name, std::string& data);
 
 	template <typename T> void Merge(std::vector<T>* target, T* source, size_t length)
 	{

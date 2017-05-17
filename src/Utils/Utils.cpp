@@ -18,4 +18,26 @@ namespace Utils
 		va_end(ap);
 		return dest;
 	}
+
+	bool ReadFile(std::string name, std::string& data)
+	{
+		std::ifstream stream(name);
+		if(stream.is_open())
+		{
+			stream.seekg(0, std::ios::end);
+			std::streampos size = stream.tellg();
+			stream.seekg(0, std::ios::beg);
+
+			if (size > -1)
+			{
+				data.clear();
+				data.resize(size_t(size));
+
+				stream.read(const_cast<char*>(data.data()), size);
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

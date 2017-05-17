@@ -15,6 +15,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <fstream>
 #pragma warning(pop)
 
 #include "Utils/Utils.hpp"
