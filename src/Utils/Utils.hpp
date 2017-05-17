@@ -1,5 +1,7 @@
 #pragma once
 
+#define ZeroObject(x) ZeroMemory(&(x), sizeof(x))
+
 namespace Utils
 {
 	const char *VA(const char *fmt, ...);

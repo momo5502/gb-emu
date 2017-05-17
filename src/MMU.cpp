@@ -1,6 +1,7 @@
 #include "STDInclude.hpp"
 
-unsigned char MMU::Bios[256] = {
+unsigned char MMU::Bios[256] =
+{
 	0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
 	0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77, 0x77, 0x3E, 0xFC, 0xE0,
 	0x47, 0x11, 0x04, 0x01, 0x21, 0x10, 0x80, 0x1A, 0xCD, 0x95, 0x00, 0xCD, 0x96, 0x00, 0x13, 0x7B,
@@ -21,7 +22,12 @@ unsigned char MMU::Bios[256] = {
 
 MMU::MMU() : passedBios(false)
 {
+	ZeroObject(this->vram);
+	ZeroObject(this->eram);
+	ZeroObject(this->wram);
+	ZeroObject(this->zram);
 
+	ZeroObject(this->oam);
 }
 
 void MMU::loadRom(std::basic_string<unsigned char> data)
@@ -127,10 +133,11 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 				else // TODO: Implement
 				{
 					throw std::runtime_error("Not implemented!");
-
+					/*
 					this->zero[0] = 0;
 					this->zero[1] = 0;
 					return &this->zero[0];
+					*/
 				}
 			}
 			else if(lhAddr == 0x0E00) // OAM
