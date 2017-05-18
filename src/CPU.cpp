@@ -66,6 +66,13 @@ void CPU::setupOperations()
 		cpu->registers.f = (cpu->registers.c ? 0 : FLAG_ZERO);
 	} };
 
+	// DEC C
+	this->operations[0x0D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c--;
+		cpu->registers.f = cpu->registers.c ? 0 : FLAG_ZERO;
+	} };
+
 	// LD C,n
 	this->operations[0x0E] = { 2, [](CPU* cpu)
 	{
@@ -126,6 +133,13 @@ void CPU::setupOperations()
 		cpu->registers.f = (cpu->registers.e ? 0 : FLAG_ZERO);
 	} };
 
+	// DEC E
+	this->operations[0x1D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e--;
+		cpu->registers.f = cpu->registers.e ? 0 : FLAG_ZERO;
+	} };
+
 	// LD E,n
 	this->operations[0x1E] = { 2, [](CPU* cpu)
 	{
@@ -181,11 +195,26 @@ void CPU::setupOperations()
 		cpu->registers.h = cpu->readProgramByte();
 	} };
 
+	// JR n
+	this->operations[0x28] = { 2, [](CPU* cpu)
+	{
+		char jumpLoc = cpu->readProgramByte();
+		cpu->registers.pc += jumpLoc;
+		cpu->registers.m++;
+	} };
+
 	// INC L
 	this->operations[0x2C] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.l++;
 		cpu->registers.f = (cpu->registers.l ? 0 : FLAG_ZERO);
+	} };
+
+	// DEC L
+	this->operations[0x2D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l--;
+		cpu->registers.f = cpu->registers.l ? 0 : FLAG_ZERO;
 	} };
 
 	// LD L,n
@@ -225,10 +254,59 @@ void CPU::setupOperations()
 		cpu->registers.f = (cpu->registers.a ? 0 : FLAG_ZERO);
 	} };
 
+	// DEC A
+	this->operations[0x3D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a--;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
 	// LD A,n
 	this->operations[0x3E] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->readProgramByte();
+	} };
+
+	// LD B,A
+	this->operations[0x47] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.a;
+	} };
+
+	// LD C,B
+	this->operations[0x48] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.b;
+	} };
+
+	// LD C,C
+	this->operations[0x49] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.c;
+	} };
+
+	// LD C,D
+	this->operations[0x4A] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.d;
+	} };
+
+	// LD C,E
+	this->operations[0x4B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.e;
+	} };
+
+	// LD C,H
+	this->operations[0x4C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.h;
+	} };
+
+	// LD C,L
+	this->operations[0x4D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.l;
 	} };
 	
 	// LD C,A
@@ -237,10 +315,130 @@ void CPU::setupOperations()
 		cpu->registers.c = cpu->registers.a;
 	} };
 
+	// LD D,A
+	this->operations[0x57] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.a;
+	} };
+
+	// LD E,B
+	this->operations[0x58] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.b;
+	} };
+
+	// LD E,C
+	this->operations[0x59] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.c;
+	} };
+
+	// LD E,D
+	this->operations[0x5A] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.d;
+	} };
+
+	// LD E,E
+	this->operations[0x5B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.e;
+	} };
+
+	// LD E,H
+	this->operations[0x5C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.h;
+	} };
+
+	// LD E,L
+	this->operations[0x5D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.l;
+	} };
+
+	// LD E,A
+	this->operations[0x5F] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->registers.a;
+	} };
+
+	// LD H,A
+	this->operations[0x67] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.a;
+	} };
+
+	// LD L,B
+	this->operations[0x68] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.b;
+	} };
+
+	// LD L,C
+	this->operations[0x69] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.c;
+	} };
+
+	// LD L,D
+	this->operations[0x6A] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.d;
+	} };
+
+	// LD L,E
+	this->operations[0x6B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.e;
+	} };
+
+	// LD L,H
+	this->operations[0x6C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.h;
+	} };
+
+	// LD L,L
+	this->operations[0x6D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.l;
+	} };
+
+	// LD L,A
+	this->operations[0x6F] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->registers.a;
+	} };
+
 	// LD(HL), A
 	this->operations[0x77] = { 2, [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->registers.a);
+	} };
+
+	// LD A,E
+	this->operations[0x7B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.e;
+	} };
+
+	// LD A,H
+	this->operations[0x7C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.h;
+	} };
+
+	// LD A,L
+	this->operations[0x7D] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.l;
+	} };
+
+	// LD A,A
+	this->operations[0x7F] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.a;
 	} };
 
 	// XOR A
@@ -319,6 +517,12 @@ void CPU::setupOperations()
 		cpu->stackPushWord(cpu->registers.hl);
 	} };
 
+	// LD (nn),A
+	this->operations[0xEA] = { 4, [](CPU* cpu)
+	{
+		cpu->mmu->writeByte(cpu->readProgramWord(), cpu->registers.a);
+	} };
+
 	// POP AF
 	this->operations[0xF1] = { 3, [](CPU* cpu)
 	{
@@ -329,6 +533,23 @@ void CPU::setupOperations()
 	this->operations[0xF5] = { 3, [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.af);
+	} };
+
+	// CP n
+	this->operations[0xFE] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->readProgramByte();
+		char regA = cpu->registers.a;
+
+		if(regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 	} };
 }
 
@@ -362,7 +583,9 @@ unsigned char CPU::readProgramByte()
 
 unsigned short CPU::readProgramWord()
 {
-	return this->readProgramByte() | (this->readProgramByte() << 8);
+	unsigned short low = this->readProgramByte();
+	unsigned short high = this->readProgramByte();
+	return low | (high << 8);
 }
 
 void CPU::stackPushWord(unsigned short value)
@@ -398,6 +621,7 @@ void CPU::loadProgram(std::string data)
 
 bool CPU::execute()
 {
+	unsigned short pc = this->registers.pc;
 	unsigned char instruction = this->readProgramByte();
 
 	auto operation = &this->operations[instruction];
@@ -409,25 +633,26 @@ bool CPU::execute()
 			operation->func(this);
 			this->registers.m += operation->ticks;
 
-			printf("Operation %X (%X) executed\n", instruction, this->registers.pc);
+			printf("Operation %X (%X) executed\n", instruction, pc);
 
-			this->gpu->frame();
+			if (!this->gpu->working()) return false;
+			//this->gpu->frame();
 
 			if(this->registers.pc == 0x100) this->mmu->markBiosPass();
 			return true;
 		}
 		catch(std::exception e)
 		{
-			printf("Operation %X (%X) has thrown an exception: %s\n", instruction, this->registers.pc, e.what());
+			printf("Operation %X (%X) has thrown an exception: %s\n", instruction, pc, e.what());
 		}
 		catch(...)
 		{
-			printf("Operation %X (%X) has thrown an unknown exception\n", instruction, this->registers.pc);
+			printf("Operation %X (%X) has thrown an unknown exception\n", instruction, pc);
 		}
 	}
 	else
 	{
-		printf("Unsupported instruction %X (%X)\n", instruction, this->registers.pc);
+		printf("Unsupported instruction %X (%X)\n", instruction, pc);
 	}
 
 	return false;

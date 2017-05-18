@@ -52,7 +52,9 @@ unsigned char MMU::readByte(unsigned short address)
 
 unsigned short MMU::readWord(unsigned short address)
 {
-	return this->readByte(address) | (this->readByte(address + 1) << 8);
+	unsigned short low = this->readByte(address);
+	unsigned short high = this->readByte(address + 1);
+	return low | (high << 8);
 }
 
 void MMU::writeByte(unsigned short address, unsigned char value)
