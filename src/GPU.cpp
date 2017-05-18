@@ -49,8 +49,10 @@ void GPU::frame()
 {
 	if (this->device)
 	{
-		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 100), 1.0f, 0);
 		this->device->BeginScene();
+
+		// TODO: Render the game
 
 		this->device->EndScene();
 		this->device->Present(nullptr, nullptr, nullptr, nullptr);

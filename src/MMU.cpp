@@ -61,14 +61,18 @@ void MMU::writeByte(unsigned short address, unsigned char value)
 	{
 		*mem = value;
 	}
-
-	throw std::runtime_error("Nullptr dereferenced!");
+	else throw std::runtime_error("Nullptr dereferenced!");
 }
 
 void MMU::writeWord(unsigned short address, unsigned short value)
 {
 	this->writeByte(address, value & 0xFF);
 	this->writeByte(address + 1, value >> 8);
+}
+
+void MMU::markBiosPass()
+{
+	this->passedBios = true;
 }
 
 unsigned char* MMU::getMemoryPtr(unsigned short address)
@@ -84,8 +88,6 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 				{
 					return &MMU::Bios[address];
 				}
-
-				this->passedBios = true;
 			}
 
 			if (address >= this->rom.size()) throw std::runtime_error("Rom not loaded!");

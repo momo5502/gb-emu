@@ -17,6 +17,8 @@ public:
 
 	unsigned char* getMemoryPtr(unsigned short address);
 
+	void markBiosPass();
+
 private:
 	static unsigned char Bios[256];
 

@@ -6,6 +6,9 @@ CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu)
 
 	this->mmu = _mmu;
 	this->gpu = _gpu;
+
+	this->mmu->connectGPU(this->gpu);
+
 	this->verifyComponents();
 
 	this->setupOperations();
@@ -37,6 +40,12 @@ void CPU::setupOperations()
 		cpu->mmu->writeByte(cpu->registers.bc, cpu->registers.a);
 	} };
 
+	// LD B,n
+	this->operations[0x06] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->readProgramByte();
+	} };
+
 	// INC C
 	this->operations[0x0C] = { 1, [](CPU* cpu)
 	{
@@ -62,6 +71,12 @@ void CPU::setupOperations()
 	this->operations[0x12] = { 2, [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.de, cpu->registers.a);
+	} };
+
+	// LD A,(DE)
+	this->operations[0x1A] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->mmu->readByte(cpu->registers.de);
 	} };
 
 	// LD E,n
@@ -130,6 +145,12 @@ void CPU::setupOperations()
 	{
 		cpu->registers.a = cpu->readProgramByte();
 	} };
+	
+	// LD C,A
+	this->operations[0x4F] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->registers.a;
+	} };
 
 	// LD(HL), A
 	this->operations[0x77] = { 2, [](CPU* cpu)
@@ -158,10 +179,24 @@ void CPU::setupOperations()
 		cpu->mmu->writeByte(0xFF00 | cpu->registers.c, cpu->registers.a);
 	} };
 
+	// PUSH BC
+	this->operations[0xC5] = { 3, [](CPU* cpu)
+	{
+		cpu->stackPushByte(cpu->registers.b);
+		cpu->stackPushByte(cpu->registers.c);
+	} };
+
 	// Ext ops (callbacks)
 	this->operations[0xCB] = { 0, [](CPU* cpu)
 	{
 		cpu->executeCallback(cpu->readProgramByte());
+	} };
+	
+	// CALL nn
+	this->operations[0xCD] = { 5, [](CPU* cpu)
+	{
+		cpu->stackPushWord(cpu->registers.pc + 2);
+		cpu->registers.pc = cpu->readProgramWord();
 	} };
 }
 
@@ -220,6 +255,8 @@ bool CPU::execute()
 			printf("Operation %X executed\n", instruction);
 
 			this->gpu->frame();
+
+			if(this->registers.pc == 0x100) this->mmu->markBiosPass();
 			return true;
 		}
 		catch(std::exception e)
