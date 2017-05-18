@@ -9,6 +9,9 @@
 #include <time.h>
 #include <conio.h>
 
+#include <d3d9.h>
+#pragma comment (lib, "d3d9.lib")
+
 #pragma warning(push)
 #pragma warning(disable: 4244)
 #include <map>
@@ -22,5 +25,6 @@ using namespace std::literals;
 
 #include "Utils/Utils.hpp"
 
+#include "GPU.hpp"
 #include "MMU.hpp"
 #include "CPU.hpp"

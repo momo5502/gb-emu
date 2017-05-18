@@ -6,6 +6,7 @@ public:
 	MMU();
 	~MMU();
 
+	void connectGPU(std::shared_ptr<GPU> _gpu);
 	void loadRom(std::basic_string<unsigned char> data);
 
 	unsigned char readByte(unsigned short address);
@@ -30,4 +31,6 @@ private:
 	unsigned char zero[2];
 
 	bool passedBios;
+
+	std::shared_ptr<GPU> gpu;
 };

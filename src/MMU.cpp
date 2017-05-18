@@ -30,6 +30,11 @@ MMU::MMU() : passedBios(false)
 	ZeroObject(this->oam);
 }
 
+void MMU::connectGPU(std::shared_ptr<GPU> _gpu)
+{
+	this->gpu = _gpu;
+}
+
 void MMU::loadRom(std::basic_string<unsigned char> data)
 {
 	this->rom = data;
@@ -42,7 +47,7 @@ unsigned char MMU::readByte(unsigned short address)
 		return *mem;
 	}
 
-	return 0;
+	throw std::runtime_error("Nullptr dereferenced!");
 }
 
 unsigned short MMU::readWord(unsigned short address)
@@ -56,6 +61,8 @@ void MMU::writeByte(unsigned short address, unsigned char value)
 	{
 		*mem = value;
 	}
+
+	throw std::runtime_error("Nullptr dereferenced!");
 }
 
 void MMU::writeWord(unsigned short address, unsigned short value)
@@ -132,6 +139,17 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 				}
 				else // TODO: Implement
 				{
+					if(address & 0x30)
+					{
+						this->zero[0] = 0;
+						this->zero[1] = 0;
+						return &this->zero[0];
+					}
+					else if((address & 0xF0) >= 0x40 && (address & 0xF0) <= 0x70)
+					{
+						return this->gpu->getMemoryPtr(address);
+					}
+
 					throw std::runtime_error("Not implemented!");
 					/*
 					this->zero[0] = 0;

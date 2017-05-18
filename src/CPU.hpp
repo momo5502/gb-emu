@@ -58,6 +58,8 @@ struct Registers
 
 	unsigned short sp;
 	unsigned short pc;
+
+	unsigned char m;
 };
 #pragma warning(pop)
 
@@ -68,27 +70,37 @@ public:
 	{
 	public:
 		unsigned char ticks;
-		unsigned char params;
-		std::function<bool(CPU*, const unsigned char*)> callback;
+		std::function<void(CPU*)> func;
 	};
 
-	CPU();
+	CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu);
 	~CPU();
 
 	void stackPushWord(unsigned short value);
 	void stackPushByte(unsigned char value);
 
+	unsigned char readProgramByte();
+	unsigned short readProgramWord();
+
 	void loadProgram(std::string data);
+
 	bool execute();
+	void executeCallback(unsigned char instruction);
 
 	Registers registers;
 
 private:
-	Operation operations[256];
-	unsigned int ticks;
+	Operation operations[0x100];
+	Operation callbacks[0x100];
 
 	// Emulated memory management unit
-	MMU mmu;
+	std::shared_ptr<MMU> mmu;
+
+	// Emulated graphics processing unit
+	std::shared_ptr<GPU> gpu;
 
 	void setupOperations();
+	void setupCallbacks();
+
+	void verifyComponents();
 };

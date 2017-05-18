@@ -17,10 +17,10 @@ int main(int argc, char* argv[])
 
 	printf("Loaded game!\n");
 
-	CPU cpu;
+	CPU cpu(std::make_shared<MMU>(), std::make_shared<GPU>());
 	cpu.loadProgram(data);
 
-	while(cpu.execute())
+	while (cpu.execute())
 	{
 		std::this_thread::sleep_for(1ms);
 	}
