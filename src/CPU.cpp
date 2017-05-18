@@ -40,6 +40,19 @@ void CPU::setupOperations()
 		cpu->mmu->writeByte(cpu->registers.bc, cpu->registers.a);
 	} };
 
+	// INC BC
+	this->operations[0x03] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.bc++;
+	} };
+
+	// DEC B
+	this->operations[0x05] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b--;
+		cpu->registers.f = cpu->registers.b ? 0 : FLAG_ZERO;
+	} };
+
 	// LD B,n
 	this->operations[0x06] = { 2, [](CPU* cpu)
 	{
@@ -50,8 +63,6 @@ void CPU::setupOperations()
 	this->operations[0x0C] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.c++;
-		cpu->registers.c &= 0xFF;
-
 		cpu->registers.f = (cpu->registers.c ? 0 : FLAG_ZERO);
 	} };
 
@@ -73,10 +84,46 @@ void CPU::setupOperations()
 		cpu->mmu->writeByte(cpu->registers.de, cpu->registers.a);
 	} };
 
+	// INC DE
+	this->operations[0x13] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.de++;
+	} };
+
+	// DEC D
+	this->operations[0x15] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d--;
+		cpu->registers.f = cpu->registers.d ? 0 : FLAG_ZERO;
+	} };
+
+	// LD D,n
+	this->operations[0x16] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->readProgramByte();
+	} };
+
+	// RL A
+	this->operations[0x17] = { 1, [](CPU* cpu)
+	{
+		unsigned char ci = cpu->registers.f & FLAG_CARRY ? 1 : 0;
+		unsigned char co = cpu->registers.a & FLAG_ZERO ? FLAG_CARRY : 0;
+
+		cpu->registers.a = (cpu->registers.a << 1) + ci;
+		cpu->registers.a &= 255;
+		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
+	} };
 	// LD A,(DE)
 	this->operations[0x1A] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.de);
+	} };
+
+	// INC E
+	this->operations[0x1C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.e++;
+		cpu->registers.f = (cpu->registers.e ? 0 : FLAG_ZERO);
 	} };
 
 	// LD E,n
@@ -88,8 +135,7 @@ void CPU::setupOperations()
 	// JR NZ,n
 	this->operations[0x20] = { 2, [](CPU* cpu)
 	{
-		unsigned char jumpLoc = cpu->readProgramByte();
-		if (jumpLoc > 0x7F) jumpLoc = -((~jumpLoc + 1) & 0xFF);
+		char jumpLoc = cpu->readProgramByte();
 
 		if (!(cpu->registers.f & FLAG_ZERO))
 		{
@@ -116,6 +162,32 @@ void CPU::setupOperations()
 		}
 	} };
 
+	// INC HL
+	this->operations[0x23] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.hl++;
+	} };
+
+	// DEC H
+	this->operations[0x25] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h--;
+		cpu->registers.f = cpu->registers.h ? 0 : FLAG_ZERO;
+	} };
+
+	// LD H,n
+	this->operations[0x26] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->readProgramByte();
+	} };
+
+	// INC L
+	this->operations[0x2C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.l++;
+		cpu->registers.f = (cpu->registers.l ? 0 : FLAG_ZERO);
+	} };
+
 	// LD L,n
 	this->operations[0x2E] = { 2, [](CPU* cpu)
 	{
@@ -138,6 +210,19 @@ void CPU::setupOperations()
 		{
 			cpu->registers.h = (cpu->registers.h + 1) & 0xFF;
 		}
+	} };
+
+	// INC SP
+	this->operations[0x33] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.sp++;
+	} };
+
+	// INC A
+	this->operations[0x3C] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a++;
+		cpu->registers.f = (cpu->registers.a ? 0 : FLAG_ZERO);
 	} };
 
 	// LD A,n
@@ -167,23 +252,22 @@ void CPU::setupOperations()
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	} };
 
-	// LDH (n),A
-	this->operations[0xE0] = { 3, [](CPU* cpu)
+	// POP BC
+	this->operations[0xC1] = { 3, [](CPU* cpu)
 	{
-		cpu->mmu->writeByte(0xFF00 | cpu->readProgramByte(), cpu->registers.a);
-	} };
-
-	// LDH (C),A
-	this->operations[0xE2] = { 2, [](CPU* cpu)
-	{
-		cpu->mmu->writeByte(0xFF00 | cpu->registers.c, cpu->registers.a);
+		cpu->registers.bc = cpu->stackPopWord();
 	} };
 
 	// PUSH BC
 	this->operations[0xC5] = { 3, [](CPU* cpu)
 	{
-		cpu->stackPushByte(cpu->registers.b);
-		cpu->stackPushByte(cpu->registers.c);
+		cpu->stackPushWord(cpu->registers.bc);
+	} };
+
+	// RET
+	this->operations[0xC9] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.pc = cpu->stackPopWord();
 	} };
 
 	// Ext ops (callbacks)
@@ -198,10 +282,69 @@ void CPU::setupOperations()
 		cpu->stackPushWord(cpu->registers.pc + 2);
 		cpu->registers.pc = cpu->readProgramWord();
 	} };
+
+	// POP DE
+	this->operations[0xD1] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.de = cpu->stackPopWord();
+	} };
+
+	// PUSH DE
+	this->operations[0xD5] = { 3, [](CPU* cpu)
+	{
+		cpu->stackPushWord(cpu->registers.de);
+	} };
+
+	// LDH (n),A
+	this->operations[0xE0] = { 3, [](CPU* cpu)
+	{
+		cpu->mmu->writeByte(0xFF00 | cpu->readProgramByte(), cpu->registers.a);
+	} };
+
+	// POP HL
+	this->operations[0xE1] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.hl = cpu->stackPopWord();
+	} };
+
+	// LDH (C),A
+	this->operations[0xE2] = { 2, [](CPU* cpu)
+	{
+		cpu->mmu->writeByte(0xFF00 | cpu->registers.c, cpu->registers.a);
+	} };
+
+	// PUSH HL
+	this->operations[0xE5] = { 3, [](CPU* cpu)
+	{
+		cpu->stackPushWord(cpu->registers.hl);
+	} };
+
+	// POP AF
+	this->operations[0xF1] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.af = cpu->stackPopWord();
+	} };
+
+	// PUSH AF
+	this->operations[0xF5] = { 3, [](CPU* cpu)
+	{
+		cpu->stackPushWord(cpu->registers.af);
+	} };
 }
 
 void CPU::setupCallbacks()
 {
+	this->callbacks[0x11] = { 2, [](CPU* cpu)
+	{
+		unsigned char ci = cpu->registers.f & FLAG_CARRY ? 1 : 0;
+		unsigned char co = cpu->registers.c & FLAG_ZERO ? FLAG_CARRY : 0;
+
+		cpu->registers.c = (cpu->registers.c << 1) + ci;
+		cpu->registers.c &= 255;
+		cpu->registers.f = (cpu->registers.c) ? 0 : FLAG_ZERO;
+		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
+	} };
+
 	this->callbacks[0x7C] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.f &= FLAG_HALF_CARRY - 1;
@@ -234,6 +377,20 @@ void CPU::stackPushByte(unsigned char value)
 	this->mmu->writeByte(this->registers.sp, value);
 }
 
+unsigned short CPU::stackPopWord()
+{
+	unsigned short value = this->mmu->readWord(this->registers.sp);
+	this->registers.sp += 2;
+	return value;
+}
+
+unsigned char CPU::stackPopByte()
+{
+	unsigned char value = this->mmu->readByte(this->registers.sp);
+	this->registers.sp += 1;
+	return value;
+}
+
 void CPU::loadProgram(std::string data)
 {
 	this->mmu->loadRom(std::basic_string<unsigned char>(data.begin(), data.end()));
@@ -252,7 +409,7 @@ bool CPU::execute()
 			operation->func(this);
 			this->registers.m += operation->ticks;
 
-			printf("Operation %X executed\n", instruction);
+			printf("Operation %X (%X) executed\n", instruction, this->registers.pc);
 
 			this->gpu->frame();
 
@@ -261,16 +418,16 @@ bool CPU::execute()
 		}
 		catch(std::exception e)
 		{
-			printf("Operation %X has thrown an exception: %s\n", instruction, e.what());
+			printf("Operation %X (%X) has thrown an exception: %s\n", instruction, this->registers.pc, e.what());
 		}
 		catch(...)
 		{
-			printf("Operation %X has thrown an unknown exception\n", instruction);
+			printf("Operation %X (%X) has thrown an unknown exception\n", instruction, this->registers.pc);
 		}
 	}
 	else
 	{
-		printf("Unsupported instruction %X\n", instruction);
+		printf("Unsupported instruction %X (%X)\n", instruction, this->registers.pc);
 	}
 
 	return false;
@@ -287,21 +444,21 @@ void CPU::executeCallback(unsigned char instruction)
 			callback->func(this);
 			this->registers.m += callback->ticks;
 
-			printf("Callback %X executed\n", instruction);
+			printf("Callback %X (%X) executed\n", instruction, this->registers.pc);
 			return;
 		}
 		catch (std::exception e)
 		{
-			printf("Callback %X has thrown an exception: %s\n", instruction, e.what());
+			printf("Callback %X (%X) has thrown an exception: %s\n", instruction, this->registers.pc, e.what());
 		}
 		catch (...)
 		{
-			printf("Callback %X has thrown an exception\n", instruction);
+			printf("Callback %X (%X) has thrown an exception\n", instruction, this->registers.pc);
 		}
 	}
 	else
 	{
-		printf("Unsupported callback %X\n", instruction);
+		printf("Unsupported callback %X (%X)\n", instruction, this->registers.pc);
 	}
 
 	throw std::exception();

@@ -79,6 +79,9 @@ public:
 	void stackPushWord(unsigned short value);
 	void stackPushByte(unsigned char value);
 
+	unsigned short stackPopWord();
+	unsigned char stackPopByte();
+
 	unsigned char readProgramByte();
 	unsigned short readProgramWord();
 
