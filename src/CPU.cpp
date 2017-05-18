@@ -13,6 +13,17 @@ CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu)
 
 	this->setupOperations();
 	this->setupCallbacks();
+
+	int implOp = 0;
+	int implCb = 0;
+	for(int i = 0; i <= 0x100; ++i)
+	{
+		if (this->operations[i].func) implOp++;
+		if (this->callbacks[i].func) implCb++;
+	}
+
+	printf("Operation coverage: %d/256\n", implOp);
+	printf("Callback coverage: %d/256\n", implCb);
 }
 
 CPU::~CPU()
@@ -267,6 +278,42 @@ void CPU::setupOperations()
 		cpu->registers.a = cpu->readProgramByte();
 	} };
 
+	// LD B,B
+	this->operations[0x40] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.b;
+	} };
+
+	// LD B,C
+	this->operations[0x41] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.c;
+	} };
+
+	// LD B,D
+	this->operations[0x42] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.d;
+	} };
+
+	// LD B,E
+	this->operations[0x43] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.e;
+	} };
+
+	// LD B,H
+	this->operations[0x44] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.h;
+	} };
+
+	// LD B,L
+	this->operations[0x45] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b = cpu->registers.l;
+	} };
+
 	// LD B,A
 	this->operations[0x47] = { 1, [](CPU* cpu)
 	{
@@ -315,6 +362,42 @@ void CPU::setupOperations()
 		cpu->registers.c = cpu->registers.a;
 	} };
 
+	// LD D,B
+	this->operations[0x50] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.b;
+	} };
+
+	// LD D,C
+	this->operations[0x51] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.c;
+	} };
+
+	// LD D,D
+	this->operations[0x52] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.d;
+	} };
+
+	// LD D,E
+	this->operations[0x53] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.e;
+	} };
+
+	// LD D,H
+	this->operations[0x54] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.h;
+	} };
+
+	// LD D,L
+	this->operations[0x55] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->registers.l;
+	} };
+
 	// LD D,A
 	this->operations[0x57] = { 1, [](CPU* cpu)
 	{
@@ -361,6 +444,42 @@ void CPU::setupOperations()
 	this->operations[0x5F] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.a;
+	} };
+
+	// LD H,B
+	this->operations[0x60] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.b;
+	} };
+
+	// LD H,C
+	this->operations[0x61] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.c;
+	} };
+
+	// LD H,D
+	this->operations[0x62] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.d;
+	} };
+
+	// LD H,E
+	this->operations[0x63] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.e;
+	} };
+
+	// LD H,H
+	this->operations[0x64] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.h;
+	} };
+
+	// LD H,L
+	this->operations[0x65] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h = cpu->registers.l;
 	} };
 
 	// LD H,A

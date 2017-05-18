@@ -58,8 +58,7 @@ workspace "gb-emu"
 	objdir "%{wks.location}/obj"
 	targetdir "%{wks.location}/bin/%{cfg.buildcfg}"
 	configurations { "Debug", "Release" }
-	architecture "x32"
-	platforms "x86"
+	platforms { "x32", "x64" }
 
 	-- VS 2015 toolset only
 	toolset "msc-140"
