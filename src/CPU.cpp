@@ -7,7 +7,8 @@ CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu)
 	this->mmu = _mmu;
 	this->gpu = _gpu;
 
-	this->mmu->connectGPU(this->gpu);
+	this->mmu->connectCPU(this);
+	this->gpu->connectCPU(this);
 
 	this->verifyComponents();
 
@@ -31,6 +32,7 @@ CPU::~CPU()
 	
 }
 
+#pragma optimize("", off)
 void CPU::setupOperations()
 {
 	// NOP
@@ -55,6 +57,13 @@ void CPU::setupOperations()
 	this->operations[0x03] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.bc++;
+	} };
+
+	// INC B
+	this->operations[0x04] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.b++;
+		cpu->registers.f = (cpu->registers.b ? 0 : FLAG_ZERO);
 	} };
 
 	// DEC B
@@ -106,6 +115,13 @@ void CPU::setupOperations()
 	this->operations[0x13] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.de++;
+	} };
+
+	// INC D
+	this->operations[0x14] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.d++;
+		cpu->registers.f = (cpu->registers.d ? 0 : FLAG_ZERO);
 	} };
 
 	// DEC D
@@ -191,6 +207,13 @@ void CPU::setupOperations()
 	this->operations[0x23] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.hl++;
+	} };
+
+	// INC H
+	this->operations[0x24] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.h++;
+		cpu->registers.f = (cpu->registers.h ? 0 : FLAG_ZERO);
 	} };
 
 	// DEC H
@@ -560,6 +583,56 @@ void CPU::setupOperations()
 		cpu->registers.a = cpu->registers.a;
 	} };
 
+	// SUB A,B
+	this->operations[0x90] = { 1, [](CPU* cpu)
+	{
+
+		char a = cpu->registers.a;
+		char b = cpu->registers.b;
+
+		this->registers.a = (a - b);
+
+		var a = Z80._r.a;
+		Z80._r.a -= Z80._r.b;
+		Z80._r.f = (Z80._r.a<0) ? 0x50 : 0x40;
+		Z80._r.a &= 255;
+		if (!Z80._r.a) Z80._r.f |= 0x80;
+		if ((Z80._r.a^Z80._r.b^a) & 0x10) Z80._r.f |= 0x20;
+
+		cpu->registers.a = cpu->registers.a;
+
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+
+
+
+
+
+
+
+
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->readProgramByte();
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
 	// XOR A
 	this->operations[0xAF] = { 1, [](CPU* cpu)
 	{
@@ -642,10 +715,22 @@ void CPU::setupOperations()
 		cpu->mmu->writeByte(cpu->readProgramWord(), cpu->registers.a);
 	} };
 
+	// LDH A,(n)
+	this->operations[0xF0] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->mmu->readByte(0xFF00 | cpu->readProgramByte());
+	} };
+
 	// POP AF
 	this->operations[0xF1] = { 3, [](CPU* cpu)
 	{
 		cpu->registers.af = cpu->stackPopWord();
+	} };
+
+	// LDH A,(C)
+	this->operations[0xF2] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->mmu->readByte(0xFF00 | cpu->registers.c);
 	} };
 
 	// PUSH AF
@@ -671,6 +756,7 @@ void CPU::setupOperations()
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 	} };
 }
+#pragma optimize("", on)
 
 void CPU::setupCallbacks()
 {
@@ -755,7 +841,7 @@ bool CPU::execute()
 			printf("Operation %X (%X) executed\n", instruction, pc);
 
 			if (!this->gpu->working()) return false;
-			//this->gpu->frame();
+			this->gpu->frame();
 
 			if(this->registers.pc == 0x100) this->mmu->markBiosPass();
 			return true;

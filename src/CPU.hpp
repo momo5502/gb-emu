@@ -59,7 +59,7 @@ struct Registers
 	unsigned short sp;
 	unsigned short pc;
 
-	unsigned char m;
+	unsigned short m;
 };
 #pragma warning(pop)
 
@@ -89,6 +89,9 @@ public:
 
 	bool execute();
 	void executeCallback(unsigned char instruction);
+
+	std::shared_ptr<MMU> getMMU() { return this->mmu; }
+	std::shared_ptr<GPU> getGPU() { return this->gpu; }
 
 	Registers registers;
 

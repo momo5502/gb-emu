@@ -30,9 +30,9 @@ MMU::MMU() : passedBios(false)
 	ZeroObject(this->oam);
 }
 
-void MMU::connectGPU(std::shared_ptr<GPU> _gpu)
+void MMU::connectCPU(CPU* _cpu)
 {
-	this->gpu = _gpu;
+	this->cpu = _cpu;
 }
 
 void MMU::loadRom(std::basic_string<unsigned char> data)
@@ -151,7 +151,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 					}
 					else if((address & 0xF0) >= 0x40 && (address & 0xF0) <= 0x70)
 					{
-						return this->gpu->getMemoryPtr(address);
+						return this->cpu->getGPU()->getMemoryPtr(address);
 					}
 
 					throw std::runtime_error("Not implemented!");

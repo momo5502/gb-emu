@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
 	while (cpu.execute())
 	{
-		std::this_thread::sleep_for(1ms);
+		//std::this_thread::sleep_for(1ms);
 	}
 
 	printf("Terminated!\n");

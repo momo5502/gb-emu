@@ -1,12 +1,14 @@
 #pragma once
 
+class CPU;
+
 class MMU
 {
 public:
 	MMU();
 	~MMU();
 
-	void connectGPU(std::shared_ptr<GPU> _gpu);
+	void connectCPU(CPU* _cpu);
 	void loadRom(std::basic_string<unsigned char> data);
 
 	unsigned char readByte(unsigned short address);
@@ -19,14 +21,15 @@ public:
 
 	void markBiosPass();
 
-private:
-	static unsigned char Bios[256];
-
-	std::basic_string<unsigned char> rom;
 	unsigned char vram[0x2000];
 	unsigned char eram[0x8000];
 	unsigned char wram[0x2000];
 	unsigned char zram[0x7F];
+
+private:
+	static unsigned char Bios[256];
+
+	std::basic_string<unsigned char> rom;
 
 	unsigned char oam[160];
 
@@ -34,5 +37,5 @@ private:
 
 	bool passedBios;
 
-	std::shared_ptr<GPU> gpu;
+	CPU* cpu;
 };
