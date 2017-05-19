@@ -20,13 +20,10 @@ int main(int argc, char* argv[])
 	CPU cpu(std::make_shared<MMU>(), std::make_shared<GPU>());
 	cpu.loadProgram(data);
 
-	while (cpu.execute())
-	{
-		//std::this_thread::sleep_for(1ms);
-	}
+	while (cpu.runFrame()) {}
 
 	printf("Terminated!\n");
 
-	//_getch();
+	_getch();
 	return 0;
 }

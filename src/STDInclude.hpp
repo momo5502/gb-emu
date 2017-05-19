@@ -10,7 +10,9 @@
 #include <conio.h>
 
 #include <d3d9.h>
+#include <D3dx9tex.h>
 #pragma comment (lib, "d3d9.lib")
+#pragma comment (lib, "d3dx9.lib")
 
 #pragma warning(push)
 #pragma warning(disable: 4244)

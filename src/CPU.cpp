@@ -2,7 +2,9 @@
 
 CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu)
 {
-	ZeroMemory(&this->registers, sizeof this->registers);
+	ZeroObject(this->registers);
+	ZeroObject(this->operations);
+	ZeroObject(this->callbacks);
 
 	this->mmu = _mmu;
 	this->gpu = _gpu;
@@ -146,6 +148,16 @@ void CPU::setupOperations()
 		cpu->registers.a &= 255;
 		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
 	} };
+
+	// JR n
+	this->operations[0x18] = { 2, [](CPU* cpu)
+	{
+		char jumpLoc = cpu->readProgramByte();
+
+		cpu->registers.pc += jumpLoc;
+		cpu->registers.m++;
+	} };
+
 	// LD A,(DE)
 	this->operations[0x1A] = { 2, [](CPU* cpu)
 	{
@@ -705,6 +717,23 @@ void CPU::setupOperations()
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	} };
 
+	// CP (HL)
+	this->operations[0xBE] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->mmu->readByte(cpu->registers.hl);
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
 	// POP BC
 	this->operations[0xC1] = { 3, [](CPU* cpu)
 	{
@@ -884,6 +913,19 @@ unsigned char CPU::stackPopByte()
 void CPU::loadProgram(std::string data)
 {
 	this->mmu->loadRom(std::basic_string<unsigned char>(data.begin(), data.end()));
+}
+
+bool CPU::runFrame()
+{
+	unsigned int endTick = this->registers.m + 17556;
+
+	while(this->registers.m < endTick)
+	{
+		if (!this->execute()) return false;
+		//std::this_thread::sleep_for(1ms);
+	}
+
+	return true;
 }
 
 bool CPU::execute()

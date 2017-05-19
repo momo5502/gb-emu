@@ -1,8 +1,12 @@
 #include "STDInclude.hpp"
 
-GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenbuffer(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
+LPD3DXSPRITE sprite;
+
+GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenTexture(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 {
 	ZeroObject(this->mem);
+	ZeroObject(this->tiles);
+	ZeroObject(this->screenBuffer);
 
 	WNDCLASSEX wc;
 	ZeroObject(wc);
@@ -29,7 +33,10 @@ GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenbuffer(nullp
 
 		if (SUCCEEDED(this->d3d9->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, this->window, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, nullptr, &this->device)))
 		{
-			this->device->CreateTexture(160, 144, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &this->screenbuffer, nullptr);
+			//D3DXCreateTextureFromFileA(this->device, "pic.png", &this->screenTexture);
+			D3DXCreateSprite(this->device, &sprite);
+
+			this->device->CreateTexture(160, 144, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &this->screenTexture, nullptr);
 		}
 
 		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 255, 255), 1.0f, 0);
@@ -41,85 +48,105 @@ void GPU::connectCPU(CPU* _cpu)
 	this->cpu = _cpu;
 }
 
-void GPU::renderToTexture()
+void GPU::renderTexture()
 {
 	if (this->device)
 	{
 		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 255, 255), 1.0f, 0);
 		this->device->BeginScene();
 
-		D3DVIEWPORT9 vp;
-		this->device->GetViewport(&vp);
-		float width = float(vp.Width);
-		float height = float(vp.Height);
+// 		D3DVIEWPORT9 vp;
+// 		this->device->GetViewport(&vp);
+// 		float width = float(vp.Width);
+// 		float height = float(vp.Height);
+// 
+// 		auto color = D3DCOLOR_XRGB(255, 255, 255);
+// 
+// 		GPU::D3DTLVERTEX qV[4] = {
+// 			{ 0, 0 , 0.0f, 1.0f, color },
+// 			{ width, 0 , 0.0f, 1.0f, color },
+// 			{ width, height, 0.0f, 1.0f, color },
+// 			{ 0, height, 0.0f, 1.0f, color },
+// 		};
+// 
+		// Update the screen to the texture
+		D3DLOCKED_RECT lockedRect;
+		this->screenTexture->LockRect(0, &lockedRect, nullptr, 0);
+		std::memcpy(lockedRect.pBits, this->screenBuffer, sizeof this->screenBuffer);
 
-		auto color = D3DCOLOR_XRGB(255, 255, 255);
+		//for (int i = 0; i < 160 * 144; ++i) static_cast<DWORD*>(lockedRect.pBits)[i] = D3DCOLOR_XRGB(rand(), rand(), rand());
+		this->screenTexture->UnlockRect(0);
+// 
+// 		this->device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+// 		this->device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+// 		this->device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+// 		this->device->SetTexture(0, this->screenTexture);
+// 		this->device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, qV, sizeof(D3DTLVERTEX));
 
-		GPU::D3DTLVERTEX qV[4] = {
-			{ 0, 0 , 0.0f, 1.0f, color },
-			{ width, 0 , 0.0f, 1.0f, color },
-			{ width, height, 0.0f, 1.0f, color },
-			{ 0, height, 0.0f, 1.0f, color },
-		};
+		D3DXVECTOR3 ImagePos0;
+		ImagePos0.x = 0.0f;
+		ImagePos0.y = 0.0f;
+		ImagePos0.z = 0.0f;
 
-		this->device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-		this->device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-		this->device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
-		this->device->SetTexture(0, this->screenbuffer);
-		this->device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, qV, sizeof(D3DTLVERTEX));
+		sprite->Begin(D3DXSPRITE_ALPHABLEND);
+		sprite->Draw(this->screenTexture, NULL, NULL, &ImagePos0, 0xFFFFFFFF);
+		sprite->End();
 
 		this->device->EndScene();
 		this->device->Present(nullptr, nullptr, nullptr, nullptr);
 	}
+}
 
-
-	// VRAM offset for the tile map
-	unsigned short mapoffs = (this->mem.flags & FLAG_ALT_TILE_MAP) ? 0x1C00 : 0x1800;
-
-	// Which line of tiles to use in the map
-	mapoffs += ((this->mem.curline + this->mem.yscrl) & 255) >> 3;
-
-	// Which tile to start with in the map line
-	unsigned char lineoffs = (this->mem.xscrl >> 3);
-
-	// Which line of pixels to use in the tiles
-	//unsigned char y = (this->mem.curline + this->mem.yscrl) & 7;
-
-	// Where in the tileline to start
-	//unsigned char x = this->mem.xscrl & 7;
-
-	// Where to render on the canvas
-	auto canvasoffs = this->mem.curline * 160;
-
-	// Read tile index from the background map
-	unsigned short tile = this->cpu->getMMU()->vram[mapoffs + lineoffs];
-
-	// If the tile data set in use is #1, the
-	// indices are signed; calculate a real tile offset
-	if ((this->mem.flags & FLAG_ALT_TILE_SET) && tile < 128) tile += 256;
-
-	D3DLOCKED_RECT lockedRect;
-	this->screenbuffer->LockRect(0, &lockedRect, nullptr, 0);
-
-	DWORD* buffer = static_cast<DWORD*>(lockedRect.pBits);
-	for (int i = 0; i < 160; i+=4)
+void GPU::renderScreen()
+{
+	if (this->mem.flags & FLAG_BACKGROUND_ON)
 	{
-		GBCPixelQuad quad;
-		std::memcpy(&quad,&this->cpu->getMMU()->vram[tile], sizeof(quad));
+		unsigned short linebase = 160 * this->mem.curline;
+		unsigned short mapbase = ((this->mem.flags & FLAG_ALT_TILE_MAP) ? 0x1C00 : 0x1800) + ((((this->mem.curline + this->mem.yscrl) & 255) >> 3) << 5);
+		unsigned char y = (this->mem.curline + this->mem.yscrl) & 7;
+		unsigned char x = this->mem.xscrl & 7;
+		unsigned char t = (this->mem.xscrl >> 3) & 31;
+		unsigned char w = 160;
 
-		// Plot the pixel to canvas
-		buffer[canvasoffs + 0] = GPU::GetGBAColor(quad._1);
-		buffer[canvasoffs + 1] = GPU::GetGBAColor(quad._2);
-		buffer[canvasoffs + 2] = GPU::GetGBAColor(quad._3);
-		buffer[canvasoffs + 3] = GPU::GetGBAColor(quad._4);
-		canvasoffs += 4;
+		if (!(this->mem.flags & FLAG_ALT_TILE_SET))
+		{
+			unsigned short tile = this->cpu->getMMU()->vram[mapbase + t];
+			if (tile < 128) tile = 256 + tile;
+			unsigned char* tilerow = this->tiles[tile][y];
+			do
+			{
+				//if (tilerow[x]) __debugbreak();
 
-		// When this tile ends, read another
-		lineoffs = (lineoffs + 1) & 31;
-		tile = this->cpu->getMMU()->vram[mapoffs + lineoffs];
-		if ((this->mem.flags & FLAG_ALT_TILE_SET) && tile < 128) tile += 256;
+				//GPU._scanrow[160 - x] = tilerow[x];
+				this->screenBuffer[linebase] = this->getColorFromPalette(0, tilerow[x]);
+				x++;
+				if (x == 8)
+				{
+					t = (t + 1) & 31; x = 0;
+					tile = this->cpu->getMMU()->vram[mapbase + t];
+					if (tile < 128)
+						tile = 256 + tile;
+					tilerow = this->tiles[tile][y];
+				}
+				linebase++;
+			} while (--w);
+		}
+		else
+		{
+			unsigned char* tilerow = this->tiles[this->cpu->getMMU()->vram[mapbase + t]][y];
+			do
+			{
+				//GPU._scanrow[160 - x] = tilerow[x];
+				this->screenBuffer[linebase] = this->getColorFromPalette(0, tilerow[x]);
+				x++;
+				if (x == 8) { t = (t + 1) & 31; x = 0; tilerow = this->tiles[this->cpu->getMMU()->vram[mapbase + t]][y]; }
+				linebase++;
+			} while (--w);
+		}
+	}
+	if (this->mem.flags & FLAG_SPRITES_ON)
+	{
 
-		this->screenbuffer->UnlockRect(0);
 	}
 }
 
@@ -139,7 +166,7 @@ void GPU::frame()
 				if(this->mem.curline == 143)
 				{
 					this->mode = MODE_VBLANK;
-					this->renderToTexture();
+					this->renderTexture();
 				}
 				else
 				{
@@ -184,14 +211,7 @@ void GPU::frame()
 
 				if(this->mem.flags & FLAG_DISPLAY_ON)
 				{
-					if(this->mem.flags & FLAG_BACKGROUND_ON)
-					{
-						
-					}
-					if(this->mem.flags & FLAG_SPRITES_ON)
-					{
-						
-					}
+					this->renderScreen();
 				}
 			}
 			break;
@@ -215,11 +235,6 @@ unsigned char* GPU::getMemoryPtr(unsigned short address)
 {
 	address -= 0xFF40;
 
-	if(address >= 7 && address <= 9)
-	{
-		OutputDebugStringA("");
-	}
-
 	if (address < sizeof(this->mem))
 	{
 		return reinterpret_cast<unsigned char*>(&this->mem) + address;
@@ -228,14 +243,45 @@ unsigned char* GPU::getMemoryPtr(unsigned short address)
 	return nullptr;
 }
 
+void GPU::updateTile(unsigned short addr)
+{
+	unsigned short saddr = addr;
+	if (addr & 1) { saddr--; addr--; }
+	unsigned short tile = (addr >> 4) & 511;
+	unsigned short y = (addr >> 1) & 7;
+	unsigned short sx;
+	for (unsigned short x = 0; x < 8; x++)
+	{
+		sx = 1 << (7 - x);
+
+		unsigned char var = (this->cpu->getMMU()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
+		var |= (this->cpu->getMMU()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
+		var &= 3;
+
+		this->tiles[tile][y][x] = var;
+	}
+}
+
 DWORD GPU::getColorFromPalette(unsigned int palette, unsigned int index)
 {
 	if (palette > 3 || index > 4) return 0;
 
-	TODO!
+	GPU::GBCPixelQuad* quad = reinterpret_cast<GPU::GBCPixelQuad*>(&this->mem.palette[palette]);
+
+	GPU::GBColor color;
+	switch (index)
+	{
+	case 0: color = quad->_1; break;
+	case 1: color = quad->_2; break;
+	case 2: color = quad->_3; break;
+	case 3: color = quad->_4; break;
+	default: color = GBC_WHITE; break;
+	}
+
+	return GPU::GetGBColor(color);
 }
 
-DWORD GPU::GetGBAColor(GPU::GBColor pixel)
+DWORD GPU::GetGBColor(GPU::GBColor pixel)
 {
 	switch(pixel)
 	{

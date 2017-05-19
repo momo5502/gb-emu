@@ -14,6 +14,7 @@ public:
 	bool working();
 
 	unsigned char* getMemoryPtr(unsigned short address);
+	void updateTile(unsigned short address);
 
 private:
 	struct Memory
@@ -74,17 +75,21 @@ private:
 	HWND window;
 	IDirect3D9Ex* d3d9;
 	IDirect3DDevice9Ex* device;
-	IDirect3DTexture9* screenbuffer;
+	IDirect3DTexture9* screenTexture;
 
 	CPU* cpu;
 	Mode mode;
 	Memory mem;
-	unsigned short clock;
+	unsigned int clock;
+
+	DWORD screenBuffer[160 * 144];
+	unsigned char tiles[512][8][8];
 
 	DWORD getColorFromPalette(unsigned int palette, unsigned int index);
 
-	static DWORD GetGBAColor(GBColor pixel);
+	static DWORD GetGBColor(GBColor pixel);
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	void renderToTexture();	
+	void renderScreen();
+	void renderTexture();
 };

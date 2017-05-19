@@ -59,18 +59,17 @@ struct Registers
 	unsigned short sp;
 	unsigned short pc;
 
-	unsigned short m;
+	unsigned int m;
 };
 #pragma warning(pop)
 
 class CPU
 {
 public:
-	class Operation
+	struct Operation
 	{
-	public:
 		unsigned char ticks;
-		std::function<void(CPU*)> func;
+		void(*func)(CPU*);
 	};
 
 	CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu);
@@ -89,6 +88,8 @@ public:
 
 	bool execute();
 	void executeCallback(unsigned char instruction);
+
+	bool runFrame();
 
 	std::shared_ptr<MMU> getMMU() { return this->mmu; }
 	std::shared_ptr<GPU> getGPU() { return this->gpu; }
