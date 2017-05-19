@@ -32,7 +32,6 @@ CPU::~CPU()
 	
 }
 
-#pragma optimize("", off)
 void CPU::setupOperations()
 {
 	// NOP
@@ -586,51 +585,115 @@ void CPU::setupOperations()
 	// SUB A,B
 	this->operations[0x90] = { 1, [](CPU* cpu)
 	{
+		cpu->registers.f |= FLAG_NIBBLE;
 
-		char a = cpu->registers.a;
-		char b = cpu->registers.b;
+		char value = cpu->registers.b;
 
-		this->registers.a = (a - b);
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
 
-		var a = Z80._r.a;
-		Z80._r.a -= Z80._r.b;
-		Z80._r.f = (Z80._r.a<0) ? 0x50 : 0x40;
-		Z80._r.a &= 255;
-		if (!Z80._r.a) Z80._r.f |= 0x80;
-		if ((Z80._r.a^Z80._r.b^a) & 0x10) Z80._r.f |= 0x20;
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
-		cpu->registers.a = cpu->registers.a;
-
+		cpu->registers.a -= value;
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
 
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-
-
-
-
-
-
-
-
+	// SUB A,C
+	this->operations[0x91] = { 1, [](CPU* cpu)
+	{
 		cpu->registers.f |= FLAG_NIBBLE;
-		char value = cpu->readProgramByte();
-		char regA = cpu->registers.a;
 
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		char value = cpu->registers.c;
 
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
+	// SUB A,D
+	this->operations[0x92] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		char value = cpu->registers.d;
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
+	// SUB A,E
+	this->operations[0x93] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		char value = cpu->registers.e;
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
+	// SUB A,H
+	this->operations[0x94] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		char value = cpu->registers.h;
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
+	// SUB A,L
+	this->operations[0x95] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		char value = cpu->registers.l;
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
 	} };
 
 	// XOR A
@@ -756,7 +819,6 @@ void CPU::setupOperations()
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 	} };
 }
-#pragma optimize("", on)
 
 void CPU::setupCallbacks()
 {
@@ -838,7 +900,9 @@ bool CPU::execute()
 			operation->func(this);
 			this->registers.m += operation->ticks;
 
+#ifdef DEBUG
 			printf("Operation %X (%X) executed\n", instruction, pc);
+#endif
 
 			if (!this->gpu->working()) return false;
 			this->gpu->frame();
@@ -874,7 +938,9 @@ void CPU::executeCallback(unsigned char instruction)
 			callback->func(this);
 			this->registers.m += callback->ticks;
 
+#ifdef DEBUG
 			printf("Callback %X (%X) executed\n", instruction, this->registers.pc);
+#endif
 			return;
 		}
 		catch (std::exception e)
