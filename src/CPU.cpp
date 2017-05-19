@@ -570,6 +570,12 @@ void CPU::setupOperations()
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->registers.a);
 	} };
 
+	// LD A,B
+	this->operations[0x78] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.b;
+	} };
+
 	// LD A,E
 	this->operations[0x7B] = { 1, [](CPU* cpu)
 	{
@@ -592,6 +598,26 @@ void CPU::setupOperations()
 	this->operations[0x7F] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.a;
+	} };
+
+	// ADD A,(HL)
+	this->operations[0x86] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->mmu->readByte(cpu->registers.hl);
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xff00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xff);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0f) + (value & 0x0f)) > 0x0f) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 	} };
 
 	// SUB A,B
@@ -738,6 +764,12 @@ void CPU::setupOperations()
 	this->operations[0xC1] = { 3, [](CPU* cpu)
 	{
 		cpu->registers.bc = cpu->stackPopWord();
+	} };
+
+	// JP nn
+	this->operations[0xC3] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.pc = cpu->readProgramWord();
 	} };
 
 	// PUSH BC
