@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenbuffer(nullptr), cpu(nullptr), mode(HBLANK), clock(0)
+GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenbuffer(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 {
 	ZeroObject(this->mem);
 
@@ -74,7 +74,7 @@ void GPU::renderToTexture()
 
 
 	// VRAM offset for the tile map
-	unsigned short mapoffs = (this->mem.flags & ALT_TILE_MAP) ? 0x1C00 : 0x1800;
+	unsigned short mapoffs = (this->mem.flags & FLAG_ALT_TILE_MAP) ? 0x1C00 : 0x1800;
 
 	// Which line of tiles to use in the map
 	mapoffs += ((this->mem.curline + this->mem.yscrl) & 255) >> 3;
@@ -96,7 +96,7 @@ void GPU::renderToTexture()
 
 	// If the tile data set in use is #1, the
 	// indices are signed; calculate a real tile offset
-	if ((this->mem.flags & ALT_TILE_SET) && tile < 128) tile += 256;
+	if ((this->mem.flags & FLAG_ALT_TILE_SET) && tile < 128) tile += 256;
 
 	D3DLOCKED_RECT lockedRect;
 	this->screenbuffer->LockRect(0, &lockedRect, nullptr, 0);
@@ -117,7 +117,7 @@ void GPU::renderToTexture()
 		// When this tile ends, read another
 		lineoffs = (lineoffs + 1) & 31;
 		tile = this->cpu->getMMU()->vram[mapoffs + lineoffs];
-		if ((this->mem.flags & ALT_TILE_SET) && tile < 128) tile += 256;
+		if ((this->mem.flags & FLAG_ALT_TILE_SET) && tile < 128) tile += 256;
 
 		this->screenbuffer->UnlockRect(0);
 	}
@@ -129,59 +129,70 @@ void GPU::frame()
 
 	switch (this->mode)
 	{
-		case HBLANK:
+		case MODE_HBLANK:
 		{
-			if(this->clock >= 204)
+			if(this->clock >= 51)
 			{
 				this->clock = 0;
 				this->mem.curline++;
 
 				if(this->mem.curline == 143)
 				{
-					this->mode = VBLANK;
+					this->mode = MODE_VBLANK;
 					this->renderToTexture();
 				}
 				else
 				{
-					this->mode = OAM;
+					this->mode = MODE_OAM;
 				}
 			}
 			break;
 		}
 
-		case VBLANK:
+		case MODE_VBLANK:
 		{
-			if(this->clock >= 456)
+			if(this->clock >= 114)
 			{
 				this->clock = 0;
 				this->mem.curline++;
 
 				if(this->mem.curline > 153)
 				{
-					this->mode = OAM;
+					this->mode = MODE_OAM;
 					this->mem.curline = 0;
 				}
 			}
 			break;
 		}
 
-		case OAM:
+		case MODE_OAM:
 		{
-			if(this->clock >= 80)
+			if(this->clock >= 20)
 			{
 				this->clock = 0;
-				this->mode = VRAM;
+				this->mode = MODE_VRAM;
 			}
 			break;
 		}
 
-		case VRAM:
+		case MODE_VRAM:
 		{
-			if(this->clock >= 172)
+			if(this->clock >= 43)
 			{
 				this->clock = 0;
-				this->mode = HBLANK;
-				// TODO: Renderscan
+				this->mode = MODE_HBLANK;
+
+				if(this->mem.flags & FLAG_DISPLAY_ON)
+				{
+					if(this->mem.flags & FLAG_BACKGROUND_ON)
+					{
+						
+					}
+					if(this->mem.flags & FLAG_SPRITES_ON)
+					{
+						
+					}
+				}
 			}
 			break;
 		}
@@ -204,12 +215,24 @@ unsigned char* GPU::getMemoryPtr(unsigned short address)
 {
 	address -= 0xFF40;
 
+	if(address >= 7 && address <= 9)
+	{
+		OutputDebugStringA("");
+	}
+
 	if (address < sizeof(this->mem))
 	{
 		return reinterpret_cast<unsigned char*>(&this->mem) + address;
 	}
 
 	return nullptr;
+}
+
+DWORD GPU::getColorFromPalette(unsigned int palette, unsigned int index)
+{
+	if (palette > 3 || index > 4) return 0;
+
+	TODO!
 }
 
 DWORD GPU::GetGBAColor(GPU::GBColor pixel)

@@ -23,6 +23,8 @@ private:
 		unsigned char xscrl;
 		unsigned char curline;
 		unsigned char raster;
+		unsigned char unk;
+		unsigned char palette[3];
 
 		unsigned char reg[0xFF];
 	};
@@ -37,10 +39,10 @@ private:
 
 	enum Mode
 	{
-		HBLANK = 0,
-		VBLANK = 1,
-		OAM = 2,
-		VRAM = 3
+		MODE_HBLANK = 0,
+		MODE_VBLANK = 1,
+		MODE_OAM = 2,
+		MODE_VRAM = 3
 	};
 
 	struct GBCPixelQuad
@@ -53,14 +55,14 @@ private:
 
 	enum Flags
 	{
-		BACKGROUND_ON = (1 << 0),
-		SPRITES_ON = (1 << 1),
-		SPRITES_SIZE = (1 << 2),
-		ALT_TILE_MAP = (1 << 3),
-		ALT_TILE_SET = (1 << 4),
-		WINDOW_ON = (1 << 5),
-		ALT_WINDOW_TILE_MAP = (1 << 6),
-		DISPLAY_ON = (1 << 7)
+		FLAG_BACKGROUND_ON = (1 << 0),
+		FLAG_SPRITES_ON = (1 << 1),
+		FLAG_SPRITES_SIZE = (1 << 2),
+		FLAG_ALT_TILE_MAP = (1 << 3),
+		FLAG_ALT_TILE_SET = (1 << 4),
+		FLAG_WINDOW_ON = (1 << 5),
+		FLAG_ALT_WINDOW_TILE_MAP = (1 << 6),
+		FLAG_DISPLAY_ON = (1 << 7)
 	};
 
 	struct D3DTLVERTEX
@@ -78,6 +80,8 @@ private:
 	Mode mode;
 	Memory mem;
 	unsigned short clock;
+
+	DWORD getColorFromPalette(unsigned int palette, unsigned int index);
 
 	static DWORD GetGBAColor(GBColor pixel);
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

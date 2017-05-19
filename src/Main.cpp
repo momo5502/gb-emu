@@ -27,6 +27,6 @@ int main(int argc, char* argv[])
 
 	printf("Terminated!\n");
 
-	_getch();
+	//_getch();
 	return 0;
 }
