@@ -100,6 +100,8 @@ private:
 	Operation operations[0x100];
 	Operation callbacks[0x100];
 
+	bool ime;
+
 	// Emulated memory management unit
 	std::shared_ptr<MMU> mmu;
 

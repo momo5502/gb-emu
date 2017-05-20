@@ -69,7 +69,7 @@ private:
 	struct D3DTLVERTEX
 	{
 		float x, y, z, rhw;
-		DWORD color;
+		FLOAT tu, tv;
 	};
 
 	HWND window;

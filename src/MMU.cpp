@@ -20,7 +20,7 @@ unsigned char MMU::Bios[256] =
 	0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50
 };
 
-MMU::MMU() : passedBios(false), cpu(nullptr)
+MMU::MMU() : interruptFlag(0), passedBios(false), cpu(nullptr)
 {
 	ZeroObject(this->vram);
 	ZeroObject(this->eram);
@@ -59,6 +59,8 @@ unsigned short MMU::readWord(unsigned short address)
 
 void MMU::writeByte(unsigned short address, unsigned char value)
 {
+	if (address < 0x8000) return;
+
 	if(auto mem = this->getMemoryPtr(address))
 	{
 		*mem = value;
@@ -77,10 +79,12 @@ void MMU::writeWord(unsigned short address, unsigned short value)
 	this->writeByte(address + 1, value >> 8);
 }
 
+#pragma optimize("", off)
 void MMU::markBiosPass()
 {
 	this->passedBios = true;
 }
+#pragma optimize("", on)
 
 unsigned char* MMU::getMemoryPtr(unsigned short address)
 {
@@ -98,7 +102,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 			}
 
 			if (address >= this->rom.size()) throw std::runtime_error("Rom not loaded!");
-			return &this->rom[address];
+			return &const_cast<unsigned char*>(this->rom.data())[address];
 		}
 
 		// ROM0
@@ -112,7 +116,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 		case 0x7000:
 		{
 			if (address >= this->rom.size()) throw std::runtime_error("Rom not loaded!");
-			return &this->rom[address];
+			return &const_cast<unsigned char*>(this->rom.data())[address];
 		}
 
 		// VRAM
@@ -159,11 +163,16 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 						return this->cpu->getGPU()->getMemoryPtr(address);
 					}
 
-					if(address == 0xFF00)
+					if(address >= 0xFF00 && address <= 0xFF0E)
 					{
 						this->zero[0] = 0;
 						this->zero[1] = 0;
 						return &this->zero[0];
+					}
+
+					if (address == 0xFF0F)
+					{
+						return &this->interruptFlag;
 					}
 
 					throw std::runtime_error(Utils::VA("Not implemented (%X)!", address));

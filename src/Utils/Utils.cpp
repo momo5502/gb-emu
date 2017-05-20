@@ -21,7 +21,7 @@ namespace Utils
 
 	bool ReadFile(std::string name, std::string& data)
 	{
-		std::ifstream stream(name);
+		std::ifstream stream(name, std::ios::binary);
 		if(stream.is_open())
 		{
 			stream.seekg(0, std::ios::end);

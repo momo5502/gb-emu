@@ -1,7 +1,5 @@
 #include "STDInclude.hpp"
 
-LPD3DXSPRITE sprite;
-
 GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenTexture(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 {
 	ZeroObject(this->mem);
@@ -33,10 +31,7 @@ GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenTexture(null
 
 		if (SUCCEEDED(this->d3d9->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, this->window, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, nullptr, &this->device)))
 		{
-			D3DXCreateTextureFromFileA(this->device, "pic.png", &this->screenTexture);
-			D3DXCreateSprite(this->device, &sprite);
-
-			//this->device->CreateTexture(160, 144, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &this->screenTexture, nullptr);
+			this->device->CreateTexture(160, 144, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &this->screenTexture, nullptr);
 		}
 
 		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 255, 255), 1.0f, 0);
@@ -60,35 +55,24 @@ void GPU::renderTexture()
 		float width = float(vp.Width);
 		float height = float(vp.Height);
 
-		auto color = D3DCOLOR_XRGB(255, 255, 255);
-
 		GPU::D3DTLVERTEX qV[4] = {
-			{ 0, 0 , 0.0f, 1.0f, color },
-			{ width, 0 , 0.0f, 1.0f, color },
-			{ width, height, 0.0f, 1.0f, color },
-			{ 0, height, 0.0f, 1.0f, color },
+			{ 0,     height, 0.0f, 1.0f, 0.0, 1.0 },
+			{ 0,     0,      0.0f, 1.0f, 0.0, 0.0 },
+			{ width, height, 0.0f, 1.0f, 1.0, 1.0 },
+			{ width, 0,      0.0f, 1.0f, 1.0, 0.0 }
 		};
 
 		// Update the screen to the texture
-// 		D3DLOCKED_RECT lockedRect;
-// 		this->screenTexture->LockRect(0, &lockedRect, nullptr, 0);
-// 		std::memcpy(lockedRect.pBits, this->screenBuffer, sizeof this->screenBuffer);
-// 		this->screenTexture->UnlockRect(0);
-// 
+		D3DLOCKED_RECT lockedRect;
+		this->screenTexture->LockRect(0, &lockedRect, nullptr, 0);
+		std::memcpy(lockedRect.pBits, this->screenBuffer, sizeof this->screenBuffer);
+		this->screenTexture->UnlockRect(0);
+
 		this->device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-		this->device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCALPHA);
-		this->device->SetFVF(D3DFVF_XYZRHW | D3DFVF_NORMAL | D3DFVF_TEX1);
+		this->device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+		this->device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 		this->device->SetTexture(0, this->screenTexture);
-		this->device->DrawPrimitiveUP(D3DPT_TRIANGLELIST, 2, qV, sizeof(D3DTLVERTEX));
-
-// 		D3DXVECTOR3 ImagePos0;
-// 		ImagePos0.x = 0.0f;
-// 		ImagePos0.y = 0.0f;
-// 		ImagePos0.z = 0.0f;
-
-// 		sprite->Begin(D3DXSPRITE_ALPHABLEND);
-// 		sprite->Draw(this->screenTexture, NULL, NULL, &ImagePos0, 0xFFFFFFFF);
-// 		sprite->End();
+		this->device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, qV, sizeof(D3DTLVERTEX));
 
 		this->device->EndScene();
 		this->device->Present(nullptr, nullptr, nullptr, nullptr);

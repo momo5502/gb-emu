@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu)
+CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu) : ime(true)
 {
 	ZeroObject(this->registers);
 	ZeroObject(this->operations);
@@ -78,6 +78,12 @@ void CPU::setupOperations()
 	this->operations[0x06] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->readProgramByte();
+	} };
+
+	// DEC BC
+	this->operations[0x0B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.bc--;
 	} };
 
 	// INC C
@@ -297,6 +303,12 @@ void CPU::setupOperations()
 	{
 		cpu->registers.a++;
 		cpu->registers.f = (cpu->registers.a ? 0 : FLAG_ZERO);
+	} };
+
+	// LD (HL),n
+	this->operations[0x36] = { 3, [](CPU* cpu)
+	{
+		cpu->mmu->writeByte(cpu->registers.hl, cpu->readProgramByte());
 	} };
 
 	// DEC A
@@ -833,6 +845,18 @@ void CPU::setupOperations()
 		cpu->stackPushWord(cpu->registers.hl);
 	} };
 
+	// AND n
+	this->operations[0xE6] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->readProgramByte();
+
+		cpu->registers.f &= ~(FLAG_CARRY | FLAG_NIBBLE);
+		cpu->registers.f |= FLAG_HALF_CARRY;
+
+		if(!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else  cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
 	// LD (nn),A
 	this->operations[0xEA] = { 4, [](CPU* cpu)
 	{
@@ -857,10 +881,22 @@ void CPU::setupOperations()
 		cpu->registers.a = cpu->mmu->readByte(0xFF00 | cpu->registers.c);
 	} };
 
+	// DI
+	this->operations[0xF3] = { 1, [](CPU* cpu)
+	{
+		cpu->ime = false;
+	} };
+
 	// PUSH AF
 	this->operations[0xF5] = { 3, [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.af);
+	} };
+
+	// EI
+	this->operations[0xFB] = { 1, [](CPU* cpu)
+	{
+		cpu->ime = true;
 	} };
 
 	// CP n
@@ -899,6 +935,11 @@ void CPU::setupCallbacks()
 		cpu->registers.f &= FLAG_HALF_CARRY - 1;
 		cpu->registers.f |= FLAG_HALF_CARRY;
 		cpu->registers.f = (cpu->registers.c & FLAG_ZERO) ? 0 : FLAG_ZERO;
+	} };
+	
+	this->callbacks[0x87] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a &= 0xFE;
 	} };
 }
 
