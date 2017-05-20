@@ -159,7 +159,14 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 						return this->cpu->getGPU()->getMemoryPtr(address);
 					}
 
-					throw std::runtime_error("Not implemented!");
+					if(address == 0xFF00)
+					{
+						this->zero[0] = 0;
+						this->zero[1] = 0;
+						return &this->zero[0];
+					}
+
+					throw std::runtime_error(Utils::VA("Not implemented (%X)!", address));
 					/*
 					this->zero[0] = 0;
 					this->zero[1] = 0;
