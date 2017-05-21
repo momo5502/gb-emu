@@ -1049,6 +1049,25 @@ void CPU::setupOperations()
 		else cpu->registers.f &= ~FLAG_ZERO;
 	} };
 
+	// SUB A,A
+	this->operations[0x97] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		char value = cpu->registers.a;
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
 	// AND B
 	this->operations[0xA0] = { 1, [](CPU* cpu)
 	{
@@ -1338,6 +1357,17 @@ void CPU::setupOperations()
 		cpu->registers.bc = cpu->stackPopWord();
 	} };
 
+	// JP NZ,nn
+	this->operations[0xC2] = { 3, [](CPU* cpu)
+	{
+		unsigned short jumpLoc = cpu->readProgramWord();
+		if (!(cpu->registers.f & FLAG_ZERO))
+		{
+			cpu->registers.pc = jumpLoc;
+			cpu->registers.m += 1;
+		}
+	} };
+
 	// JP nn
 	this->operations[0xC3] = { 3, [](CPU* cpu)
 	{
@@ -1619,9 +1649,9 @@ bool CPU::runFrame()
 
 	auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
 
-	if(delta < (16ms))
+	if(delta < (15ms))
 	{
-		//std::this_thread::sleep_for((16ms) - delta);
+		std::this_thread::sleep_for((15ms) - delta);
 	}
 
 	return true;
@@ -1645,7 +1675,7 @@ bool CPU::execute()
 			printf("Operation %X (%X) executed\n", instruction, pc);
 #endif
 
-			this->timer.increment();
+			this->timer.increment(this);
 
 			if (this->ime && this->mmu->iE && this->mmu->iF)
 			{
@@ -1683,7 +1713,7 @@ bool CPU::execute()
 				}
 			}
 
-			this->timer.increment();
+			this->timer.increment(this);
 
 			if (!this->gpu->working()) return false;
 			this->gpu->frame();

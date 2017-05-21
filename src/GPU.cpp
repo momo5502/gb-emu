@@ -71,8 +71,8 @@ void GPU::renderScreen()
 				{
 					t = (t + 1) & 31; x = 0;
 					tile = this->cpu->getMMU()->vram[mapbase + t];
-					if (tile < 128)
-						tile = 256 + tile;
+
+					if (tile < 128) tile = 256 + tile;
 					tilerow = this->tiles[tile][y];
 				}
 				linebase++;
@@ -86,7 +86,13 @@ void GPU::renderScreen()
 				//GPU._scanrow[160 - x] = tilerow[x];
 				this->screenBuffer[linebase] = this->getColorFromPalette(0, tilerow[x]);
 				x++;
-				if (x == 8) { t = (t + 1) & 31; x = 0; tilerow = this->tiles[this->cpu->getMMU()->vram[mapbase + t]][y]; }
+				if (x == 8)
+				{
+					t = (t + 1) & 31;
+					x = 0;
+
+					tilerow = this->tiles[this->cpu->getMMU()->vram[mapbase + t]][y];
+				}
 				linebase++;
 			} while (--w);
 		}

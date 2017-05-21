@@ -69,6 +69,14 @@ void MMU::writeByte(unsigned short address, unsigned char value)
 		{
 			this->cpu->getGPU()->updateTile(address);
 		}
+		else if (static_cast<void*>(mem) == &this->cpu->timer.div)
+		{
+			this->cpu->timer.div = 0;
+		}
+		else if (static_cast<void*>(mem) == &this->cpu->timer.tac)
+		{
+			this->cpu->timer.tac &= 7;
+		}
 	}
 	else throw std::runtime_error("Nullptr dereferenced!");
 }
@@ -165,7 +173,22 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 						return this->cpu->getGPU()->getMemoryPtr(address);
 					}
 
-					if(address >= 0xFF00 && address <= 0xFF0E)
+					// Joypad
+					if (address >= 0xFF00 && address <= 0xFF03)
+					{
+						this->zero[0] = 0;
+						this->zero[1] = 0;
+						return &this->zero[0];
+					}
+
+					// Timer
+					if (address == 0xFF04) return reinterpret_cast<unsigned char*>(&this->cpu->timer.div);
+					if (address == 0xFF05) return reinterpret_cast<unsigned char*>(&this->cpu->timer.tima);
+					if (address == 0xFF06) return reinterpret_cast<unsigned char*>(&this->cpu->timer.tma);
+					if (address == 0xFF07) return reinterpret_cast<unsigned char*>(&this->cpu->timer.tac);
+
+					// Others
+					if(address >= 0xFF08 && address <= 0xFF0E)
 					{
 						this->zero[0] = 0;
 						this->zero[1] = 0;
