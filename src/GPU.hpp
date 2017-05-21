@@ -1,6 +1,8 @@
 #pragma once
 
 class CPU;
+#define GB_WIDTH (160)
+#define GB_HEIGHT (144)
 
 class GPU
 {
@@ -79,7 +81,7 @@ private:
 	Memory mem;
 	unsigned int clock;
 
-	COLORREF screenBuffer[160 * 144];
+	COLORREF screenBuffer[GB_WIDTH * GB_HEIGHT];
 	unsigned char tiles[512][8][8];
 
 	inline COLORREF getColorFromPalette(unsigned int palette, unsigned int index);

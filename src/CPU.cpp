@@ -1351,6 +1351,16 @@ void CPU::setupOperations()
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 	} };
 
+	// RET NZ
+	this->operations[0xC0] = { 2, [](CPU* cpu)
+	{
+		if (!(cpu->registers.f & FLAG_ZERO))
+		{
+			cpu->registers.pc = cpu->stackPopWord();
+			cpu->registers.m += 1;
+		}
+	} };
+
 	// POP BC
 	this->operations[0xC1] = { 3, [](CPU* cpu)
 	{
@@ -1441,6 +1451,22 @@ void CPU::setupOperations()
 	this->operations[0xD5] = { 3, [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.de);
+	} };
+
+	// RETI
+	this->operations[0xD9] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->savRegisters.a;
+		cpu->registers.b = cpu->savRegisters.b;
+		cpu->registers.c = cpu->savRegisters.c;
+		cpu->registers.d = cpu->savRegisters.d;
+		cpu->registers.e = cpu->savRegisters.e;
+		cpu->registers.f = cpu->savRegisters.f;
+		cpu->registers.h = cpu->savRegisters.h;
+		cpu->registers.l = cpu->savRegisters.l;
+
+		cpu->ime = true;
+		cpu->registers.pc = cpu->stackPopWord();
 	} };
 
 	// LDH (n),A

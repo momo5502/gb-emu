@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-GPU::GPU() : window(nullptr),cpu(nullptr), mode(MODE_HBLANK), clock(0)
+GPU::GPU() : window(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 {
 	ZeroObject(this->mem);
 	ZeroObject(this->tiles);
@@ -17,7 +17,8 @@ GPU::GPU() : window(nullptr),cpu(nullptr), mode(MODE_HBLANK), clock(0)
 	wc.lpszClassName = L"GBAWindow";
 	RegisterClassEx(&wc);
 
-	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW, 300, 300, 500, 400, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+	const int scale = 3;
+	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, GB_WIDTH * scale, GB_HEIGHT * scale, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
 	ShowWindow(this->window, SW_SHOW);
 }
@@ -34,10 +35,10 @@ void GPU::renderTexture()
 
 	HDC hdc = GetDC(this->window);
 	HDC src = CreateCompatibleDC(hdc);
-	HBITMAP map = CreateBitmap(160, 144, 1, 8 * 4, this->screenBuffer);
+	HBITMAP map = CreateBitmap(GB_WIDTH, GB_HEIGHT, 1, 8 * 4, this->screenBuffer);
 
 	SelectObject(src, map);
-	StretchBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, src, 0, 0, 160, 144, SRCCOPY);
+	StretchBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, src, 0, 0, GB_WIDTH, GB_HEIGHT, SRCCOPY);
 
 	DeleteDC(src);
 	DeleteObject(map);
@@ -48,53 +49,24 @@ void GPU::renderScreen()
 {
 	if (this->mem.flags & FLAG_BACKGROUND_ON)
 	{
-		unsigned short linebase = 160 * this->mem.curline;
+		unsigned short linebase = GB_WIDTH * this->mem.curline;
 		unsigned short mapbase = ((this->mem.flags & FLAG_ALT_TILE_MAP) ? 0x1C00 : 0x1800) + ((((this->mem.curline + this->mem.yscrl) & 255) >> 3) << 5);
 		unsigned char y = (this->mem.curline + this->mem.yscrl) & 7;
 		unsigned char x = this->mem.xscrl & 7;
 		unsigned char t = (this->mem.xscrl >> 3) & 31;
-		unsigned char w = 160;
 
-		if (!(this->mem.flags & FLAG_ALT_TILE_SET))
+		unsigned short tile = this->cpu->getMMU()->vram[mapbase + t];
+		for(int i = 0; i < GB_WIDTH; ++i)
 		{
-			unsigned short tile = this->cpu->getMMU()->vram[mapbase + t];
-			if (tile < 128) tile = 256 + tile;
-			unsigned char* tilerow = this->tiles[tile][y];
-			do
+			this->screenBuffer[linebase + i] = this->getColorFromPalette(0, this->tiles[tile][y][x]);
+
+			x++;
+			if (x == 8)
 			{
-				//if (tilerow[x]) __debugbreak();
-
-				//GPU._scanrow[160 - x] = tilerow[x];
-				this->screenBuffer[linebase] = this->getColorFromPalette(0, tilerow[x]);
-				x++;
-				if (x == 8)
-				{
-					t = (t + 1) & 31; x = 0;
-					tile = this->cpu->getMMU()->vram[mapbase + t];
-
-					if (tile < 128) tile = 256 + tile;
-					tilerow = this->tiles[tile][y];
-				}
-				linebase++;
-			} while (--w);
-		}
-		else
-		{
-			unsigned char* tilerow = this->tiles[this->cpu->getMMU()->vram[mapbase + t]][y];
-			do
-			{
-				//GPU._scanrow[160 - x] = tilerow[x];
-				this->screenBuffer[linebase] = this->getColorFromPalette(0, tilerow[x]);
-				x++;
-				if (x == 8)
-				{
-					t = (t + 1) & 31;
-					x = 0;
-
-					tilerow = this->tiles[this->cpu->getMMU()->vram[mapbase + t]][y];
-				}
-				linebase++;
-			} while (--w);
+				t = (t + 1) & 31;
+				x = 0;
+				tile = this->cpu->getMMU()->vram[mapbase + t];
+			}
 		}
 	}
 	if (this->mem.flags & FLAG_SPRITES_ON)
@@ -113,13 +85,14 @@ void GPU::frame()
 		{
 			if(this->clock >= 51)
 			{
-				this->clock = 0;
+				this->clock -= 51;
 				this->mem.curline++;
 
-				if(this->mem.curline == 143)
+				if(this->mem.curline == (GB_HEIGHT - 1))
 				{
 					this->mode = MODE_VBLANK;
 					this->renderTexture();
+					if(this->cpu->getMMU()->iE & 1) this->cpu->getMMU()->iF |= 1;
 				}
 				else
 				{
@@ -133,7 +106,7 @@ void GPU::frame()
 		{
 			if(this->clock >= 114)
 			{
-				this->clock = 0;
+				this->clock -= 114;
 				this->mem.curline++;
 
 				if(this->mem.curline > 153)
@@ -149,7 +122,7 @@ void GPU::frame()
 		{
 			if(this->clock >= 20)
 			{
-				this->clock = 0;
+				this->clock -= 20;
 				this->mode = MODE_VRAM;
 			}
 			break;
@@ -159,7 +132,7 @@ void GPU::frame()
 		{
 			if(this->clock >= 43)
 			{
-				this->clock = 0;
+				this->clock -= 43;
 				this->mode = MODE_HBLANK;
 
 				if(this->mem.flags & FLAG_DISPLAY_ON)
