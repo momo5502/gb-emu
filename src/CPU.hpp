@@ -100,6 +100,8 @@ private:
 	Operation operations[0x100];
 	Operation callbacks[0x100];
 
+	Registers savRegisters;
+
 	bool ime;
 
 	// Emulated memory management unit

@@ -216,7 +216,7 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.l)
 		{
-			cpu->registers.l = (cpu->registers.l + 1) & 0xFF;
+			cpu->registers.l++;
 		}
 	} };
 
@@ -252,6 +252,19 @@ void CPU::setupOperations()
 		char jumpLoc = cpu->readProgramByte();
 		cpu->registers.pc += jumpLoc;
 		cpu->registers.m++;
+	} };
+
+	// LDI A,(HL)
+	this->operations[0x2A] = { 2, [](CPU* cpu)
+	{
+
+		cpu->registers.a = cpu->mmu->readByte(cpu->registers.hl);
+		cpu->registers.l = (cpu->registers.l + 1) & 0xFF;
+
+		if (!cpu->registers.l)
+		{
+			cpu->registers.h++;
+		}
 	} };
 
 	// INC L
@@ -914,6 +927,14 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// RST 38
+	this->operations[0xFF] = { 3, [](CPU* cpu)
+	{
+		std::memcpy(&cpu->savRegisters, &cpu->registers, sizeof cpu->registers);
+		cpu->stackPushWord(cpu->registers.pc);
+		cpu->registers.pc = 0x38;
 	} };
 }
 
