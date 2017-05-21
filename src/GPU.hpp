@@ -73,21 +73,18 @@ private:
 	};
 
 	HWND window;
-	IDirect3D9Ex* d3d9;
-	IDirect3DDevice9Ex* device;
-	IDirect3DTexture9* screenTexture;
 
 	CPU* cpu;
 	Mode mode;
 	Memory mem;
 	unsigned int clock;
 
-	DWORD screenBuffer[160 * 144];
+	COLORREF screenBuffer[160 * 144];
 	unsigned char tiles[512][8][8];
 
-	DWORD getColorFromPalette(unsigned int palette, unsigned int index);
+	inline COLORREF getColorFromPalette(unsigned int palette, unsigned int index);
 
-	static DWORD GetGBColor(GBColor pixel);
+	static inline COLORREF GetGBColor(GBColor pixel);
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	void renderScreen();

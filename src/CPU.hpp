@@ -72,7 +72,7 @@ public:
 		void(*func)(CPU*);
 	};
 
-	CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu);
+	CPU(MMU* _mmu, GPU* _gpu);
 	~CPU();
 
 	void stackPushWord(unsigned short value);
@@ -91,8 +91,8 @@ public:
 
 	bool runFrame();
 
-	std::shared_ptr<MMU> getMMU() { return this->mmu; }
-	std::shared_ptr<GPU> getGPU() { return this->gpu; }
+	MMU* getMMU() { return this->mmu; }
+	GPU* getGPU() { return this->gpu; }
 
 	Registers registers;
 
@@ -105,10 +105,10 @@ private:
 	bool ime;
 
 	// Emulated memory management unit
-	std::shared_ptr<MMU> mmu;
+	MMU* mmu;
 
 	// Emulated graphics processing unit
-	std::shared_ptr<GPU> gpu;
+	GPU* gpu;
 
 	void setupOperations();
 	void setupCallbacks();

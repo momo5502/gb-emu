@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu) : ime(true)
+CPU::CPU(MMU* _mmu, GPU* _gpu) : ime(true)
 {
 	ZeroObject(this->registers);
 	ZeroObject(this->operations);
@@ -31,7 +31,8 @@ CPU::CPU(std::shared_ptr<MMU> _mmu, std::shared_ptr<GPU> _gpu) : ime(true)
 
 CPU::~CPU()
 {
-	
+	if (this->mmu) delete this->mmu;
+	if (this->gpu) delete this->gpu;
 }
 
 void CPU::setupOperations()
@@ -601,6 +602,18 @@ void CPU::setupOperations()
 		cpu->registers.a = cpu->registers.b;
 	} };
 
+	// LD A,C
+	this->operations[0x79] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.c;
+	} };
+
+	// LD A,D
+	this->operations[0x7A] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->registers.d;
+	} };
+
 	// LD A,E
 	this->operations[0x7B] = { 1, [](CPU* cpu)
 	{
@@ -759,12 +772,110 @@ void CPU::setupOperations()
 		else cpu->registers.f &= ~FLAG_ZERO;
 	} };
 
+	// AND B
+	this->operations[0xA0] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.b;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// AND C
+	this->operations[0xA1] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.c;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// AND D
+	this->operations[0xA2] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.d;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// AND E
+	this->operations[0xA3] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.e;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// AND H
+	this->operations[0xA4] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.h;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// AND L
+	this->operations[0xA5] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.l;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// AND A
+	this->operations[0xA7] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a &= cpu->registers.a;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
 	// XOR A
 	this->operations[0xAF] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.a;
 		cpu->registers.a &= 0xFF;
 
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR B
+	this->operations[0xB0] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.b;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR C
+	this->operations[0xB1] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.b;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR D
+	this->operations[0xB2] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.d;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR E
+	this->operations[0xB3] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.e;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR H
+	this->operations[0xB4] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.h;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR L
+	this->operations[0xB5] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.l;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// OR A
+	this->operations[0xB7] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a |= cpu->registers.a;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	} };
 
@@ -904,6 +1015,12 @@ void CPU::setupOperations()
 	this->operations[0xF5] = { 3, [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.af);
+	} };
+
+	// LD A,(nn)
+	this->operations[0xFA] = { 4, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->mmu->readByte(cpu->readProgramWord());
 	} };
 
 	// EI

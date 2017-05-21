@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenTexture(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
+GPU::GPU() : window(nullptr),cpu(nullptr), mode(MODE_HBLANK), clock(0)
 {
 	ZeroObject(this->mem);
 	ZeroObject(this->tiles);
@@ -20,22 +20,6 @@ GPU::GPU() : window(nullptr), d3d9(nullptr), device(nullptr), screenTexture(null
 	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW, 300, 300, 500, 400, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
 	ShowWindow(this->window, SW_SHOW);
-
-	if (SUCCEEDED(Direct3DCreate9Ex(D3D_SDK_VERSION, &this->d3d9)))
-	{
-		D3DPRESENT_PARAMETERS d3dpp;
-		ZeroObject(d3dpp);
-		d3dpp.Windowed = TRUE;
-		d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-		d3dpp.hDeviceWindow = this->window;
-
-		if (SUCCEEDED(this->d3d9->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, this->window, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, nullptr, &this->device)))
-		{
-			this->device->CreateTexture(160, 144, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &this->screenTexture, nullptr);
-		}
-
-		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 255, 255), 1.0f, 0);
-	}
 }
 
 void GPU::connectCPU(CPU* _cpu)
@@ -45,38 +29,19 @@ void GPU::connectCPU(CPU* _cpu)
 
 void GPU::renderTexture()
 {
-	if (this->device)
-	{
-		this->device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 255, 255), 1.0f, 0);
-		this->device->BeginScene();
+	RECT rect;
+	GetWindowRect(this->window, &rect);
 
-		D3DVIEWPORT9 vp;
-		this->device->GetViewport(&vp);
-		float width = float(vp.Width);
-		float height = float(vp.Height);
+	HDC hdc = GetDC(this->window);
+	HDC src = CreateCompatibleDC(hdc);
+	HBITMAP map = CreateBitmap(160, 144, 1, 8 * 4, this->screenBuffer);
 
-		GPU::D3DTLVERTEX qV[4] = {
-			{ 0,     height, 0.0f, 1.0f, 0.0, 1.0 },
-			{ 0,     0,      0.0f, 1.0f, 0.0, 0.0 },
-			{ width, height, 0.0f, 1.0f, 1.0, 1.0 },
-			{ width, 0,      0.0f, 1.0f, 1.0, 0.0 }
-		};
+	SelectObject(src, map);
+	StretchBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, src, 0, 0, 160, 144, SRCCOPY);
 
-		// Update the screen to the texture
-		D3DLOCKED_RECT lockedRect;
-		this->screenTexture->LockRect(0, &lockedRect, nullptr, 0);
-		std::memcpy(lockedRect.pBits, this->screenBuffer, sizeof this->screenBuffer);
-		this->screenTexture->UnlockRect(0);
-
-		this->device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-		this->device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-		this->device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
-		this->device->SetTexture(0, this->screenTexture);
-		this->device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, qV, sizeof(D3DTLVERTEX));
-
-		this->device->EndScene();
-		this->device->Present(nullptr, nullptr, nullptr, nullptr);
-	}
+	DeleteDC(src);
+	DeleteObject(map);
+	ReleaseDC(this->window, hdc);
 }
 
 void GPU::renderScreen()
@@ -244,7 +209,7 @@ void GPU::updateTile(unsigned short addr)
 	}
 }
 
-DWORD GPU::getColorFromPalette(unsigned int palette, unsigned int index)
+COLORREF GPU::getColorFromPalette(unsigned int palette, unsigned int index)
 {
 	if (palette > 3 || index > 4) return 0;
 
@@ -263,14 +228,14 @@ DWORD GPU::getColorFromPalette(unsigned int palette, unsigned int index)
 	return GPU::GetGBColor(color);
 }
 
-DWORD GPU::GetGBColor(GPU::GBColor pixel)
+COLORREF GPU::GetGBColor(GPU::GBColor pixel)
 {
 	switch(pixel)
 	{
-	case GBC_BLACK: return D3DCOLOR_XRGB(0, 0, 0);
-	case GBC_DARK_GRAY: return D3DCOLOR_XRGB(192, 192, 192);
-	case GBC_LIGHT_GRAY: return D3DCOLOR_XRGB(96, 96, 96);
-	case GBC_WHITE: return D3DCOLOR_XRGB(255, 255, 255);
+	case GBC_BLACK: return RGB(0, 0, 0);
+	case GBC_DARK_GRAY: return RGB(192, 192, 192);
+	case GBC_LIGHT_GRAY: return RGB(96, 96, 96);
+	case GBC_WHITE: return RGB(255, 255, 255);
 	}
 	return 0;
 }
@@ -293,7 +258,5 @@ LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 GPU::~GPU()
 {
-	if (this->device) this->device->Release();
-	if (this->d3d9) this->d3d9->Release();
 	if (this->working()) DestroyWindow(this->window);
 }
