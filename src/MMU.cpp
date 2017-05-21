@@ -20,7 +20,7 @@ unsigned char MMU::Bios[256] =
 	0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50
 };
 
-MMU::MMU() : interruptFlag(0), passedBios(false), cpu(nullptr)
+MMU::MMU() : iF(0), iE(0), passedBios(false), cpu(nullptr)
 {
 	ZeroObject(this->vram);
 	ZeroObject(this->eram);
@@ -146,6 +146,8 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 			unsigned short lhAddr = address & 0x0F00;
 			if(lhAddr == 0x0F00) // Zero page
 			{
+				if (address == 0xFFFF) return &this->iE;
+
 				if (address >= 0xFF80)
 				{
 					return &this->zram[address & 0x7F];
@@ -172,7 +174,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 
 					if (address == 0xFF0F)
 					{
-						return &this->interruptFlag;
+						return &this->iF;
 					}
 
 					throw std::runtime_error(Utils::VA("Not implemented (%X)!", address));

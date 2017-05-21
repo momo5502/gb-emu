@@ -80,6 +80,16 @@ void CPU::setupOperations()
 		cpu->registers.b = cpu->readProgramByte();
 	} };
 
+	// RLC A
+	this->operations[0x07] = { 1, [](CPU* cpu)
+	{
+		unsigned char ci = cpu->registers.a & FLAG_ZERO ? 1 : 0;
+		unsigned char co = cpu->registers.a & FLAG_ZERO ? FLAG_CARRY : 0;
+
+		cpu->registers.a = (cpu->registers.a << 1) + ci;
+		cpu->registers.a &= 255;
+		cpu->registers.a = (cpu->registers.f & 0xEF) + co;
+	} };
 	// ADD HL,BC
 	this->operations[0x09] = { 3, [](CPU* cpu)
 	{
@@ -765,6 +775,126 @@ void CPU::setupOperations()
 		cpu->registers.a = cpu->registers.a;
 	} };
 
+	// ADD A,B
+	this->operations[0x80] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.b;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// ADD A,C
+	this->operations[0x81] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.c;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// ADD A,D
+	this->operations[0x82] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.d;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// ADD A,E
+	this->operations[0x83] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.e;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// ADD A,H
+	this->operations[0x84] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.h;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// ADD A,L
+	this->operations[0x85] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.l;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
 	// ADD A,(HL)
 	this->operations[0x86] = { 2, [](CPU* cpu)
 	{
@@ -773,15 +903,35 @@ void CPU::setupOperations()
 		char value = cpu->mmu->readByte(cpu->registers.hl);
 		unsigned int result = cpu->registers.a + value;
 
-		if (result & 0xff00) cpu->registers.f |= FLAG_CARRY;
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		cpu->registers.a = static_cast<unsigned char>(result & 0xff);
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
 
-		if (((cpu->registers.a & 0x0f) + (value & 0x0f)) > 0x0f) cpu->registers.f |= FLAG_HALF_CARRY;
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// ADD A,B
+	this->operations[0x87] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		char value = cpu->registers.b;
+		unsigned int result = cpu->registers.a + value;
+
+		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 	} };
 
@@ -1365,11 +1515,9 @@ void CPU::setupOperations()
 	} };
 
 	// RST 38
-	this->operations[0xFF] = { 3, [](CPU* cpu)
+	this->operations[0xFF] = { 0, [](CPU* cpu)
 	{
-		std::memcpy(&cpu->savRegisters, &cpu->registers, sizeof cpu->registers);
-		cpu->stackPushWord(cpu->registers.pc);
-		cpu->registers.pc = 0x38;
+		cpu->executeRst(0x38);
 	} };
 }
 
@@ -1402,6 +1550,14 @@ void CPU::setupCallbacks()
 	{
 		cpu->registers.a |= 1 << 1;
 	} };
+}
+
+void CPU::executeRst(unsigned short num)
+{
+	std::memcpy(&this->savRegisters, &this->registers, sizeof this->registers);
+	this->stackPushWord(this->registers.pc);
+	this->registers.pc = num;
+	this->registers.m += 3;
 }
 
 unsigned char CPU::readProgramByte()
@@ -1488,6 +1644,46 @@ bool CPU::execute()
 #ifdef DEBUG
 			printf("Operation %X (%X) executed\n", instruction, pc);
 #endif
+
+			this->timer.increment();
+
+			if (this->ime && this->mmu->iE && this->mmu->iF)
+			{
+				this->ime = false;
+
+				unsigned char ifired = this->mmu->iE & this->mmu->iF;
+				if (ifired & 1)
+				{
+					this->mmu->iF &= 0xFE;
+					this->executeRst(0x40);
+				}
+				else if (ifired & 2)
+				{
+					this->mmu->iF &= 0xFD;
+					this->executeRst(0x48);
+				}
+				else if (ifired & 4)
+				{
+					this->mmu->iF &= 0xFB;
+					this->executeRst(0x50);
+				}
+				else if (ifired & 8)
+				{
+					this->mmu->iF &= 0xF7;
+					this->executeRst(0x58);
+				}
+				else if (ifired & 16)
+				{
+					this->mmu->iF &= 0xEF;
+					this->executeRst(0x60);
+				}
+				else
+				{
+					this->ime = true;
+				}
+			}
+
+			this->timer.increment();
 
 			if (!this->gpu->working()) return false;
 			this->gpu->frame();

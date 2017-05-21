@@ -26,7 +26,8 @@ public:
 	unsigned char wram[0x2000];
 	unsigned char zram[0x7F];
 
-	unsigned char interruptFlag;
+	unsigned char iF;
+	unsigned char iE;
 
 private:
 	static unsigned char Bios[256];

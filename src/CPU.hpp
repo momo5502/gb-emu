@@ -95,6 +95,7 @@ public:
 	GPU* getGPU() { return this->gpu.get(); }
 
 	Registers registers;
+	Timer timer;
 
 private:
 	Operation operations[0x100];
@@ -114,4 +115,6 @@ private:
 	void setupCallbacks();
 
 	void verifyComponents();
+
+	void executeRst(unsigned short num);
 };

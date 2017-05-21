@@ -25,6 +25,7 @@ using namespace std::literals;
 
 #include "Utils/Utils.hpp"
 
+#include "Timer.hpp"
 #include "GPU.hpp"
 #include "MMU.hpp"
 #include "CPU.hpp"
