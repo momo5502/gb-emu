@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
 	printf("Loaded game!\n");
 
-	CPU cpu(new MMU, new GPU);
+	CPU cpu(std::make_unique<MMU>(), std::make_unique<GPU>());
 	cpu.loadProgram(data);
 
 	while (cpu.runFrame()) {}

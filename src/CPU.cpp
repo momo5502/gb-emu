@@ -1,13 +1,13 @@
 #include "STDInclude.hpp"
 
-CPU::CPU(MMU* _mmu, GPU* _gpu) : ime(true)
+CPU::CPU(std::unique_ptr<MMU> _mmu, std::unique_ptr<GPU> _gpu) : ime(true)
 {
 	ZeroObject(this->registers);
 	ZeroObject(this->operations);
 	ZeroObject(this->callbacks);
 
-	this->mmu = _mmu;
-	this->gpu = _gpu;
+	this->mmu = std::move(_mmu);
+	this->gpu = std::move(_gpu);
 
 	this->mmu->connectCPU(this);
 	this->gpu->connectCPU(this);
@@ -31,8 +31,7 @@ CPU::CPU(MMU* _mmu, GPU* _gpu) : ime(true)
 
 CPU::~CPU()
 {
-	if (this->mmu) delete this->mmu;
-	if (this->gpu) delete this->gpu;
+
 }
 
 void CPU::setupOperations()
@@ -79,6 +78,32 @@ void CPU::setupOperations()
 	this->operations[0x06] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->readProgramByte();
+	} };
+
+	// ADD HL,BC
+	this->operations[0x09] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		short value = cpu->registers.bc;
+		unsigned int result = cpu->registers.hl + value;
+
+		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
+
+		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// LD A,(BC)
+	this->operations[0x0A] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->mmu->readByte(cpu->registers.bc);
 	} };
 
 	// DEC BC
@@ -165,10 +190,36 @@ void CPU::setupOperations()
 		cpu->registers.m++;
 	} };
 
+	// ADD HL,DE
+	this->operations[0x19] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		short value = cpu->registers.de;
+		unsigned int result = cpu->registers.hl + value;
+
+		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
+
+		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
 	// LD A,(DE)
 	this->operations[0x1A] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.de);
+	} };
+
+	// DEC DE
+	this->operations[0x1B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.de--;
 	} };
 
 	// INC E
@@ -255,6 +306,26 @@ void CPU::setupOperations()
 		cpu->registers.m++;
 	} };
 
+	// ADD HL,HL
+	this->operations[0x29] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		short value = cpu->registers.hl;
+		unsigned int result = cpu->registers.hl + value;
+
+		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
+
+		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
 	// LDI A,(HL)
 	this->operations[0x2A] = { 2, [](CPU* cpu)
 	{
@@ -266,6 +337,12 @@ void CPU::setupOperations()
 		{
 			cpu->registers.h++;
 		}
+	} };
+
+	// DEC HL
+	this->operations[0x2B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.hl--;
 	} };
 
 	// INC L
@@ -323,6 +400,32 @@ void CPU::setupOperations()
 	this->operations[0x36] = { 3, [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->readProgramByte());
+	} };
+
+	// ADD HL,SP
+	this->operations[0x39] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.f &= ~FLAG_NIBBLE;
+
+		short value = cpu->registers.sp;
+		unsigned int result = cpu->registers.hl + value;
+
+		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
+
+		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// DEC SP
+	this->operations[0x3B] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.sp--;
 	} };
 
 	// DEC A
@@ -415,6 +518,12 @@ void CPU::setupOperations()
 	{
 		cpu->registers.c = cpu->registers.l;
 	} };
+
+	// LD C,(HL)
+	this->operations[0x4E] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.c = cpu->mmu->readByte(cpu->registers.hl);
+	} };
 	
 	// LD C,A
 	this->operations[0x4F] = { 1, [](CPU* cpu)
@@ -498,6 +607,12 @@ void CPU::setupOperations()
 	this->operations[0x5D] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.l;
+	} };
+
+	// LD E,(HL)
+	this->operations[0x5E] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.e = cpu->mmu->readByte(cpu->registers.hl);
 	} };
 
 	// LD E,A
@@ -584,6 +699,12 @@ void CPU::setupOperations()
 		cpu->registers.l = cpu->registers.l;
 	} };
 
+	// LD L,(HL)
+	this->operations[0x6E] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.l = cpu->mmu->readByte(cpu->registers.hl);
+	} };
+
 	// LD L,A
 	this->operations[0x6F] = { 1, [](CPU* cpu)
 	{
@@ -630,6 +751,12 @@ void CPU::setupOperations()
 	this->operations[0x7D] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.l;
+	} };
+
+	// LD A,(HL)
+	this->operations[0x7E] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a = cpu->mmu->readByte(cpu->registers.hl);
 	} };
 
 	// LD A,A
@@ -821,12 +948,52 @@ void CPU::setupOperations()
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	} };
 
+	// XOR B
+	this->operations[0xA8] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a ^= cpu->registers.b;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// XOR C
+	this->operations[0xA9] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a ^= cpu->registers.c;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// XOR D
+	this->operations[0xAA] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a ^= cpu->registers.d;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// XOR E
+	this->operations[0xAB] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a ^= cpu->registers.e;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// XOR H
+	this->operations[0xAC] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a ^= cpu->registers.h;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
+	// XOR L
+	this->operations[0xAD] = { 1, [](CPU* cpu)
+	{
+		cpu->registers.a ^= cpu->registers.l;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	} };
+
 	// XOR A
 	this->operations[0xAF] = { 1, [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.a;
-		cpu->registers.a &= 0xFF;
-
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	} };
 
@@ -879,11 +1046,130 @@ void CPU::setupOperations()
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	} };
 
+	// CP B
+	this->operations[0xB8] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.b;
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// CP C
+	this->operations[0xB9] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.c;
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// CP D
+	this->operations[0xBA] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.d;
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// CP E
+	this->operations[0xBB] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.e;
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// CP H
+	this->operations[0xBC] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.h;
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// CP L
+	this->operations[0xBD] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.l;
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
 	// CP (HL)
 	this->operations[0xBE] = { 2, [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->mmu->readByte(cpu->registers.hl);
+		char regA = cpu->registers.a;
+
+		if (regA == value) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if (regA < value) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+	} };
+
+	// CP A
+	this->operations[0xBF] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+		char value = cpu->registers.a;
 		char regA = cpu->registers.a;
 
 		if (regA == value) cpu->registers.f |= FLAG_ZERO;
@@ -914,10 +1200,31 @@ void CPU::setupOperations()
 		cpu->stackPushWord(cpu->registers.bc);
 	} };
 
+	// RET Z
+	this->operations[0xC8] = { 2, [](CPU* cpu)
+	{
+		if ((cpu->registers.f & FLAG_ZERO))
+		{
+			cpu->registers.pc = cpu->stackPopWord();
+			cpu->registers.m += 1;
+		}
+	} };
+
 	// RET
 	this->operations[0xC9] = { 3, [](CPU* cpu)
 	{
 		cpu->registers.pc = cpu->stackPopWord();
+	} };
+
+	// JP Z,nn
+	this->operations[0xCA] = { 3, [](CPU* cpu)
+	{
+		unsigned short jumpLoc = cpu->readProgramWord();
+		if ((cpu->registers.f & FLAG_ZERO))
+		{
+			cpu->registers.pc = jumpLoc;
+			cpu->registers.m += 1;
+		}
 	} };
 
 	// Ext ops (callbacks)
@@ -937,6 +1244,17 @@ void CPU::setupOperations()
 	this->operations[0xD1] = { 3, [](CPU* cpu)
 	{
 		cpu->registers.de = cpu->stackPopWord();
+	} };
+
+	// JP NC,nn
+	this->operations[0xD2] = { 3, [](CPU* cpu)
+	{
+		unsigned short jumpLoc = cpu->readProgramWord();
+		if (!(cpu->registers.f & FLAG_CARRY))
+		{
+			cpu->registers.pc = jumpLoc;
+			cpu->registers.m += 1;
+		}
 	} };
 
 	// PUSH DE
@@ -1079,6 +1397,11 @@ void CPU::setupCallbacks()
 	{
 		cpu->registers.a &= 0xFE;
 	} };
+
+	this->callbacks[0xCF] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.a |= 1 << 1;
+	} };
 }
 
 unsigned char CPU::readProgramByte()
@@ -1130,10 +1453,19 @@ bool CPU::runFrame()
 {
 	unsigned int endTick = this->registers.m + 17556;
 
+	auto start = std::chrono::high_resolution_clock::now();
+
 	while(this->registers.m < endTick)
 	{
 		if (!this->execute()) return false;
 		//std::this_thread::sleep_for(1ms);
+	}
+
+	auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+
+	if(delta < (16ms))
+	{
+		//std::this_thread::sleep_for((16ms) - delta);
 	}
 
 	return true;

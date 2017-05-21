@@ -72,7 +72,7 @@ public:
 		void(*func)(CPU*);
 	};
 
-	CPU(MMU* _mmu, GPU* _gpu);
+	CPU(std::unique_ptr<MMU> _mmu, std::unique_ptr<GPU> _gpu);
 	~CPU();
 
 	void stackPushWord(unsigned short value);
@@ -91,8 +91,8 @@ public:
 
 	bool runFrame();
 
-	MMU* getMMU() { return this->mmu; }
-	GPU* getGPU() { return this->gpu; }
+	MMU* getMMU() { return this->mmu.get(); }
+	GPU* getGPU() { return this->gpu.get(); }
 
 	Registers registers;
 
@@ -105,10 +105,10 @@ private:
 	bool ime;
 
 	// Emulated memory management unit
-	MMU* mmu;
+	std::unique_ptr<MMU> mmu;
 
 	// Emulated graphics processing unit
-	GPU* gpu;
+	std::unique_ptr<GPU> gpu;
 
 	void setupOperations();
 	void setupCallbacks();
