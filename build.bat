@@ -16,9 +16,14 @@ endlocal
 exit /B 1
 
 :build
+call generate
+
 set PLATFORM=Win32
 set CONFIGURATION=Release
-call generate
+msbuild /nologo /m /v:m %* build\gb-emu.sln
+
+set PLATFORM=x64
+set CONFIGURATION=Release
 msbuild /nologo /m /v:m %* build\gb-emu.sln
 endlocal
 exit /B %ERRORLEVEL%

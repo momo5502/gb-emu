@@ -1697,10 +1697,6 @@ bool CPU::execute()
 			operation->func(this);
 			this->registers.m += operation->ticks;
 
-#ifdef DEBUG
-			printf("Operation %X (%X) executed\n", instruction, pc);
-#endif
-
 			this->timer.increment(this);
 
 			if (this->ime && this->mmu->iE && this->mmu->iF)
@@ -1775,9 +1771,6 @@ void CPU::executeCallback(unsigned char instruction)
 			callback->func(this);
 			this->registers.m += callback->ticks;
 
-#ifdef DEBUG
-			printf("Callback %X (%X) executed\n", instruction, this->registers.pc);
-#endif
 			return;
 		}
 		catch (std::exception e)

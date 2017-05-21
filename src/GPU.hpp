@@ -87,6 +87,7 @@ private:
 	inline COLORREF getColorFromPalette(unsigned int palette, unsigned int index);
 
 	static inline COLORREF GetGBColor(GBColor pixel);
+	static inline COLORREF GetGBColor(unsigned char pixel);
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	void renderScreen();

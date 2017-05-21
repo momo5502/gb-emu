@@ -58,6 +58,11 @@ void GPU::renderScreen()
 		unsigned short tile = this->cpu->getMMU()->vram[mapbase + t];
 		for(int i = 0; i < GB_WIDTH; ++i)
 		{
+			if(this->mem.flags & FLAG_ALT_TILE_SET){}
+			else
+			{
+				tile = 0x100 + static_cast<char>(tile);
+			}
 			this->screenBuffer[linebase + i] = this->getColorFromPalette(0, this->tiles[tile][y][x]);
 
 			x++;
@@ -171,8 +176,8 @@ unsigned char* GPU::getMemoryPtr(unsigned short address)
 
 void GPU::updateTile(unsigned short addr)
 {
+	addr &= ~1;
 	unsigned short saddr = addr;
-	if (addr & 1) { saddr--; addr--; }
 	unsigned short tile = (addr >> 4) & 511;
 	unsigned short y = (addr >> 1) & 7;
 	unsigned short sx;
@@ -217,6 +222,11 @@ COLORREF GPU::GetGBColor(GPU::GBColor pixel)
 	case GBC_WHITE: return RGB(255, 255, 255);
 	}
 	return 0;
+}
+
+COLORREF GPU::GetGBColor(unsigned char pixel)
+{
+	return GPU::GetGBColor(*reinterpret_cast<GPU::GBColor*>(&pixel));
 }
 
 LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
