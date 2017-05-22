@@ -62,6 +62,6 @@ void Timer::step(CPU* cpu)
 	if(this->tima > 0xFF)
 	{
 		this->tima = this->tma;
-		cpu->getMMU()->iF |= 4;
+		if(cpu->getMMU()->iE & 4) cpu->getMMU()->iF |= 4;
 	}
 }

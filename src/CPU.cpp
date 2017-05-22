@@ -375,6 +375,18 @@ void CPU::setupOperations()
 		cpu->registers.l = cpu->readProgramByte();
 	} };
 
+	// JR NC,n
+	this->operations[0x30] = { 3, [](CPU* cpu)
+	{
+		char jumpLoc = cpu->readProgramByte();
+
+		if (!(cpu->registers.f & FLAG_CARRY))
+		{
+			cpu->registers.pc += jumpLoc;
+			cpu->registers.m++;
+		}
+	} };
+
 	// LD SP,nn
 	this->operations[0x31] = { 3, [](CPU* cpu)
 	{
@@ -1453,6 +1465,25 @@ void CPU::setupOperations()
 		cpu->stackPushWord(cpu->registers.de);
 	} };
 
+	// SUB A,n
+	this->operations[0xD6] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		char value = cpu->readProgramByte();
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+
+		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+	} };
+
 	// RETI
 	this->operations[0xD9] = { 3, [](CPU* cpu)
 	{
@@ -1469,6 +1500,25 @@ void CPU::setupOperations()
 		cpu->registers.pc = cpu->stackPopWord();
 	} };
 
+	// SBC A,n
+	this->operations[0xDE] = { 2, [](CPU* cpu)
+	{
+		char value = cpu->readProgramByte();
+		value += (cpu->registers.f & FLAG_CARRY) ? 1 : 0;
+
+		cpu->registers.f |= FLAG_NIBBLE;
+
+		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
+		else cpu->registers.f &= ~FLAG_CARRY;
+
+		if (value == cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
+		else cpu->registers.f &= ~FLAG_ZERO;
+
+		if ((value & 0x0F) > (cpu->registers.a & 0x0F))  cpu->registers.f |= FLAG_HALF_CARRY;
+		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+
+		cpu->registers.a -= value;
+	} };
 	// LDH (n),A
 	this->operations[0xE0] = { 3, [](CPU* cpu)
 	{
