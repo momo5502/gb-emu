@@ -4,6 +4,8 @@ class CPU;
 #define GB_WIDTH (160)
 #define GB_HEIGHT (144)
 
+#define WM_KILL_WINDOW (WM_USER+0)
+
 class GPU
 {
 public:

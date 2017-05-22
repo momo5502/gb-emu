@@ -33,16 +33,15 @@ void GPU::windowRunner()
 
 	SetWindowLongPtrA(this->window, GWLP_USERDATA, LONG_PTR(this));
 
-	while (this->working())
+	MSG msg;
+	while (this->working() && (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE) || []()
 	{
-		MSG msg;
-		while (this->working() && PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-
 		std::this_thread::sleep_for(1ms);
+		return true;
+	}()))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
 }
 
@@ -247,17 +246,16 @@ LRESULT GPU::windowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-		case WM_DESTROY:
-		{
-			PostQuitMessage(0);
-			DestroyWindow(this->window);
-			return 0;
-		}
-
 		case WM_SIZE:
 		{
 			this->renderTexture();
 			break;
+		}
+
+		case WM_KILL_WINDOW:
+		{
+			DestroyWindow(this->window);
+			return 0;
 		}
 
 		default: break;
@@ -275,6 +273,6 @@ LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 GPU::~GPU()
 {
-	if (this->working()) DestroyWindow(this->window);
+	if (this->working()) SendMessageA(this->window, WM_KILL_WINDOW, NULL, NULL);
 	if(this->windowThread.joinable()) this->windowThread.join();
 }
