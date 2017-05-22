@@ -21,7 +21,8 @@ public:
 private:
 	struct Memory
 	{
-		unsigned short flags;
+		unsigned char flags;
+		unsigned char lcdStatus;
 		unsigned char yscrl;
 		unsigned char xscrl;
 		unsigned char curline;
@@ -81,6 +82,8 @@ private:
 	Memory mem;
 	unsigned int clock;
 
+	std::thread windowThread;
+
 	COLORREF screenBuffer[GB_WIDTH * GB_HEIGHT];
 	unsigned char tiles[512][8][8];
 
@@ -88,8 +91,12 @@ private:
 
 	static inline COLORREF GetGBColor(GBColor pixel);
 	static inline COLORREF GetGBColor(unsigned char pixel);
+
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	LRESULT windowProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 	void renderScreen();
 	void renderTexture();
+
+	void windowRunner();
 };

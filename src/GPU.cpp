@@ -6,6 +6,17 @@ GPU::GPU() : window(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 	ZeroObject(this->tiles);
 	ZeroObject(this->screenBuffer);
 
+	this->windowThread = std::thread(std::bind(&GPU::windowRunner, this));
+	while(!this->working()) std::this_thread::sleep_for(1ms);
+}
+
+void GPU::connectCPU(CPU* _cpu)
+{
+	this->cpu = _cpu;
+}
+
+void GPU::windowRunner()
+{
 	WNDCLASSEX wc;
 	ZeroObject(wc);
 	wc.cbSize = sizeof(wc);
@@ -18,14 +29,21 @@ GPU::GPU() : window(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 	RegisterClassEx(&wc);
 
 	const int scale = 3;
-	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, GB_WIDTH * scale, GB_HEIGHT * scale, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, GB_WIDTH * scale, GB_HEIGHT * scale, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
-	ShowWindow(this->window, SW_SHOW);
-}
+	SetWindowLongPtrA(this->window, GWLP_USERDATA, LONG_PTR(this));
 
-void GPU::connectCPU(CPU* _cpu)
-{
-	this->cpu = _cpu;
+	while (this->working())
+	{
+		MSG msg;
+		while (this->working() && PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		std::this_thread::sleep_for(1ms);
+	}
 }
 
 void GPU::renderTexture()
@@ -59,10 +77,8 @@ void GPU::renderScreen()
 		for(int i = 0; i < GB_WIDTH; ++i)
 		{
 			if(this->mem.flags & FLAG_ALT_TILE_SET){}
-			else
-			{
-				tile = 0x100 + static_cast<char>(tile);
-			}
+			else tile = 0x100 + static_cast<char>(tile);
+
 			this->screenBuffer[linebase + i] = this->getColorFromPalette(0, this->tiles[tile][y][x]);
 
 			x++;
@@ -98,10 +114,12 @@ void GPU::frame()
 					this->mode = MODE_VBLANK;
 					this->renderTexture();
 					if(this->cpu->getMMU()->iE & 1) this->cpu->getMMU()->iF |= 1;
+					if (this->mem.lcdStatus & (1 << 4) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
 				}
 				else
 				{
 					this->mode = MODE_OAM;
+					if (this->mem.lcdStatus & (1 << 5) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
 				}
 			}
 			break;
@@ -118,6 +136,8 @@ void GPU::frame()
 				{
 					this->mode = MODE_OAM;
 					this->mem.curline = 0;
+
+					if (this->mem.lcdStatus & (1 << 5) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
 				}
 			}
 			break;
@@ -139,6 +159,7 @@ void GPU::frame()
 			{
 				this->clock -= 43;
 				this->mode = MODE_HBLANK;
+				if (this->mem.lcdStatus & (1 << 3) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
 
 				if(this->mem.flags & FLAG_DISPLAY_ON)
 				{
@@ -147,13 +168,6 @@ void GPU::frame()
 			}
 			break;
 		}
-	}
-
-	MSG msg;
-	while (this->working() && PeekMessage(&msg, nullptr, NULL, NULL, PM_REMOVE))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
 	}
 }
 
@@ -229,23 +243,30 @@ COLORREF GPU::GetGBColor(unsigned char pixel)
 	return GPU::GetGBColor(*reinterpret_cast<GPU::GBColor*>(&pixel));
 }
 
-LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT GPU::windowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
 		case WM_DESTROY:
 		{
 			PostQuitMessage(0);
-			DestroyWindow(hWnd);
+			DestroyWindow(this->window);
 			return 0;
 		}
 
-		default: 
-			return DefWindowProc(hWnd, message, wParam, lParam);
+		default: return DefWindowProc(this->window, message, wParam, lParam);
 	}
+}
+
+LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	GPU* gpu = reinterpret_cast<GPU*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+	if (gpu) gpu->windowProc(message, wParam, lParam);
+	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 GPU::~GPU()
 {
 	if (this->working()) DestroyWindow(this->window);
+	if(this->windowThread.joinable()) this->windowThread.join();
 }
