@@ -254,14 +254,22 @@ LRESULT GPU::windowProc(UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
-		default: return DefWindowProc(this->window, message, wParam, lParam);
+		case WM_SIZE:
+		{
+			this->renderTexture();
+			break;
+		}
+
+		default: break;
 	}
+
+	return DefWindowProc(this->window, message, wParam, lParam);
 }
 
 LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	GPU* gpu = reinterpret_cast<GPU*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-	if (gpu) gpu->windowProc(message, wParam, lParam);
+	if (gpu) return gpu->windowProc(message, wParam, lParam);
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
