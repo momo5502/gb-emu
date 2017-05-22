@@ -19,6 +19,7 @@ public:
 
 	unsigned char* getMemoryPtr(unsigned short address);
 	void updateTile(unsigned short address);
+	void closeWindow();
 
 private:
 	struct Memory

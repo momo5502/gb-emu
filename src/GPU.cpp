@@ -273,6 +273,15 @@ LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 GPU::~GPU()
 {
-	if (this->working()) SendMessageA(this->window, WM_KILL_WINDOW, NULL, NULL);
+	this->closeWindow();
 	if(this->windowThread.joinable()) this->windowThread.join();
+}
+
+void GPU::closeWindow()
+{
+	if (this->working())
+	{
+		SendMessageA(this->window, WM_KILL_WINDOW, NULL, NULL);
+		this->window = nullptr;
+	}
 }

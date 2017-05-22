@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
 	cpu.loadProgram(data);
 
 	while (cpu.runFrame()) {}
+	cpu.getGPU()->closeWindow();
 
 	printf("Terminated!\n");
 
