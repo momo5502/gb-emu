@@ -589,6 +589,12 @@ void CPU::setupOperations()
 		cpu->registers.d = cpu->registers.l;
 	} };
 
+	// LD D,(HL)
+	this->operations[0x56] = { 2, [](CPU* cpu)
+	{
+		cpu->registers.d = cpu->mmu->readByte(cpu->registers.hl);
+	} };
+
 	// LD D,A
 	this->operations[0x57] = { 1, [](CPU* cpu)
 	{
@@ -1555,10 +1561,22 @@ void CPU::setupOperations()
 		else  cpu->registers.f &= ~FLAG_ZERO;
 	} };
 
+	// JP (HL)
+	this->operations[0xE9] = { 3, [](CPU* cpu)
+	{
+		cpu->registers.pc = cpu->mmu->readByte(cpu->registers.hl);
+	} };
+
 	// LD (nn),A
 	this->operations[0xEA] = { 4, [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->readProgramWord(), cpu->registers.a);
+	} };
+
+	// RST 28
+	this->operations[0xEF] = { 0, [](CPU* cpu)
+	{
+		cpu->executeRst(0x28);
 	} };
 
 	// LDH A,(n)
