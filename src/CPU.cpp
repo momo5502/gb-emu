@@ -387,6 +387,13 @@ void CPU::setupOperations()
 		cpu->registers.l = cpu->readProgramByte();
 	};
 
+	// CPL
+	this->operations[0x2F] = [](CPU* cpu)
+	{
+		cpu->registers.a ^= 0xFF;
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+	};
+
 	// JR NC,n
 	this->operations[0x30] = [](CPU* cpu)
 	{
@@ -798,577 +805,265 @@ void CPU::setupOperations()
 	// ADD A,B
 	this->operations[0x80] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.b;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.b);
 	};
 
 	// ADD A,C
 	this->operations[0x81] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.c;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.c);
 	};
 
 	// ADD A,D
 	this->operations[0x82] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.d;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.d);
 	};
 
 	// ADD A,E
 	this->operations[0x83] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.e;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.e);
 	};
 
 	// ADD A,H
 	this->operations[0x84] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.h;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.h);
 	};
 
 	// ADD A,L
 	this->operations[0x85] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.l;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.l);
 	};
 
 	// ADD A,(HL)
 	this->operations[0x86] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->mmu->readByte(cpu->registers.hl);
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->mmu->readByte(cpu->registers.hl));
 	};
 
 	// ADD A,B
 	this->operations[0x87] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NEGATIVE;
-
-		char value = cpu->registers.b;
-		unsigned int result = cpu->registers.a + value;
-
-		if (result & 0xFF00) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		cpu->registers.a = static_cast<unsigned char>(result & 0xFF);
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->add(cpu->registers.b);
 	};
 
 	// SUB A,B
 	this->operations[0x90] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.b;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.b);
 	};
 
 	// SUB A,C
 	this->operations[0x91] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.c;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.c);
 	};
 
 	// SUB A,D
 	this->operations[0x92] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.d;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.d);
 	};
 
 	// SUB A,E
 	this->operations[0x93] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.e;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.e);
 	};
 
 	// SUB A,H
 	this->operations[0x94] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.h;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.h);
 	};
 
 	// SUB A,L
 	this->operations[0x95] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.l;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.l);
 	};
 
 	// SUB A,A
 	this->operations[0x97] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->registers.a;
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->registers.a);
 	};
 
 	// AND B
 	this->operations[0xA0] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.b;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.b);
 	};
 
 	// AND C
 	this->operations[0xA1] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.c;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.c);
 	};
 
 	// AND D
 	this->operations[0xA2] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.d;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.d);
 	};
 
 	// AND E
 	this->operations[0xA3] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.e;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.e);
 	};
 
 	// AND H
 	this->operations[0xA4] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.h;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.h);
 	};
 
 	// AND L
 	this->operations[0xA5] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.l;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.h);
 	};
 
 	// AND A
 	this->operations[0xA7] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->registers.a;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->and(cpu->registers.a);
 	};
 
 	// XOR B
 	this->operations[0xA8] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.b;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.b);
 	};
 
 	// XOR C
 	this->operations[0xA9] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.c;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.c);
 	};
 
 	// XOR D
 	this->operations[0xAA] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.d;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.d);
 	};
 
 	// XOR E
 	this->operations[0xAB] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.e;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.e);
 	};
 
 	// XOR H
 	this->operations[0xAC] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.h;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.h);
 	};
 
 	// XOR L
 	this->operations[0xAD] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.l;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.l);
 	};
 
 	// XOR A
 	this->operations[0xAF] = [](CPU* cpu)
 	{
-		cpu->registers.a ^= cpu->registers.a;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->xor(cpu->registers.a);
 	};
 
 	// OR B
 	this->operations[0xB0] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.b;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.b);
 	};
 
 	// OR C
 	this->operations[0xB1] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.b;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.c);
 	};
 
 	// OR D
 	this->operations[0xB2] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.d;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.d);
 	};
 
 	// OR E
 	this->operations[0xB3] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.e;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.e);
 	};
 
 	// OR H
 	this->operations[0xB4] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.h;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.h);
 	};
 
 	// OR L
 	this->operations[0xB5] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.l;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.l);
 	};
 
 	// OR A
 	this->operations[0xB7] = [](CPU* cpu)
 	{
-		cpu->registers.a |= cpu->registers.a;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->or(cpu->registers.a);
 	};
 
 	// CP B
 	this->operations[0xB8] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.b;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.b);
 	};
 
 	// CP C
 	this->operations[0xB9] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.c;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.c);
 	};
 
 	// CP D
 	this->operations[0xBA] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.d;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.d);
 	};
 
 	// CP E
 	this->operations[0xBB] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.e;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.e);
 	};
 
 	// CP H
 	this->operations[0xBC] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.h;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.h);
 	};
 
 	// CP L
 	this->operations[0xBD] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.l;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.l);
 	};
 
 	// CP (HL)
 	this->operations[0xBE] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->mmu->readByte(cpu->registers.hl);
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->mmu->readByte(cpu->registers.hl));
 	};
 
 	// CP A
 	this->operations[0xBF] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-		char value = cpu->registers.a;
-		char regA = cpu->registers.a;
-
-		if (regA == value) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
+		cpu->cp(cpu->registers.a);
 	};
 
 	// RET NZ
@@ -1402,6 +1097,17 @@ void CPU::setupOperations()
 	this->operations[0xC3] = [](CPU* cpu)
 	{
 		cpu->registers.pc = cpu->readProgramWord();
+	};
+
+	// CALL NZ,nn
+	this->operations[0xC4] = [](CPU* cpu)
+	{
+		if (!(cpu->registers.f & FLAG_ZERO))
+		{
+			cpu->stackPushWord(cpu->registers.pc + 2);
+			cpu->registers.pc = cpu->readProgramWord();
+		}
+		else cpu->readProgramWord();
 	};
 
 	// PUSH BC
@@ -1442,12 +1148,33 @@ void CPU::setupOperations()
 	{
 		cpu->executeCallback(cpu->readProgramByte());
 	};
+
+	// CALL Z,nn
+	this->operations[0xCC] = [](CPU* cpu)
+	{
+		if (cpu->registers.f & FLAG_ZERO)
+		{
+			cpu->stackPushWord(cpu->registers.pc + 2);
+			cpu->registers.pc = cpu->readProgramWord();
+		}
+		else cpu->readProgramWord();
+	};
 	
 	// CALL nn
 	this->operations[0xCD] = [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.pc + 2);
 		cpu->registers.pc = cpu->readProgramWord();
+	};
+
+	// RET NC
+	this->operations[0xD0] = [](CPU* cpu)
+	{
+		if (!(cpu->registers.f & FLAG_CARRY))
+		{
+			cpu->registers.pc = cpu->stackPopWord();
+			cpu->registers.m += 1;
+		}
 	};
 
 	// POP DE
@@ -1476,20 +1203,7 @@ void CPU::setupOperations()
 	// SUB A,n
 	this->operations[0xD6] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NEGATIVE;
-
-		char value = cpu->readProgramByte();
-
-		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
-		else cpu->registers.f &= ~FLAG_CARRY;
-
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
-		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-
-		cpu->registers.a -= value;
-
-		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->sub(cpu->readProgramByte());
 	};
 
 	// RETI
@@ -1554,13 +1268,7 @@ void CPU::setupOperations()
 	// AND n
 	this->operations[0xE6] = [](CPU* cpu)
 	{
-		cpu->registers.a &= cpu->readProgramByte();
-
-		cpu->registers.f &= ~(FLAG_CARRY | FLAG_NEGATIVE);
-		cpu->registers.f |= FLAG_HALF_CARRY;
-
-		if(!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
-		else  cpu->registers.f &= ~FLAG_ZERO;
+		cpu->and(cpu->readProgramByte());
 	};
 
 	// JP (HL)
@@ -1656,7 +1364,7 @@ void CPU::setupCallbacks()
 
 		cpu->registers.c = (cpu->registers.c << 1) + ci;
 		cpu->registers.c &= 255;
-		cpu->registers.f = (cpu->registers.c) ? 0 : FLAG_ZERO;
+		cpu->registers.f |= (cpu->registers.c) ? 0 : FLAG_ZERO;
 		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
 	};
 
@@ -1664,7 +1372,7 @@ void CPU::setupCallbacks()
 	{
 		cpu->registers.f &= FLAG_HALF_CARRY - 1;
 		cpu->registers.f |= FLAG_HALF_CARRY;
-		cpu->registers.f = (cpu->registers.c & FLAG_ZERO) ? 0 : FLAG_ZERO;
+		cpu->registers.f |= (cpu->registers.c & FLAG_ZERO) ? 0 : FLAG_ZERO;
 	};
 	
 	this->callbacks[0x87] = [](CPU* cpu)
@@ -1696,7 +1404,7 @@ void CPU::inc(unsigned char* reg)
 
 void CPU::dec(unsigned char* reg)
 {
-/*
+	/*
 	this->registers.f &= ~FLAG_NEGATIVE;
 
 	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
@@ -1704,10 +1412,83 @@ void CPU::dec(unsigned char* reg)
 
 	(*reg)--;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
-*/
+	*/
 
 	(*reg)--;
 	this->registers.f = ((*reg) ? 0 : FLAG_ZERO);
+}
+
+void CPU::add(unsigned char reg)
+{
+	this->registers.f &= ~FLAG_NEGATIVE;
+
+	char value = reg;
+	unsigned int result = this->registers.a + value;
+
+	if (result > 0xFF) this->registers.f |= FLAG_CARRY;
+	else this->registers.f &= ~FLAG_CARRY;
+
+	this->registers.a = static_cast<unsigned char>(result & 0xFF);
+
+	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
+	else this->registers.f &= ~FLAG_ZERO;
+
+	if (((this->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
+	else this->registers.f &= ~FLAG_HALF_CARRY;
+}
+
+void CPU::sub(unsigned char reg)
+{
+	this->registers.f |= FLAG_NEGATIVE;
+
+	char value = reg;
+
+	if (value > this->registers.a) this->registers.f |= FLAG_CARRY;
+	else this->registers.f &= ~FLAG_CARRY;
+
+	if ((value & 0x0F) > (this->registers.a & 0x0F)) this->registers.f |= FLAG_HALF_CARRY;
+	else this->registers.f &= ~FLAG_HALF_CARRY;
+
+	this->registers.a -= value;
+
+	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
+	else this->registers.f &= ~FLAG_ZERO;
+}
+
+void CPU::and(unsigned char reg)
+{
+	this->registers.f = FLAG_HALF_CARRY;
+
+	this->registers.a &= reg;
+	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
+}
+
+void CPU::xor(unsigned char reg)
+{
+	this->registers.a ^= reg;
+	this->registers.f = this->registers.a ? 0 : FLAG_ZERO;
+}
+
+void CPU::or(unsigned char reg)
+{
+	this->registers.a |= reg;
+	this->registers.f = this->registers.a ? 0 : FLAG_ZERO;
+}
+
+void CPU::cp(unsigned char reg)
+{
+	this->registers.f |= FLAG_NEGATIVE;
+	char value = reg;
+	char regA = this->registers.a;
+
+	if (regA == value) this->registers.f |= FLAG_ZERO;
+	else this->registers.f &= ~FLAG_ZERO;
+
+	if (regA < value) this->registers.f |= FLAG_CARRY;
+	else this->registers.f &= ~FLAG_CARRY;
+
+	if ((regA & 0x0F) < (value & 0x0F)) this->registers.f |= FLAG_HALF_CARRY;
+	else this->registers.f &= ~FLAG_HALF_CARRY;
 }
 
 void CPU::executeRst(unsigned short num)

@@ -119,4 +119,10 @@ private:
 
 	void inc(unsigned char* reg);
 	void dec(unsigned char* reg);
+	void add(unsigned char reg);
+	void sub(unsigned char reg);
+	void and(unsigned char reg);
+	void xor(unsigned char reg);
+	void or(unsigned char reg);
+	void cp(unsigned char reg);
 };
