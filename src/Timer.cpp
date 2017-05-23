@@ -10,9 +10,9 @@ Timer::~Timer()
 
 }
 
-void Timer::increment(CPU* cpu)
+void Timer::increment(GameBoy* gb)
 {
-	this->subClock += cpu->registers.m;
+	this->subClock += gb->getCPU()->registers.m;
 
 	if(this->subClock > 3)
 	{
@@ -33,19 +33,19 @@ void Timer::increment(CPU* cpu)
 		switch(this->tac & 3)
 		{
 		case 0:
-			if (this->mainClock >= 64) this->step(cpu);
+			if (this->mainClock >= 64) this->step(gb);
 			break;
 
 		case 1:
-			if (this->mainClock >= 1) this->step(cpu);
+			if (this->mainClock >= 1) this->step(gb);
 			break;
 
 		case 2:
-			if (this->mainClock >= 4) this->step(cpu);
+			if (this->mainClock >= 4) this->step(gb);
 			break;
 
 		case 3:
-			if (this->mainClock >= 16) this->step(cpu);
+			if (this->mainClock >= 16) this->step(gb);
 			break;
 
 		default:
@@ -54,7 +54,7 @@ void Timer::increment(CPU* cpu)
 	}
 }
 
-void Timer::step(CPU* cpu)
+void Timer::step(GameBoy* gb)
 {
 	this->tima++;
 	this->mainClock = 0;
@@ -62,6 +62,6 @@ void Timer::step(CPU* cpu)
 	if(this->tima > 0xFF)
 	{
 		this->tima = this->tma;
-		if(cpu->getMMU()->iE & 4) cpu->getMMU()->iF |= 4;
+		if(gb->getMMU()->iE & 4) gb->getMMU()->iF |= 4;
 	}
 }

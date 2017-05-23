@@ -1,5 +1,6 @@
 #pragma once
 
+class GameBoy;
 class CPU;
 
 class Timer
@@ -8,7 +9,7 @@ public:
 	Timer();
 	~Timer();
 
-	void increment(CPU* cpu);
+	void increment(GameBoy* gb);
 
 	unsigned int div;
 	unsigned int tma;
@@ -20,5 +21,5 @@ public:
 	unsigned int divClock;
 
 private:
-	void step(CPU* cpu);
+	void step(GameBoy* gb);
 };

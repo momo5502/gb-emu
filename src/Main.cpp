@@ -17,11 +17,9 @@ int main(int argc, char* argv[])
 
 	printf("Loaded game!\n");
 
-	CPU cpu(std::make_unique<MMU>(), std::make_unique<GPU>());
-	cpu.loadProgram(data);
-
-	while (cpu.runFrame()) {}
-	cpu.getGPU()->closeWindow();
+	GameBoy gameBoy;
+	gameBoy.loadRom(data);
+	gameBoy.run();
 
 	printf("Terminated!\n");
 

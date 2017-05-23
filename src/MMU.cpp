@@ -20,7 +20,7 @@ unsigned char MMU::Bios[256] =
 	0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50
 };
 
-MMU::MMU() : iF(0), iE(0), passedBios(false), cpu(nullptr)
+MMU::MMU(GameBoy* gameBoy) : iF(0), iE(0), passedBios(false), gb(gameBoy)
 {
 	ZeroObject(this->vram);
 	ZeroObject(this->eram);
@@ -28,11 +28,6 @@ MMU::MMU() : iF(0), iE(0), passedBios(false), cpu(nullptr)
 	ZeroObject(this->zram);
 
 	ZeroObject(this->oam);
-}
-
-void MMU::connectCPU(CPU* _cpu)
-{
-	this->cpu = _cpu;
 }
 
 void MMU::loadRom(std::basic_string<unsigned char> data)
@@ -44,6 +39,11 @@ unsigned char MMU::readByte(unsigned short address)
 {
 	if (auto mem = this->getMemoryPtr(address))
 	{
+		if (address == 0xFF00)
+		{
+			return this->gb->getJoypad()->read();
+		}
+
 		return *mem;
 	}
 
@@ -59,23 +59,25 @@ unsigned short MMU::readWord(unsigned short address)
 
 void MMU::writeByte(unsigned short address, unsigned char value)
 {
-	if (address < 0x8000) return;
-
 	if(auto mem = this->getMemoryPtr(address))
 	{
 		*mem = value;
 
 		if(mem >= this->vram && mem < &this->vram[sizeof this->vram])
 		{
-			this->cpu->getGPU()->updateTile(address);
+			this->gb->getGPU()->updateTile(address);
 		}
-		else if (static_cast<void*>(mem) == &this->cpu->timer.div)
+		else if (static_cast<void*>(mem) == &this->gb->getCPU()->timer.div)
 		{
-			this->cpu->timer.div = 0;
+			this->gb->getCPU()->timer.div = 0;
 		}
-		else if (static_cast<void*>(mem) == &this->cpu->timer.tac)
+		else if (static_cast<void*>(mem) == &this->gb->getCPU()->timer.tac)
 		{
-			this->cpu->timer.tac &= 7;
+			this->gb->getCPU()->timer.tac &= 7;
+		}
+		else if(address == 0xFF00)
+		{
+			this->gb->getJoypad()->write(value);
 		}
 	}
 	else throw std::runtime_error("Nullptr dereferenced!");
@@ -170,7 +172,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 					}
 					else if((address & 0xF0) >= 0x40 && (address & 0xF0) <= 0x70)
 					{
-						return this->cpu->getGPU()->getMemoryPtr(address);
+						return this->gb->getGPU()->getMemoryPtr(address);
 					}
 
 					// Joypad
@@ -182,10 +184,10 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 					}
 
 					// Timer
-					if (address == 0xFF04) return reinterpret_cast<unsigned char*>(&this->cpu->timer.div);
-					if (address == 0xFF05) return reinterpret_cast<unsigned char*>(&this->cpu->timer.tima);
-					if (address == 0xFF06) return reinterpret_cast<unsigned char*>(&this->cpu->timer.tma);
-					if (address == 0xFF07) return reinterpret_cast<unsigned char*>(&this->cpu->timer.tac);
+					if (address == 0xFF04) return reinterpret_cast<unsigned char*>(&this->gb->getCPU()->timer.div);
+					if (address == 0xFF05) return reinterpret_cast<unsigned char*>(&this->gb->getCPU()->timer.tima);
+					if (address == 0xFF06) return reinterpret_cast<unsigned char*>(&this->gb->getCPU()->timer.tma);
+					if (address == 0xFF07) return reinterpret_cast<unsigned char*>(&this->gb->getCPU()->timer.tac);
 
 					// Others
 					if(address >= 0xFF08 && address <= 0xFF0E)

@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-GPU::GPU() : window(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
+GPU::GPU(GameBoy* gameBoy) : window(nullptr), gb(gameBoy), mode(MODE_HBLANK), clock(0)
 {
 	ZeroObject(this->mem);
 	ZeroObject(this->tiles);
@@ -8,11 +8,6 @@ GPU::GPU() : window(nullptr), cpu(nullptr), mode(MODE_HBLANK), clock(0)
 
 	this->windowThread = std::thread(std::bind(&GPU::windowRunner, this));
 	while(!this->working()) std::this_thread::sleep_for(1ms);
-}
-
-void GPU::connectCPU(CPU* _cpu)
-{
-	this->cpu = _cpu;
 }
 
 void GPU::windowRunner()
@@ -72,7 +67,7 @@ void GPU::renderScreen()
 		unsigned char x = this->mem.xscrl & 7;
 		unsigned char t = (this->mem.xscrl >> 3) & 31;
 
-		unsigned short tile = this->cpu->getMMU()->vram[mapbase + t];
+		unsigned short tile = this->gb->getMMU()->vram[mapbase + t];
 		for(int i = 0; i < GB_WIDTH; ++i)
 		{
 			if(this->mem.flags & FLAG_ALT_TILE_SET){}
@@ -85,7 +80,7 @@ void GPU::renderScreen()
 			{
 				t = (t + 1) & 31;
 				x = 0;
-				tile = this->cpu->getMMU()->vram[mapbase + t];
+				tile = this->gb->getMMU()->vram[mapbase + t];
 			}
 		}
 	}
@@ -97,7 +92,7 @@ void GPU::renderScreen()
 
 void GPU::frame()
 {
-	this->clock += this->cpu->registers.m;
+	this->clock += this->gb->getCPU()->registers.m;
 
 	switch (this->mode)
 	{
@@ -112,13 +107,13 @@ void GPU::frame()
 				{
 					this->mode = MODE_VBLANK;
 					this->renderTexture();
-					if(this->cpu->getMMU()->iE & 1) this->cpu->getMMU()->iF |= 1;
-					if (this->mem.lcdStatus & (1 << 4) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
+					if(this->gb->getMMU()->iE & 1) this->gb->getMMU()->iF |= 1;
+					if (this->mem.lcdStatus & (1 << 4) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
 				}
 				else
 				{
 					this->mode = MODE_OAM;
-					if (this->mem.lcdStatus & (1 << 5) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
+					if (this->mem.lcdStatus & (1 << 5) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
 				}
 			}
 			break;
@@ -136,7 +131,7 @@ void GPU::frame()
 					this->mode = MODE_OAM;
 					this->mem.curline = 0;
 
-					if (this->mem.lcdStatus & (1 << 5) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
+					if (this->mem.lcdStatus & (1 << 5) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
 				}
 			}
 			break;
@@ -158,7 +153,7 @@ void GPU::frame()
 			{
 				this->clock -= 43;
 				this->mode = MODE_HBLANK;
-				if (this->mem.lcdStatus & (1 << 3) && this->cpu->getMMU()->iE & 2) this->cpu->getMMU()->iF |= 2;
+				if (this->mem.lcdStatus & (1 << 3) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
 
 				if(this->mem.flags & FLAG_DISPLAY_ON)
 				{
@@ -198,8 +193,8 @@ void GPU::updateTile(unsigned short addr)
 	{
 		sx = 1 << (7 - x);
 
-		unsigned char var = (this->cpu->getMMU()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
-		var |= (this->cpu->getMMU()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
+		unsigned char var = (this->gb->getMMU()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
+		var |= (this->gb->getMMU()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
 		var &= 3;
 
 		this->tiles[tile][y][x] = var;

@@ -5,10 +5,9 @@ class CPU;
 class MMU
 {
 public:
-	MMU();
+	MMU(GameBoy* gameBoy);
 	~MMU();
 
-	void connectCPU(CPU* _cpu);
 	void loadRom(std::basic_string<unsigned char> data);
 
 	unsigned char readByte(unsigned short address);
@@ -40,5 +39,5 @@ private:
 
 	bool passedBios;
 
-	CPU* cpu;
+	GameBoy* gb;
 };

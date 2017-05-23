@@ -1,6 +1,6 @@
 #pragma once
 
-class CPU;
+class GameBoy;
 #define GB_WIDTH (160)
 #define GB_HEIGHT (144)
 
@@ -9,10 +9,8 @@ class CPU;
 class GPU
 {
 public:
-	GPU();
+	GPU(GameBoy* gameBoy);
 	~GPU();
-
-	void connectCPU(CPU* _cpu);
 
 	void frame();
 	bool working();
@@ -80,7 +78,8 @@ private:
 
 	HWND window;
 
-	CPU* cpu;
+	GameBoy* gb;
+
 	Mode mode;
 	Memory mem;
 	unsigned int clock;

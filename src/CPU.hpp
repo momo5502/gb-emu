@@ -1,5 +1,7 @@
 #pragma once
 
+class GameBoy;
+
 enum Flags
 {
 	FLAG_ZERO = 0x80,
@@ -66,9 +68,9 @@ struct Registers
 class CPU
 {
 public:
-	typedef void(*Operation)(CPU*);
+	typedef void(*Operation)(GameBoy*);
 
-	CPU(std::unique_ptr<MMU> _mmu, std::unique_ptr<GPU> _gpu);
+	CPU(GameBoy* gameBoy);
 	~CPU();
 
 	void stackPushWord(unsigned short value);
@@ -80,15 +82,8 @@ public:
 	unsigned char readProgramByte();
 	unsigned short readProgramWord();
 
-	void loadProgram(std::string data);
-
 	bool execute();
 	void executeCallback(unsigned char instruction);
-
-	bool runFrame();
-
-	MMU* getMMU() { return this->mmu.get(); }
-	GPU* getGPU() { return this->gpu.get(); }
 
 	Registers registers;
 	Timer timer;
@@ -100,20 +95,12 @@ private:
 	Operation callbacks[0x100];
 	static const unsigned char CallbackTicks[0x100];
 
-	Registers savRegisters;
-
 	bool ime;
-
-	// Emulated memory management unit
-	std::unique_ptr<MMU> mmu;
-
-	// Emulated graphics processing unit
-	std::unique_ptr<GPU> gpu;
+	GameBoy* gb;
+	Registers savRegisters;
 
 	void setupOperations();
 	void setupCallbacks();
-
-	void verifyComponents();
 
 	void executeRst(unsigned short num);
 
