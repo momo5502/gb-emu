@@ -103,15 +103,13 @@ void CPU::setupOperations()
 	// INC B
 	this->operations[0x04] = [](CPU* cpu)
 	{
-		cpu->registers.b++;
-		cpu->registers.f = (cpu->registers.b ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.b);
 	};
 
 	// DEC B
 	this->operations[0x05] = [](CPU* cpu)
 	{
-		cpu->registers.b--;
-		cpu->registers.f = cpu->registers.b ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.b);
 	};
 
 	// LD B,n
@@ -161,15 +159,13 @@ void CPU::setupOperations()
 	// INC C
 	this->operations[0x0C] = [](CPU* cpu)
 	{
-		cpu->registers.c++;
-		cpu->registers.f = (cpu->registers.c ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.c);
 	};
 
 	// DEC C
 	this->operations[0x0D] = [](CPU* cpu)
 	{
-		cpu->registers.c--;
-		cpu->registers.f = cpu->registers.c ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.c);
 	};
 
 	// LD C,n
@@ -199,15 +195,13 @@ void CPU::setupOperations()
 	// INC D
 	this->operations[0x14] = [](CPU* cpu)
 	{
-		cpu->registers.d++;
-		cpu->registers.f = (cpu->registers.d ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.d);
 	};
 
 	// DEC D
 	this->operations[0x15] = [](CPU* cpu)
 	{
-		cpu->registers.d--;
-		cpu->registers.f = cpu->registers.d ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.d);
 	};
 
 	// LD D,n
@@ -267,15 +261,13 @@ void CPU::setupOperations()
 	// INC E
 	this->operations[0x1C] = [](CPU* cpu)
 	{
-		cpu->registers.e++;
-		cpu->registers.f = (cpu->registers.e ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.e);
 	};
 
 	// DEC E
 	this->operations[0x1D] = [](CPU* cpu)
 	{
-		cpu->registers.e--;
-		cpu->registers.f = cpu->registers.e ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.e);
 	};
 
 	// LD E,n
@@ -323,15 +315,13 @@ void CPU::setupOperations()
 	// INC H
 	this->operations[0x24] = [](CPU* cpu)
 	{
-		cpu->registers.h++;
-		cpu->registers.f = (cpu->registers.h ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.h);
 	};
 
 	// DEC H
 	this->operations[0x25] = [](CPU* cpu)
 	{
-		cpu->registers.h--;
-		cpu->registers.f = cpu->registers.h ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.h);
 	};
 
 	// LD H,n
@@ -387,15 +377,13 @@ void CPU::setupOperations()
 	// INC L
 	this->operations[0x2C] = [](CPU* cpu)
 	{
-		cpu->registers.l++;
-		cpu->registers.f = (cpu->registers.l ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.l);
 	};
 
 	// DEC L
 	this->operations[0x2D] = [](CPU* cpu)
 	{
-		cpu->registers.l--;
-		cpu->registers.f = cpu->registers.l ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.l);
 	};
 
 	// LD L,n
@@ -443,8 +431,7 @@ void CPU::setupOperations()
 	// INC A
 	this->operations[0x3C] = [](CPU* cpu)
 	{
-		cpu->registers.a++;
-		cpu->registers.f = (cpu->registers.a ? 0 : FLAG_ZERO);
+		cpu->inc(&cpu->registers.a);
 	};
 
 	// LD (HL),n
@@ -479,8 +466,7 @@ void CPU::setupOperations()
 	// DEC A
 	this->operations[0x3D] = [](CPU* cpu)
 	{
-		cpu->registers.a--;
-		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
+		cpu->dec(&cpu->registers.a);
 	};
 
 	// LD A,n
@@ -1700,6 +1686,38 @@ void CPU::setupCallbacks()
 	{
 		cpu->registers.a |= 1 << 1;
 	};
+}
+
+void CPU::inc(unsigned char* reg)
+{
+/*
+	this->registers.f &= ~FLAG_NEGATIVE;
+
+	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
+	else this->registers.f &= ~FLAG_HALF_CARRY;
+
+	(*reg)++;
+	if (!*reg) this->registers.f |= FLAG_ZERO;
+*/
+
+	(*reg)++;
+	this->registers.f = ((*reg) ? 0 : FLAG_ZERO);
+}
+
+void CPU::dec(unsigned char* reg)
+{
+/*
+	this->registers.f &= ~FLAG_NEGATIVE;
+
+	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
+	else this->registers.f &= ~FLAG_HALF_CARRY;
+
+	(*reg)--;
+	if (!*reg) this->registers.f |= FLAG_ZERO;
+*/
+
+	(*reg)--;
+	this->registers.f = ((*reg) ? 0 : FLAG_ZERO);
 }
 
 void CPU::executeRst(unsigned short num)

@@ -116,4 +116,7 @@ private:
 	void verifyComponents();
 
 	void executeRst(unsigned short num);
+
+	void inc(unsigned char* reg);
+	void dec(unsigned char* reg);
 };
