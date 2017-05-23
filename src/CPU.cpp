@@ -51,14 +51,18 @@ CPU::CPU(GameBoy* gameBoy) : ime(true), gb(gameBoy)
 
 	int implOp = 0;
 	int implCb = 0;
-	for(int i = 0; i <= min(ARRAYSIZE(this->operations), ARRAYSIZE(this->callbacks)); ++i)
+
+	int opSize = ARRAYSIZE(this->operations);
+	int cbSize = ARRAYSIZE(this->callbacks);
+
+	for(int i = 0; i <= min(opSize, cbSize); ++i)
 	{
 		if (this->operations[i]) implOp++;
 		if (this->callbacks[i]) implCb++;
 	}
 
-	printf("Operation coverage: %d/%d\n", implOp, ARRAYSIZE(this->operations));
-	printf("Callback coverage: %d/%d\n", implCb, ARRAYSIZE(this->callbacks));
+	printf("Operation coverage: %d/%d\n", implOp, opSize);
+	printf("Callback coverage: %d/%d\n", implCb, cbSize);
 }
 
 CPU::~CPU()
