@@ -749,6 +749,48 @@ void CPU::setupOperations()
 		gb->getCPU()->registers.l = gb->getCPU()->registers.a;
 	};
 
+	// LD (HL),B
+	this->operations[0x70] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.b);
+	};
+
+	// LD (HL),C
+	this->operations[0x71] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.c);
+	};
+
+	// LD (HL),D
+	this->operations[0x72] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.d);
+	};
+
+	// LD (HL),E
+	this->operations[0x73] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.e);
+	};
+
+	// LD (HL),H
+	this->operations[0x74] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.h);
+	};
+
+	// LD (HL),L
+	this->operations[0x75] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.l);
+	};
+
+	// HALT
+	this->operations[0x76] = [](GameBoy*)
+	{
+		throw std::runtime_error("Halt not implemented!");
+	};
+
 	// LD(HL), A
 	this->operations[0x77] = [](GameBoy* gb)
 	{
@@ -849,6 +891,54 @@ void CPU::setupOperations()
 	this->operations[0x87] = [](GameBoy* gb)
 	{
 		gb->getCPU()->add(gb->getCPU()->registers.b);
+	};
+
+	// ADC A,B
+	this->operations[0x88] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.b);
+	};
+
+	// ADC A,C
+	this->operations[0x89] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.c);
+	};
+
+	// ADC A,D
+	this->operations[0x8A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.d);
+	};
+
+	// ADC A,E
+	this->operations[0x8B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.e);
+	};
+
+	// ADC A,H
+	this->operations[0x8C] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.h);
+	};
+
+	// ADC A,L
+	this->operations[0x8D] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.l);
+	};
+
+	// ADC A,(HL)
+	this->operations[0x8E] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+	};
+
+	// ADC A,B
+	this->operations[0x8F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->registers.a);
 	};
 
 	// SUB A,B
@@ -1115,6 +1205,12 @@ void CPU::setupOperations()
 	this->operations[0xC5] = [](GameBoy* gb)
 	{
 		gb->getCPU()->stackPushWord(gb->getCPU()->registers.bc);
+	};
+
+	// ADD A,n
+	this->operations[0xC6] = [](GameBoy* gb)
+	{
+		gb->getCPU()->add(gb->getCPU()->readProgramByte());
 	};
 
 	// RST 0
@@ -1416,6 +1512,25 @@ void CPU::setupCallbacks()
 		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
 	};
 
+	this->callbacks[0x12] = [](GameBoy* gb)
+	{
+		unsigned char ci = gb->getCPU()->registers.f & FLAG_CARRY ? 1 : 0;
+		unsigned char co = gb->getCPU()->registers.d & FLAG_ZERO ? FLAG_CARRY : 0;
+
+		gb->getCPU()->registers.d = (gb->getCPU()->registers.d << 1) + ci;
+		gb->getCPU()->registers.d &= 255;
+		gb->getCPU()->registers.f |= (gb->getCPU()->registers.d) ? 0 : FLAG_ZERO;
+		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
+	};
+
+	this->callbacks[0x23] = [](GameBoy* gb)
+	{
+		unsigned char co = gb->getCPU()->registers.e & 0x80 ? FLAG_CARRY : 0;
+		gb->getCPU()->registers.e = (gb->getCPU()->registers.e << 1) & 255;
+		gb->getCPU()->registers.f = (gb->getCPU()->registers.e) ? 0 : FLAG_ZERO;
+		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
+	};
+
 	this->callbacks[0x27] = [](GameBoy* gb)
 	{
 		unsigned char co = gb->getCPU()->registers.a & 0x80 ? FLAG_CARRY : 0;
@@ -1482,6 +1597,26 @@ void CPU::add(unsigned char reg)
 
 	if (((this->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
 	else this->registers.f &= ~FLAG_HALF_CARRY;
+}
+
+void CPU::adc(unsigned char reg)
+{
+	this->registers.f |= FLAG_NEGATIVE;
+	reg += (this->registers.f & FLAG_CARRY) ? 1 : 0;
+
+	int value = reg;
+	int result = this->registers.a + value;
+
+	if (result > 0xFF) this->registers.f |= FLAG_CARRY;
+	else this->registers.f &= ~FLAG_CARRY;
+
+	if (this->registers.a == value) this->registers.f |= FLAG_ZERO;
+	else this->registers.f &= ~FLAG_ZERO;
+
+	if (((this->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
+	else this->registers.f &= ~FLAG_HALF_CARRY;
+
+	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 }
 
 void CPU::sub(unsigned char reg)

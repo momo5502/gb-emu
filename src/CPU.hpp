@@ -112,4 +112,5 @@ private:
 	void xor(unsigned char reg);
 	void or(unsigned char reg);
 	void cp(unsigned char reg);
+	void adc(unsigned char reg);
 };
