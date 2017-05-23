@@ -1617,11 +1617,18 @@ void CPU::setupCallbacks()
 		gb->getCPU()->registers.f = gb->getCPU()->registers.a ? 0 : FLAG_ZERO;
 	};
 
+	this->callbacks[0x77] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.f &= ~(FLAG_ZERO | FLAG_NEGATIVE);
+		gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
+		if (gb->getCPU()->registers.a & (1 << 6)) gb->getCPU()->registers.f |= FLAG_ZERO;
+	};
+
 	this->callbacks[0x7C] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_HALF_CARRY - 1;
+		gb->getCPU()->registers.f &= ~(FLAG_ZERO | FLAG_NEGATIVE);
 		gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-		gb->getCPU()->registers.f |= (gb->getCPU()->registers.c & FLAG_ZERO) ? 0 : FLAG_ZERO;
+		if(gb->getCPU()->registers.h & (1 << 7)) gb->getCPU()->registers.f |= FLAG_ZERO;
 	};
 	
 	this->callbacks[0x87] = [](GameBoy* gb)
