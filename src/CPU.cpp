@@ -1003,7 +1003,7 @@ void CPU::setupOperations()
 		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
 		cpu->registers.a -= value;
@@ -1022,7 +1022,7 @@ void CPU::setupOperations()
 		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
 		cpu->registers.a -= value;
@@ -1041,7 +1041,7 @@ void CPU::setupOperations()
 		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
 		cpu->registers.a -= value;
@@ -1060,7 +1060,7 @@ void CPU::setupOperations()
 		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
 		cpu->registers.a -= value;
@@ -1079,7 +1079,7 @@ void CPU::setupOperations()
 		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		if ((value & 0x0f) > (cpu->registers.a & 0x0f)) cpu->registers.f |= FLAG_HALF_CARRY;
+		if ((value & 0x0F) > (cpu->registers.a & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
 		cpu->registers.a -= value;
