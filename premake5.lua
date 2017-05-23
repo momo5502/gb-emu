@@ -29,7 +29,7 @@ workspace "gb-emu"
 		optimize "Debug"
 
 	project "gb-emu"
-		kind "ConsoleApp"
+		kind "WindowedApp"
 		language "C++"
 		files {
 			"./src/**.hpp",

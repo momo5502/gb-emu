@@ -2,9 +2,20 @@
 
 int main(int argc, char* argv[])
 {
+//#ifdef DEBUG
+	AllocConsole();
+	AttachConsole(GetCurrentProcessId());
+
+	FILE* fp;
+	freopen_s(&fp, "conin$", "r", stdin);
+	freopen_s(&fp, "conout$", "w", stdout);
+	freopen_s(&fp, "conout$", "w", stderr);
+//#endif
+
 	if (argc < 2)
 	{
 		printf("Missing arguments!\n");
+		_getch();
 		return 1;
 	}
 
