@@ -1,5 +1,45 @@
 #include "STDInclude.hpp"
 
+const unsigned char CPU::OperationTicks[0x100] =
+{
+	2, 6, 4, 4, 2, 2, 4, 4, 10, 4, 4, 4, 2, 2, 4, 4, // 0x0_
+	2, 6, 4, 4, 2, 2, 4, 4,  4, 4, 4, 4, 2, 2, 4, 4, // 0x1_
+	0, 6, 4, 4, 2, 2, 4, 2,  0, 4, 4, 4, 2, 2, 4, 2, // 0x2_
+	4, 6, 4, 4, 6, 6, 6, 2,  0, 4, 4, 4, 2, 2, 4, 2, // 0x3_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x4_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x5_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x6_
+	4, 4, 4, 4, 4, 4, 2, 4,  2, 2, 2, 2, 2, 2, 4, 2, // 0x7_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x8_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x9_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0xa_
+	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0xb_
+	0, 6, 0, 6, 0, 8, 4, 8,  0, 2, 0, 0, 0, 6, 4, /*8*/ 0, // 0xc_
+	0, 6, 0, 0, 0, 8, 4, 8,  0, 8, 0, 0, 0, 0, 4, /*8*/ 0, // 0xd_
+	6, 6, 4, 0, 0, 8, 4, 8,  8, 2, 8, 0, 0, 0, 4, /*8*/ 0, // 0xe_
+	6, 6, 4, 2, 0, 8, 4, 8,  6, 4, 8, 2, 0, 0, 4, /*8*/ 0  // 0xf_
+};
+
+const unsigned char CPU::CallbackTicks[0x100] =
+{
+	8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8, // 0x0_
+	8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8, // 0x1_
+	8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8, // 0x2_
+	8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8, // 0x3_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0x4_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0x5_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0x6_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0x7_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0x8_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0x9_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xa_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xb_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xc_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xd_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xe_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8  // 0xf_
+};
+
 CPU::CPU(std::unique_ptr<MMU> _mmu, std::unique_ptr<GPU> _gpu) : ime(true)
 {
 	ZeroObject(this->registers);
@@ -19,14 +59,14 @@ CPU::CPU(std::unique_ptr<MMU> _mmu, std::unique_ptr<GPU> _gpu) : ime(true)
 
 	int implOp = 0;
 	int implCb = 0;
-	for(int i = 0; i <= 0x100; ++i)
+	for(int i = 0; i <= min(ARRAYSIZE(this->operations), ARRAYSIZE(this->callbacks)); ++i)
 	{
-		if (this->operations[i].func) implOp++;
-		if (this->callbacks[i].func) implCb++;
+		if (this->operations[i]) implOp++;
+		if (this->callbacks[i]) implCb++;
 	}
 
-	printf("Operation coverage: %d/256\n", implOp);
-	printf("Callback coverage: %d/256\n", implCb);
+	printf("Operation coverage: %d/%d\n", implOp, ARRAYSIZE(this->operations));
+	printf("Callback coverage: %d/%d\n", implCb, ARRAYSIZE(this->callbacks));
 }
 
 CPU::~CPU()
@@ -37,51 +77,51 @@ CPU::~CPU()
 void CPU::setupOperations()
 {
 	// NOP
-	this->operations[0x00] = { 1, [](CPU*)
+	this->operations[0x00] = [](CPU*)
 	{
 		__nop();
-	} };
+	};
 
 	// LD BC,nn
-	this->operations[0x01] = { 3, [](CPU* cpu)
+	this->operations[0x01] = [](CPU* cpu)
 	{
 		cpu->registers.bc = cpu->readProgramWord();
-	} };
+	};
 
 	// LD (BC),A
-	this->operations[0x02] = { 2, [](CPU* cpu)
+	this->operations[0x02] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.bc, cpu->registers.a);
-	} };
+	};
 
 	// INC BC
-	this->operations[0x03] = { 1, [](CPU* cpu)
+	this->operations[0x03] = [](CPU* cpu)
 	{
 		cpu->registers.bc++;
-	} };
+	};
 
 	// INC B
-	this->operations[0x04] = { 1, [](CPU* cpu)
+	this->operations[0x04] = [](CPU* cpu)
 	{
 		cpu->registers.b++;
 		cpu->registers.f = (cpu->registers.b ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// DEC B
-	this->operations[0x05] = { 1, [](CPU* cpu)
+	this->operations[0x05] = [](CPU* cpu)
 	{
 		cpu->registers.b--;
 		cpu->registers.f = cpu->registers.b ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD B,n
-	this->operations[0x06] = { 2, [](CPU* cpu)
+	this->operations[0x06] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->readProgramByte();
-	} };
+	};
 
 	// RLC A
-	this->operations[0x07] = { 1, [](CPU* cpu)
+	this->operations[0x07] = [](CPU* cpu)
 	{
 		unsigned char ci = cpu->registers.a & FLAG_ZERO ? 1 : 0;
 		unsigned char co = cpu->registers.a & FLAG_ZERO ? FLAG_CARRY : 0;
@@ -89,9 +129,9 @@ void CPU::setupOperations()
 		cpu->registers.a = (cpu->registers.a << 1) + ci;
 		cpu->registers.a &= 255;
 		cpu->registers.a = (cpu->registers.f & 0xEF) + co;
-	} };
+	};
 	// ADD HL,BC
-	this->operations[0x09] = { 3, [](CPU* cpu)
+	this->operations[0x09] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -108,80 +148,80 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// LD A,(BC)
-	this->operations[0x0A] = { 2, [](CPU* cpu)
+	this->operations[0x0A] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.bc);
-	} };
+	};
 
 	// DEC BC
-	this->operations[0x0B] = { 1, [](CPU* cpu)
+	this->operations[0x0B] = [](CPU* cpu)
 	{
 		cpu->registers.bc--;
-	} };
+	};
 
 	// INC C
-	this->operations[0x0C] = { 1, [](CPU* cpu)
+	this->operations[0x0C] = [](CPU* cpu)
 	{
 		cpu->registers.c++;
 		cpu->registers.f = (cpu->registers.c ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// DEC C
-	this->operations[0x0D] = { 1, [](CPU* cpu)
+	this->operations[0x0D] = [](CPU* cpu)
 	{
 		cpu->registers.c--;
 		cpu->registers.f = cpu->registers.c ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD C,n
-	this->operations[0x0E] = { 2, [](CPU* cpu)
+	this->operations[0x0E] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->readProgramByte();
-	} };
+	};
 
 	// LD DE,nn
-	this->operations[0x11] = { 3, [](CPU* cpu)
+	this->operations[0x11] = [](CPU* cpu)
 	{
 		cpu->registers.de = cpu->readProgramWord();
-	} };
+	};
 
 	// LD (DE),A
-	this->operations[0x12] = { 2, [](CPU* cpu)
+	this->operations[0x12] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.de, cpu->registers.a);
-	} };
+	};
 
 	// INC DE
-	this->operations[0x13] = { 1, [](CPU* cpu)
+	this->operations[0x13] = [](CPU* cpu)
 	{
 		cpu->registers.de++;
-	} };
+	};
 
 	// INC D
-	this->operations[0x14] = { 1, [](CPU* cpu)
+	this->operations[0x14] = [](CPU* cpu)
 	{
 		cpu->registers.d++;
 		cpu->registers.f = (cpu->registers.d ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// DEC D
-	this->operations[0x15] = { 1, [](CPU* cpu)
+	this->operations[0x15] = [](CPU* cpu)
 	{
 		cpu->registers.d--;
 		cpu->registers.f = cpu->registers.d ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD D,n
-	this->operations[0x16] = { 2, [](CPU* cpu)
+	this->operations[0x16] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->readProgramByte();
-	} };
+	};
 
 	// RL A
-	this->operations[0x17] = { 1, [](CPU* cpu)
+	this->operations[0x17] = [](CPU* cpu)
 	{
 		unsigned char ci = cpu->registers.f & FLAG_CARRY ? 1 : 0;
 		unsigned char co = cpu->registers.a & FLAG_ZERO ? FLAG_CARRY : 0;
@@ -189,19 +229,19 @@ void CPU::setupOperations()
 		cpu->registers.a = (cpu->registers.a << 1) + ci;
 		cpu->registers.a &= 255;
 		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
-	} };
+	};
 
 	// JR n
-	this->operations[0x18] = { 2, [](CPU* cpu)
+	this->operations[0x18] = [](CPU* cpu)
 	{
 		char jumpLoc = cpu->readProgramByte();
 
 		cpu->registers.pc += jumpLoc;
 		cpu->registers.m++;
-	} };
+	};
 
 	// ADD HL,DE
-	this->operations[0x19] = { 3, [](CPU* cpu)
+	this->operations[0x19] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -218,42 +258,42 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// LD A,(DE)
-	this->operations[0x1A] = { 2, [](CPU* cpu)
+	this->operations[0x1A] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.de);
-	} };
+	};
 
 	// DEC DE
-	this->operations[0x1B] = { 1, [](CPU* cpu)
+	this->operations[0x1B] = [](CPU* cpu)
 	{
 		cpu->registers.de--;
-	} };
+	};
 
 	// INC E
-	this->operations[0x1C] = { 1, [](CPU* cpu)
+	this->operations[0x1C] = [](CPU* cpu)
 	{
 		cpu->registers.e++;
 		cpu->registers.f = (cpu->registers.e ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// DEC E
-	this->operations[0x1D] = { 1, [](CPU* cpu)
+	this->operations[0x1D] = [](CPU* cpu)
 	{
 		cpu->registers.e--;
 		cpu->registers.f = cpu->registers.e ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD E,n
-	this->operations[0x1E] = { 2, [](CPU* cpu)
+	this->operations[0x1E] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->readProgramByte();
-	} };
+	};
 
 	// JR NZ,n
-	this->operations[0x20] = { 2, [](CPU* cpu)
+	this->operations[0x20] = [](CPU* cpu)
 	{
 		char jumpLoc = cpu->readProgramByte();
 
@@ -262,16 +302,16 @@ void CPU::setupOperations()
 			cpu->registers.pc += jumpLoc;
 			cpu->registers.m++;
 		}
-	} };
+	};
 
 	// LD HL,nn
-	this->operations[0x21] = { 3, [](CPU* cpu)
+	this->operations[0x21] = [](CPU* cpu)
 	{
 		cpu->registers.hl = cpu->readProgramWord();
-	} };
+	};
 
 	// LDI (HL),A
-	this->operations[0x22] = { 2, [](CPU* cpu)
+	this->operations[0x22] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->registers.a);
 		cpu->registers.l = (cpu->registers.l + 1) & 0xFF;
@@ -280,44 +320,44 @@ void CPU::setupOperations()
 		{
 			cpu->registers.l++;
 		}
-	} };
+	};
 
 	// INC HL
-	this->operations[0x23] = { 1, [](CPU* cpu)
+	this->operations[0x23] = [](CPU* cpu)
 	{
 		cpu->registers.hl++;
-	} };
+	};
 
 	// INC H
-	this->operations[0x24] = { 1, [](CPU* cpu)
+	this->operations[0x24] = [](CPU* cpu)
 	{
 		cpu->registers.h++;
 		cpu->registers.f = (cpu->registers.h ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// DEC H
-	this->operations[0x25] = { 1, [](CPU* cpu)
+	this->operations[0x25] = [](CPU* cpu)
 	{
 		cpu->registers.h--;
 		cpu->registers.f = cpu->registers.h ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD H,n
-	this->operations[0x26] = { 2, [](CPU* cpu)
+	this->operations[0x26] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->readProgramByte();
-	} };
+	};
 
 	// JR n
-	this->operations[0x28] = { 2, [](CPU* cpu)
+	this->operations[0x28] = [](CPU* cpu)
 	{
 		char jumpLoc = cpu->readProgramByte();
 		cpu->registers.pc += jumpLoc;
 		cpu->registers.m++;
-	} };
+	};
 
 	// ADD HL,HL
-	this->operations[0x29] = { 3, [](CPU* cpu)
+	this->operations[0x29] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -334,10 +374,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// LDI A,(HL)
-	this->operations[0x2A] = { 2, [](CPU* cpu)
+	this->operations[0x2A] = [](CPU* cpu)
 	{
 
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.hl);
@@ -347,36 +387,36 @@ void CPU::setupOperations()
 		{
 			cpu->registers.h++;
 		}
-	} };
+	};
 
 	// DEC HL
-	this->operations[0x2B] = { 1, [](CPU* cpu)
+	this->operations[0x2B] = [](CPU* cpu)
 	{
 		cpu->registers.hl--;
-	} };
+	};
 
 	// INC L
-	this->operations[0x2C] = { 1, [](CPU* cpu)
+	this->operations[0x2C] = [](CPU* cpu)
 	{
 		cpu->registers.l++;
 		cpu->registers.f = (cpu->registers.l ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// DEC L
-	this->operations[0x2D] = { 1, [](CPU* cpu)
+	this->operations[0x2D] = [](CPU* cpu)
 	{
 		cpu->registers.l--;
 		cpu->registers.f = cpu->registers.l ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD L,n
-	this->operations[0x2E] = { 2, [](CPU* cpu)
+	this->operations[0x2E] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->readProgramByte();
-	} };
+	};
 
 	// JR NC,n
-	this->operations[0x30] = { 3, [](CPU* cpu)
+	this->operations[0x30] = [](CPU* cpu)
 	{
 		char jumpLoc = cpu->readProgramByte();
 
@@ -385,16 +425,16 @@ void CPU::setupOperations()
 			cpu->registers.pc += jumpLoc;
 			cpu->registers.m++;
 		}
-	} };
+	};
 
 	// LD SP,nn
-	this->operations[0x31] = { 3, [](CPU* cpu)
+	this->operations[0x31] = [](CPU* cpu)
 	{
 		cpu->registers.sp = cpu->readProgramWord();
-	} };
+	};
 
 	// LDD (HL),A
-	this->operations[0x32] = { 2, [](CPU* cpu)
+	this->operations[0x32] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->registers.a);
 		cpu->registers.l = (cpu->registers.l + 1) & 0xFF;
@@ -403,29 +443,29 @@ void CPU::setupOperations()
 		{
 			cpu->registers.h = (cpu->registers.h + 1) & 0xFF;
 		}
-	} };
+	};
 
 	// INC SP
-	this->operations[0x33] = { 1, [](CPU* cpu)
+	this->operations[0x33] = [](CPU* cpu)
 	{
 		cpu->registers.sp++;
-	} };
+	};
 
 	// INC A
-	this->operations[0x3C] = { 1, [](CPU* cpu)
+	this->operations[0x3C] = [](CPU* cpu)
 	{
 		cpu->registers.a++;
 		cpu->registers.f = (cpu->registers.a ? 0 : FLAG_ZERO);
-	} };
+	};
 
 	// LD (HL),n
-	this->operations[0x36] = { 3, [](CPU* cpu)
+	this->operations[0x36] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->readProgramByte());
-	} };
+	};
 
 	// ADD HL,SP
-	this->operations[0x39] = { 3, [](CPU* cpu)
+	this->operations[0x39] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -442,359 +482,359 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// DEC SP
-	this->operations[0x3B] = { 1, [](CPU* cpu)
+	this->operations[0x3B] = [](CPU* cpu)
 	{
 		cpu->registers.sp--;
-	} };
+	};
 
 	// DEC A
-	this->operations[0x3D] = { 1, [](CPU* cpu)
+	this->operations[0x3D] = [](CPU* cpu)
 	{
 		cpu->registers.a--;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// LD A,n
-	this->operations[0x3E] = { 2, [](CPU* cpu)
+	this->operations[0x3E] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->readProgramByte();
-	} };
+	};
 
 	// LD B,B
-	this->operations[0x40] = { 1, [](CPU* cpu)
+	this->operations[0x40] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.b;
-	} };
+	};
 
 	// LD B,C
-	this->operations[0x41] = { 1, [](CPU* cpu)
+	this->operations[0x41] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.c;
-	} };
+	};
 
 	// LD B,D
-	this->operations[0x42] = { 1, [](CPU* cpu)
+	this->operations[0x42] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.d;
-	} };
+	};
 
 	// LD B,E
-	this->operations[0x43] = { 1, [](CPU* cpu)
+	this->operations[0x43] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.e;
-	} };
+	};
 
 	// LD B,H
-	this->operations[0x44] = { 1, [](CPU* cpu)
+	this->operations[0x44] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.h;
-	} };
+	};
 
 	// LD B,L
-	this->operations[0x45] = { 1, [](CPU* cpu)
+	this->operations[0x45] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.l;
-	} };
+	};
 
 	// LD B,A
-	this->operations[0x47] = { 1, [](CPU* cpu)
+	this->operations[0x47] = [](CPU* cpu)
 	{
 		cpu->registers.b = cpu->registers.a;
-	} };
+	};
 
 	// LD C,B
-	this->operations[0x48] = { 1, [](CPU* cpu)
+	this->operations[0x48] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.b;
-	} };
+	};
 
 	// LD C,C
-	this->operations[0x49] = { 1, [](CPU* cpu)
+	this->operations[0x49] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.c;
-	} };
+	};
 
 	// LD C,D
-	this->operations[0x4A] = { 1, [](CPU* cpu)
+	this->operations[0x4A] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.d;
-	} };
+	};
 
 	// LD C,E
-	this->operations[0x4B] = { 1, [](CPU* cpu)
+	this->operations[0x4B] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.e;
-	} };
+	};
 
 	// LD C,H
-	this->operations[0x4C] = { 1, [](CPU* cpu)
+	this->operations[0x4C] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.h;
-	} };
+	};
 
 	// LD C,L
-	this->operations[0x4D] = { 1, [](CPU* cpu)
+	this->operations[0x4D] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.l;
-	} };
+	};
 
 	// LD C,(HL)
-	this->operations[0x4E] = { 2, [](CPU* cpu)
+	this->operations[0x4E] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->mmu->readByte(cpu->registers.hl);
-	} };
+	};
 	
 	// LD C,A
-	this->operations[0x4F] = { 1, [](CPU* cpu)
+	this->operations[0x4F] = [](CPU* cpu)
 	{
 		cpu->registers.c = cpu->registers.a;
-	} };
+	};
 
 	// LD D,B
-	this->operations[0x50] = { 1, [](CPU* cpu)
+	this->operations[0x50] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.b;
-	} };
+	};
 
 	// LD D,C
-	this->operations[0x51] = { 1, [](CPU* cpu)
+	this->operations[0x51] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.c;
-	} };
+	};
 
 	// LD D,D
-	this->operations[0x52] = { 1, [](CPU* cpu)
+	this->operations[0x52] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.d;
-	} };
+	};
 
 	// LD D,E
-	this->operations[0x53] = { 1, [](CPU* cpu)
+	this->operations[0x53] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.e;
-	} };
+	};
 
 	// LD D,H
-	this->operations[0x54] = { 1, [](CPU* cpu)
+	this->operations[0x54] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.h;
-	} };
+	};
 
 	// LD D,L
-	this->operations[0x55] = { 1, [](CPU* cpu)
+	this->operations[0x55] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.l;
-	} };
+	};
 
 	// LD D,(HL)
-	this->operations[0x56] = { 2, [](CPU* cpu)
+	this->operations[0x56] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->mmu->readByte(cpu->registers.hl);
-	} };
+	};
 
 	// LD D,A
-	this->operations[0x57] = { 1, [](CPU* cpu)
+	this->operations[0x57] = [](CPU* cpu)
 	{
 		cpu->registers.d = cpu->registers.a;
-	} };
+	};
 
 	// LD E,B
-	this->operations[0x58] = { 1, [](CPU* cpu)
+	this->operations[0x58] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.b;
-	} };
+	};
 
 	// LD E,C
-	this->operations[0x59] = { 1, [](CPU* cpu)
+	this->operations[0x59] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.c;
-	} };
+	};
 
 	// LD E,D
-	this->operations[0x5A] = { 1, [](CPU* cpu)
+	this->operations[0x5A] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.d;
-	} };
+	};
 
 	// LD E,E
-	this->operations[0x5B] = { 1, [](CPU* cpu)
+	this->operations[0x5B] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.e;
-	} };
+	};
 
 	// LD E,H
-	this->operations[0x5C] = { 1, [](CPU* cpu)
+	this->operations[0x5C] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.h;
-	} };
+	};
 
 	// LD E,L
-	this->operations[0x5D] = { 1, [](CPU* cpu)
+	this->operations[0x5D] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.l;
-	} };
+	};
 
 	// LD E,(HL)
-	this->operations[0x5E] = { 2, [](CPU* cpu)
+	this->operations[0x5E] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->mmu->readByte(cpu->registers.hl);
-	} };
+	};
 
 	// LD E,A
-	this->operations[0x5F] = { 1, [](CPU* cpu)
+	this->operations[0x5F] = [](CPU* cpu)
 	{
 		cpu->registers.e = cpu->registers.a;
-	} };
+	};
 
 	// LD H,B
-	this->operations[0x60] = { 1, [](CPU* cpu)
+	this->operations[0x60] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.b;
-	} };
+	};
 
 	// LD H,C
-	this->operations[0x61] = { 1, [](CPU* cpu)
+	this->operations[0x61] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.c;
-	} };
+	};
 
 	// LD H,D
-	this->operations[0x62] = { 1, [](CPU* cpu)
+	this->operations[0x62] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.d;
-	} };
+	};
 
 	// LD H,E
-	this->operations[0x63] = { 1, [](CPU* cpu)
+	this->operations[0x63] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.e;
-	} };
+	};
 
 	// LD H,H
-	this->operations[0x64] = { 1, [](CPU* cpu)
+	this->operations[0x64] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.h;
-	} };
+	};
 
 	// LD H,L
-	this->operations[0x65] = { 1, [](CPU* cpu)
+	this->operations[0x65] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.l;
-	} };
+	};
 
 	// LD H,A
-	this->operations[0x67] = { 1, [](CPU* cpu)
+	this->operations[0x67] = [](CPU* cpu)
 	{
 		cpu->registers.h = cpu->registers.a;
-	} };
+	};
 
 	// LD L,B
-	this->operations[0x68] = { 1, [](CPU* cpu)
+	this->operations[0x68] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.b;
-	} };
+	};
 
 	// LD L,C
-	this->operations[0x69] = { 1, [](CPU* cpu)
+	this->operations[0x69] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.c;
-	} };
+	};
 
 	// LD L,D
-	this->operations[0x6A] = { 1, [](CPU* cpu)
+	this->operations[0x6A] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.d;
-	} };
+	};
 
 	// LD L,E
-	this->operations[0x6B] = { 1, [](CPU* cpu)
+	this->operations[0x6B] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.e;
-	} };
+	};
 
 	// LD L,H
-	this->operations[0x6C] = { 1, [](CPU* cpu)
+	this->operations[0x6C] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.h;
-	} };
+	};
 
 	// LD L,L
-	this->operations[0x6D] = { 1, [](CPU* cpu)
+	this->operations[0x6D] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.l;
-	} };
+	};
 
 	// LD L,(HL)
-	this->operations[0x6E] = { 2, [](CPU* cpu)
+	this->operations[0x6E] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->mmu->readByte(cpu->registers.hl);
-	} };
+	};
 
 	// LD L,A
-	this->operations[0x6F] = { 1, [](CPU* cpu)
+	this->operations[0x6F] = [](CPU* cpu)
 	{
 		cpu->registers.l = cpu->registers.a;
-	} };
+	};
 
 	// LD(HL), A
-	this->operations[0x77] = { 2, [](CPU* cpu)
+	this->operations[0x77] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->registers.a);
-	} };
+	};
 
 	// LD A,B
-	this->operations[0x78] = { 2, [](CPU* cpu)
+	this->operations[0x78] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.b;
-	} };
+	};
 
 	// LD A,C
-	this->operations[0x79] = { 2, [](CPU* cpu)
+	this->operations[0x79] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.c;
-	} };
+	};
 
 	// LD A,D
-	this->operations[0x7A] = { 1, [](CPU* cpu)
+	this->operations[0x7A] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.d;
-	} };
+	};
 
 	// LD A,E
-	this->operations[0x7B] = { 1, [](CPU* cpu)
+	this->operations[0x7B] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.e;
-	} };
+	};
 
 	// LD A,H
-	this->operations[0x7C] = { 1, [](CPU* cpu)
+	this->operations[0x7C] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.h;
-	} };
+	};
 
 	// LD A,L
-	this->operations[0x7D] = { 1, [](CPU* cpu)
+	this->operations[0x7D] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.l;
-	} };
+	};
 
 	// LD A,(HL)
-	this->operations[0x7E] = { 2, [](CPU* cpu)
+	this->operations[0x7E] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.hl);
-	} };
+	};
 
 	// LD A,A
-	this->operations[0x7F] = { 1, [](CPU* cpu)
+	this->operations[0x7F] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->registers.a;
-	} };
+	};
 
 	// ADD A,B
-	this->operations[0x80] = { 2, [](CPU* cpu)
+	this->operations[0x80] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -811,10 +851,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,C
-	this->operations[0x81] = { 2, [](CPU* cpu)
+	this->operations[0x81] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -831,10 +871,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,D
-	this->operations[0x82] = { 2, [](CPU* cpu)
+	this->operations[0x82] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -851,10 +891,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,E
-	this->operations[0x83] = { 2, [](CPU* cpu)
+	this->operations[0x83] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -871,10 +911,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,H
-	this->operations[0x84] = { 2, [](CPU* cpu)
+	this->operations[0x84] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -891,10 +931,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,L
-	this->operations[0x85] = { 2, [](CPU* cpu)
+	this->operations[0x85] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -911,10 +951,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,(HL)
-	this->operations[0x86] = { 2, [](CPU* cpu)
+	this->operations[0x86] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -931,10 +971,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// ADD A,B
-	this->operations[0x87] = { 2, [](CPU* cpu)
+	this->operations[0x87] = [](CPU* cpu)
 	{
 		cpu->registers.f &= ~FLAG_NIBBLE;
 
@@ -951,10 +991,10 @@ void CPU::setupOperations()
 
 		if (((cpu->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// SUB A,B
-	this->operations[0x90] = { 1, [](CPU* cpu)
+	this->operations[0x90] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -970,10 +1010,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// SUB A,C
-	this->operations[0x91] = { 1, [](CPU* cpu)
+	this->operations[0x91] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -989,10 +1029,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// SUB A,D
-	this->operations[0x92] = { 1, [](CPU* cpu)
+	this->operations[0x92] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -1008,10 +1048,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// SUB A,E
-	this->operations[0x93] = { 1, [](CPU* cpu)
+	this->operations[0x93] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -1027,10 +1067,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// SUB A,H
-	this->operations[0x94] = { 1, [](CPU* cpu)
+	this->operations[0x94] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -1046,10 +1086,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// SUB A,L
-	this->operations[0x95] = { 1, [](CPU* cpu)
+	this->operations[0x95] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -1065,10 +1105,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// SUB A,A
-	this->operations[0x97] = { 1, [](CPU* cpu)
+	this->operations[0x97] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -1084,157 +1124,157 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// AND B
-	this->operations[0xA0] = { 1, [](CPU* cpu)
+	this->operations[0xA0] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.b;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// AND C
-	this->operations[0xA1] = { 1, [](CPU* cpu)
+	this->operations[0xA1] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.c;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// AND D
-	this->operations[0xA2] = { 1, [](CPU* cpu)
+	this->operations[0xA2] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.d;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// AND E
-	this->operations[0xA3] = { 1, [](CPU* cpu)
+	this->operations[0xA3] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.e;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// AND H
-	this->operations[0xA4] = { 1, [](CPU* cpu)
+	this->operations[0xA4] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.h;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// AND L
-	this->operations[0xA5] = { 1, [](CPU* cpu)
+	this->operations[0xA5] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.l;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// AND A
-	this->operations[0xA7] = { 1, [](CPU* cpu)
+	this->operations[0xA7] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->registers.a;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR B
-	this->operations[0xA8] = { 1, [](CPU* cpu)
+	this->operations[0xA8] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.b;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR C
-	this->operations[0xA9] = { 1, [](CPU* cpu)
+	this->operations[0xA9] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.c;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR D
-	this->operations[0xAA] = { 1, [](CPU* cpu)
+	this->operations[0xAA] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.d;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR E
-	this->operations[0xAB] = { 1, [](CPU* cpu)
+	this->operations[0xAB] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.e;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR H
-	this->operations[0xAC] = { 1, [](CPU* cpu)
+	this->operations[0xAC] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.h;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR L
-	this->operations[0xAD] = { 1, [](CPU* cpu)
+	this->operations[0xAD] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.l;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// XOR A
-	this->operations[0xAF] = { 1, [](CPU* cpu)
+	this->operations[0xAF] = [](CPU* cpu)
 	{
 		cpu->registers.a ^= cpu->registers.a;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR B
-	this->operations[0xB0] = { 1, [](CPU* cpu)
+	this->operations[0xB0] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.b;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR C
-	this->operations[0xB1] = { 1, [](CPU* cpu)
+	this->operations[0xB1] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.b;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR D
-	this->operations[0xB2] = { 1, [](CPU* cpu)
+	this->operations[0xB2] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.d;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR E
-	this->operations[0xB3] = { 1, [](CPU* cpu)
+	this->operations[0xB3] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.e;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR H
-	this->operations[0xB4] = { 1, [](CPU* cpu)
+	this->operations[0xB4] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.h;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR L
-	this->operations[0xB5] = { 1, [](CPU* cpu)
+	this->operations[0xB5] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.l;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// OR A
-	this->operations[0xB7] = { 1, [](CPU* cpu)
+	this->operations[0xB7] = [](CPU* cpu)
 	{
 		cpu->registers.a |= cpu->registers.a;
 		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
-	} };
+	};
 
 	// CP B
-	this->operations[0xB8] = { 2, [](CPU* cpu)
+	this->operations[0xB8] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.b;
@@ -1248,10 +1288,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP C
-	this->operations[0xB9] = { 2, [](CPU* cpu)
+	this->operations[0xB9] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.c;
@@ -1265,10 +1305,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP D
-	this->operations[0xBA] = { 2, [](CPU* cpu)
+	this->operations[0xBA] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.d;
@@ -1282,10 +1322,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP E
-	this->operations[0xBB] = { 2, [](CPU* cpu)
+	this->operations[0xBB] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.e;
@@ -1299,10 +1339,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP H
-	this->operations[0xBC] = { 2, [](CPU* cpu)
+	this->operations[0xBC] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.h;
@@ -1316,10 +1356,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP L
-	this->operations[0xBD] = { 2, [](CPU* cpu)
+	this->operations[0xBD] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.l;
@@ -1333,10 +1373,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP (HL)
-	this->operations[0xBE] = { 2, [](CPU* cpu)
+	this->operations[0xBE] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->mmu->readByte(cpu->registers.hl);
@@ -1350,10 +1390,10 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// CP A
-	this->operations[0xBF] = { 2, [](CPU* cpu)
+	this->operations[0xBF] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->registers.a;
@@ -1367,26 +1407,26 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// RET NZ
-	this->operations[0xC0] = { 2, [](CPU* cpu)
+	this->operations[0xC0] = [](CPU* cpu)
 	{
 		if (!(cpu->registers.f & FLAG_ZERO))
 		{
 			cpu->registers.pc = cpu->stackPopWord();
 			cpu->registers.m += 1;
 		}
-	} };
+	};
 
 	// POP BC
-	this->operations[0xC1] = { 3, [](CPU* cpu)
+	this->operations[0xC1] = [](CPU* cpu)
 	{
 		cpu->registers.bc = cpu->stackPopWord();
-	} };
+	};
 
 	// JP NZ,nn
-	this->operations[0xC2] = { 3, [](CPU* cpu)
+	this->operations[0xC2] = [](CPU* cpu)
 	{
 		unsigned short jumpLoc = cpu->readProgramWord();
 		if (!(cpu->registers.f & FLAG_ZERO))
@@ -1394,38 +1434,38 @@ void CPU::setupOperations()
 			cpu->registers.pc = jumpLoc;
 			cpu->registers.m += 1;
 		}
-	} };
+	};
 
 	// JP nn
-	this->operations[0xC3] = { 3, [](CPU* cpu)
+	this->operations[0xC3] = [](CPU* cpu)
 	{
 		cpu->registers.pc = cpu->readProgramWord();
-	} };
+	};
 
 	// PUSH BC
-	this->operations[0xC5] = { 3, [](CPU* cpu)
+	this->operations[0xC5] = [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.bc);
-	} };
+	};
 
 	// RET Z
-	this->operations[0xC8] = { 2, [](CPU* cpu)
+	this->operations[0xC8] = [](CPU* cpu)
 	{
 		if ((cpu->registers.f & FLAG_ZERO))
 		{
 			cpu->registers.pc = cpu->stackPopWord();
 			cpu->registers.m += 1;
 		}
-	} };
+	};
 
 	// RET
-	this->operations[0xC9] = { 3, [](CPU* cpu)
+	this->operations[0xC9] = [](CPU* cpu)
 	{
 		cpu->registers.pc = cpu->stackPopWord();
-	} };
+	};
 
 	// JP Z,nn
-	this->operations[0xCA] = { 3, [](CPU* cpu)
+	this->operations[0xCA] = [](CPU* cpu)
 	{
 		unsigned short jumpLoc = cpu->readProgramWord();
 		if ((cpu->registers.f & FLAG_ZERO))
@@ -1433,29 +1473,29 @@ void CPU::setupOperations()
 			cpu->registers.pc = jumpLoc;
 			cpu->registers.m += 1;
 		}
-	} };
+	};
 
 	// Ext ops (callbacks)
-	this->operations[0xCB] = { 0, [](CPU* cpu)
+	this->operations[0xCB] = [](CPU* cpu)
 	{
 		cpu->executeCallback(cpu->readProgramByte());
-	} };
+	};
 	
 	// CALL nn
-	this->operations[0xCD] = { 5, [](CPU* cpu)
+	this->operations[0xCD] = [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.pc + 2);
 		cpu->registers.pc = cpu->readProgramWord();
-	} };
+	};
 
 	// POP DE
-	this->operations[0xD1] = { 3, [](CPU* cpu)
+	this->operations[0xD1] = [](CPU* cpu)
 	{
 		cpu->registers.de = cpu->stackPopWord();
-	} };
+	};
 
 	// JP NC,nn
-	this->operations[0xD2] = { 3, [](CPU* cpu)
+	this->operations[0xD2] = [](CPU* cpu)
 	{
 		unsigned short jumpLoc = cpu->readProgramWord();
 		if (!(cpu->registers.f & FLAG_CARRY))
@@ -1463,16 +1503,16 @@ void CPU::setupOperations()
 			cpu->registers.pc = jumpLoc;
 			cpu->registers.m += 1;
 		}
-	} };
+	};
 
 	// PUSH DE
-	this->operations[0xD5] = { 3, [](CPU* cpu)
+	this->operations[0xD5] = [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.de);
-	} };
+	};
 
 	// SUB A,n
-	this->operations[0xD6] = { 2, [](CPU* cpu)
+	this->operations[0xD6] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 
@@ -1488,10 +1528,10 @@ void CPU::setupOperations()
 
 		if (!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// RETI
-	this->operations[0xD9] = { 3, [](CPU* cpu)
+	this->operations[0xD9] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->savRegisters.a;
 		cpu->registers.b = cpu->savRegisters.b;
@@ -1504,10 +1544,10 @@ void CPU::setupOperations()
 
 		cpu->ime = true;
 		cpu->registers.pc = cpu->stackPopWord();
-	} };
+	};
 
 	// SBC A,n
-	this->operations[0xDE] = { 2, [](CPU* cpu)
+	this->operations[0xDE] = [](CPU* cpu)
 	{
 		char value = cpu->readProgramByte();
 		value += (cpu->registers.f & FLAG_CARRY) ? 1 : 0;
@@ -1524,33 +1564,33 @@ void CPU::setupOperations()
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
 
 		cpu->registers.a -= value;
-	} };
+	};
 	// LDH (n),A
-	this->operations[0xE0] = { 3, [](CPU* cpu)
+	this->operations[0xE0] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(0xFF00 | cpu->readProgramByte(), cpu->registers.a);
-	} };
+	};
 
 	// POP HL
-	this->operations[0xE1] = { 3, [](CPU* cpu)
+	this->operations[0xE1] = [](CPU* cpu)
 	{
 		cpu->registers.hl = cpu->stackPopWord();
-	} };
+	};
 
 	// LDH (C),A
-	this->operations[0xE2] = { 2, [](CPU* cpu)
+	this->operations[0xE2] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(0xFF00 | cpu->registers.c, cpu->registers.a);
-	} };
+	};
 
 	// PUSH HL
-	this->operations[0xE5] = { 3, [](CPU* cpu)
+	this->operations[0xE5] = [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.hl);
-	} };
+	};
 
 	// AND n
-	this->operations[0xE6] = { 2, [](CPU* cpu)
+	this->operations[0xE6] = [](CPU* cpu)
 	{
 		cpu->registers.a &= cpu->readProgramByte();
 
@@ -1559,70 +1599,70 @@ void CPU::setupOperations()
 
 		if(!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
 		else  cpu->registers.f &= ~FLAG_ZERO;
-	} };
+	};
 
 	// JP (HL)
-	this->operations[0xE9] = { 3, [](CPU* cpu)
+	this->operations[0xE9] = [](CPU* cpu)
 	{
 		cpu->registers.pc = cpu->mmu->readByte(cpu->registers.hl);
-	} };
+	};
 
 	// LD (nn),A
-	this->operations[0xEA] = { 4, [](CPU* cpu)
+	this->operations[0xEA] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->readProgramWord(), cpu->registers.a);
-	} };
+	};
 
 	// RST 28
-	this->operations[0xEF] = { 0, [](CPU* cpu)
+	this->operations[0xEF] = [](CPU* cpu)
 	{
 		cpu->executeRst(0x28);
-	} };
+	};
 
 	// LDH A,(n)
-	this->operations[0xF0] = { 3, [](CPU* cpu)
+	this->operations[0xF0] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(0xFF00 | cpu->readProgramByte());
-	} };
+	};
 
 	// POP AF
-	this->operations[0xF1] = { 3, [](CPU* cpu)
+	this->operations[0xF1] = [](CPU* cpu)
 	{
 		cpu->registers.af = cpu->stackPopWord();
-	} };
+	};
 
 	// LDH A,(C)
-	this->operations[0xF2] = { 2, [](CPU* cpu)
+	this->operations[0xF2] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(0xFF00 | cpu->registers.c);
-	} };
+	};
 
 	// DI
-	this->operations[0xF3] = { 1, [](CPU* cpu)
+	this->operations[0xF3] = [](CPU* cpu)
 	{
 		cpu->ime = false;
-	} };
+	};
 
 	// PUSH AF
-	this->operations[0xF5] = { 3, [](CPU* cpu)
+	this->operations[0xF5] = [](CPU* cpu)
 	{
 		cpu->stackPushWord(cpu->registers.af);
-	} };
+	};
 
 	// LD A,(nn)
-	this->operations[0xFA] = { 4, [](CPU* cpu)
+	this->operations[0xFA] = [](CPU* cpu)
 	{
 		cpu->registers.a = cpu->mmu->readByte(cpu->readProgramWord());
-	} };
+	};
 
 	// EI
-	this->operations[0xFB] = { 1, [](CPU* cpu)
+	this->operations[0xFB] = [](CPU* cpu)
 	{
 		cpu->ime = true;
-	} };
+	};
 
 	// CP n
-	this->operations[0xFE] = { 2, [](CPU* cpu)
+	this->operations[0xFE] = [](CPU* cpu)
 	{
 		cpu->registers.f |= FLAG_NIBBLE;
 		char value = cpu->readProgramByte();
@@ -1636,18 +1676,18 @@ void CPU::setupOperations()
 
 		if ((regA & 0x0F) < (value & 0x0F)) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
-	} };
+	};
 
 	// RST 38
-	this->operations[0xFF] = { 0, [](CPU* cpu)
+	this->operations[0xFF] = [](CPU* cpu)
 	{
 		cpu->executeRst(0x38);
-	} };
+	};
 }
 
 void CPU::setupCallbacks()
 {
-	this->callbacks[0x11] = { 2, [](CPU* cpu)
+	this->callbacks[0x11] = [](CPU* cpu)
 	{
 		unsigned char ci = cpu->registers.f & FLAG_CARRY ? 1 : 0;
 		unsigned char co = cpu->registers.c & FLAG_ZERO ? FLAG_CARRY : 0;
@@ -1656,24 +1696,24 @@ void CPU::setupCallbacks()
 		cpu->registers.c &= 255;
 		cpu->registers.f = (cpu->registers.c) ? 0 : FLAG_ZERO;
 		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
-	} };
+	};
 
-	this->callbacks[0x7C] = { 2, [](CPU* cpu)
+	this->callbacks[0x7C] = [](CPU* cpu)
 	{
 		cpu->registers.f &= FLAG_HALF_CARRY - 1;
 		cpu->registers.f |= FLAG_HALF_CARRY;
 		cpu->registers.f = (cpu->registers.c & FLAG_ZERO) ? 0 : FLAG_ZERO;
-	} };
+	};
 	
-	this->callbacks[0x87] = { 2, [](CPU* cpu)
+	this->callbacks[0x87] = [](CPU* cpu)
 	{
 		cpu->registers.a &= 0xFE;
-	} };
+	};
 
-	this->callbacks[0xCF] = { 2, [](CPU* cpu)
+	this->callbacks[0xCF] = [](CPU* cpu)
 	{
 		cpu->registers.a |= 1 << 1;
-	} };
+	};
 }
 
 void CPU::executeRst(unsigned short num)
@@ -1756,14 +1796,14 @@ bool CPU::execute()
 	unsigned short pc = this->registers.pc;
 	unsigned char instruction = this->readProgramByte();
 
-	auto operation = &this->operations[instruction];
+	auto operation = this->operations[instruction];
 
-	if(operation->func)
+	if(operation)
 	{
 		try
 		{
-			operation->func(this);
-			this->registers.m += operation->ticks;
+			operation(this);
+			this->registers.m += (CPU::OperationTicks[instruction] / 2);
 
 			this->timer.increment(this);
 
@@ -1830,14 +1870,14 @@ bool CPU::execute()
 
 void CPU::executeCallback(unsigned char instruction)
 {
-	auto callback = &this->callbacks[instruction];
+	auto callback = this->callbacks[instruction];
 
-	if (callback->func)
+	if (callback)
 	{
 		try
 		{
-			callback->func(this);
-			this->registers.m += callback->ticks;
+			callback(this);
+			this->registers.m += (CPU::CallbackTicks[instruction] / 4);
 
 			return;
 		}

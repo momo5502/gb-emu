@@ -66,11 +66,7 @@ struct Registers
 class CPU
 {
 public:
-	struct Operation
-	{
-		unsigned char ticks;
-		void(*func)(CPU*);
-	};
+	typedef void(*Operation)(CPU*);
 
 	CPU(std::unique_ptr<MMU> _mmu, std::unique_ptr<GPU> _gpu);
 	~CPU();
@@ -99,7 +95,10 @@ public:
 
 private:
 	Operation operations[0x100];
+	static const unsigned char OperationTicks[0x100];
+
 	Operation callbacks[0x100];
+	static const unsigned char CallbackTicks[0x100];
 
 	Registers savRegisters;
 
