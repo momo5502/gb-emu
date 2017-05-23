@@ -77,10 +77,7 @@ CPU::~CPU()
 void CPU::setupOperations()
 {
 	// NOP
-	this->operations[0x00] = [](CPU*)
-	{
-		__nop();
-	};
+	this->operations[0x00] = [](CPU*) { };
 
 	// LD BC,nn
 	this->operations[0x01] = [](CPU* cpu)
@@ -1413,34 +1410,18 @@ void CPU::setupCallbacks()
 
 void CPU::inc(unsigned char* reg)
 {
-/*
-	this->registers.f &= ~FLAG_NEGATIVE;
-
+	(*reg)++;
+	this->registers.f = (this->registers.f & FLAG_CARRY);
 	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
-	else this->registers.f &= ~FLAG_HALF_CARRY;
-
-	(*reg)++;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
-*/
-
-	(*reg)++;
-	this->registers.f = ((*reg) ? 0 : FLAG_ZERO);
 }
 
 void CPU::dec(unsigned char* reg)
 {
-	/*
-	this->registers.f &= ~FLAG_NEGATIVE;
-
-	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
-	else this->registers.f &= ~FLAG_HALF_CARRY;
-
 	(*reg)--;
+	this->registers.f = (this->registers.f & FLAG_CARRY) | FLAG_NEGATIVE;
+	if ((*reg & 0x0F) == 0x00) this->registers.f |= FLAG_HALF_CARRY;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
-	*/
-
-	(*reg)--;
-	this->registers.f = ((*reg) ? 0 : FLAG_ZERO);
 }
 
 void CPU::add(unsigned char reg)
