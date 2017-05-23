@@ -371,7 +371,7 @@ void CPU::setupOperations()
 		gb->getCPU()->registers.l = gb->getCPU()->readProgramByte();
 	};
 
-	// CPL | TODO: Check flags
+	// CPL
 	this->operations[0x2F] = [](GameBoy* gb)
 	{
 		gb->getCPU()->registers.a ^= 0xFF;
@@ -389,7 +389,7 @@ void CPU::setupOperations()
 		}
 	};
 
-	// LD SP,nn | TODO: Continue here
+	// LD SP,nn
 	this->operations[0x31] = [](GameBoy* gb)
 	{
 		gb->getCPU()->registers.sp = gb->getCPU()->readProgramWord();
@@ -408,10 +408,29 @@ void CPU::setupOperations()
 		gb->getCPU()->registers.sp++;
 	};
 
-	// INC A
-	this->operations[0x3C] = [](GameBoy* gb)
+	// INC (HL)
+	this->operations[0x34] = [](GameBoy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.a);
+		gb->getCPU()->registers.f &= FLAG_CARRY;
+
+		unsigned char value = gb->getMMU()->readByte(gb->getCPU()->registers.hl) + 1;
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, value);
+
+		if (!value) gb->getCPU()->registers.f |= FLAG_ZERO;
+		if ((value & 0x0F) == 0x0F) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
+	};
+
+	// DEC (HL)
+	this->operations[0x35] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.f &= FLAG_CARRY;
+
+		unsigned char value = gb->getMMU()->readByte(gb->getCPU()->registers.hl) - 1;
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, value);
+
+		gb->getCPU()->registers.f |= FLAG_NEGATIVE;
+		if(!value) gb->getCPU()->registers.f |= FLAG_ZERO;
+		if((value & 0x0F) == 0x0F) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
 	};
 
 	// LD (HL),n
@@ -439,6 +458,12 @@ void CPU::setupOperations()
 	this->operations[0x3B] = [](GameBoy* gb)
 	{
 		gb->getCPU()->registers.sp--;
+	};
+
+	// INC A
+	this->operations[0x3C] = [](GameBoy* gb)
+	{
+		gb->getCPU()->inc(&gb->getCPU()->registers.a);
 	};
 
 	// DEC A
@@ -879,10 +904,10 @@ void CPU::setupOperations()
 		gb->getCPU()->add(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
 	};
 
-	// ADD A,B
+	// ADD A,A
 	this->operations[0x87] = [](GameBoy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.b);
+		gb->getCPU()->add(gb->getCPU()->registers.a);
 	};
 
 	// ADC A,B
@@ -927,7 +952,7 @@ void CPU::setupOperations()
 		gb->getCPU()->adc(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
 	};
 
-	// ADC A,B
+	// ADC A,A
 	this->operations[0x8F] = [](GameBoy* gb)
 	{
 		gb->getCPU()->adc(gb->getCPU()->registers.a);
@@ -967,6 +992,12 @@ void CPU::setupOperations()
 	this->operations[0x95] = [](GameBoy* gb)
 	{
 		gb->getCPU()->sub(gb->getCPU()->registers.l);
+	};
+
+	// SUB A,(HL)
+	this->operations[0x96] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sub(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
 	};
 
 	// SUB A,A
@@ -1011,6 +1042,12 @@ void CPU::setupOperations()
 		gb->getCPU()->and(gb->getCPU()->registers.h);
 	};
 
+	// AND A,(HL)
+	this->operations[0xA6] = [](GameBoy* gb)
+	{
+		gb->getCPU()->and(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+	};
+
 	// AND A
 	this->operations[0xA7] = [](GameBoy* gb)
 	{
@@ -1053,6 +1090,12 @@ void CPU::setupOperations()
 		gb->getCPU()->xor(gb->getCPU()->registers.l);
 	};
 
+	// XOR (HL)
+	this->operations[0xAE] = [](GameBoy* gb)
+	{
+		gb->getCPU()->xor(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+	};
+
 	// XOR A
 	this->operations[0xAF] = [](GameBoy* gb)
 	{
@@ -1093,6 +1136,12 @@ void CPU::setupOperations()
 	this->operations[0xB5] = [](GameBoy* gb)
 	{
 		gb->getCPU()->or(gb->getCPU()->registers.l);
+	};
+
+	// OR (HL)
+	this->operations[0xB6] = [](GameBoy* gb)
+	{
+		gb->getCPU()->or(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
 	};
 
 	// OR A
@@ -1155,7 +1204,7 @@ void CPU::setupOperations()
 		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
 		}
 	};
 
@@ -1172,7 +1221,7 @@ void CPU::setupOperations()
 		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
 		{
 			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
 		}
 	};
 
@@ -1185,12 +1234,12 @@ void CPU::setupOperations()
 	// CALL NZ,nn
 	this->operations[0xC4] = [](GameBoy* gb)
 	{
+		unsigned short callLoc = gb->getCPU()->readProgramWord();
 		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
 		{
-			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc + 2);
-			gb->getCPU()->registers.pc = gb->getCPU()->readProgramWord();
+			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
+			gb->getCPU()->registers.pc = callLoc;
 		}
-		else gb->getCPU()->readProgramWord();
 	};
 
 	// PUSH BC
@@ -1214,10 +1263,10 @@ void CPU::setupOperations()
 	// RET Z
 	this->operations[0xC8] = [](GameBoy* gb)
 	{
-		if ((gb->getCPU()->registers.f & FLAG_ZERO))
+		if (gb->getCPU()->registers.f & FLAG_ZERO)
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
 		}
 	};
 
@@ -1231,10 +1280,10 @@ void CPU::setupOperations()
 	this->operations[0xCA] = [](GameBoy* gb)
 	{
 		unsigned short jumpLoc = gb->getCPU()->readProgramWord();
-		if ((gb->getCPU()->registers.f & FLAG_ZERO))
+		if (gb->getCPU()->registers.f & FLAG_ZERO)
 		{
 			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
 		}
 	};
 
@@ -1247,12 +1296,12 @@ void CPU::setupOperations()
 	// CALL Z,nn
 	this->operations[0xCC] = [](GameBoy* gb)
 	{
+		unsigned short callLoc = gb->getCPU()->readProgramWord();
 		if (gb->getCPU()->registers.f & FLAG_ZERO)
 		{
-			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc + 2);
-			gb->getCPU()->registers.pc = gb->getCPU()->readProgramWord();
+			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
+			gb->getCPU()->registers.pc = callLoc;
 		}
-		else gb->getCPU()->readProgramWord();
 	};
 	
 	// CALL nn
@@ -1260,6 +1309,12 @@ void CPU::setupOperations()
 	{
 		gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc + 2);
 		gb->getCPU()->registers.pc = gb->getCPU()->readProgramWord();
+	};
+
+	// ADC A,n
+	this->operations[0xCE] = [](GameBoy* gb)
+	{
+		gb->getCPU()->adc(gb->getCPU()->readProgramByte());
 	};
 
 	// RST 8
@@ -1274,7 +1329,7 @@ void CPU::setupOperations()
 		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
 		}
 	};
 
@@ -1291,7 +1346,18 @@ void CPU::setupOperations()
 		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
 		{
 			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
+		}
+	};
+
+	// CALL NC,nn
+	this->operations[0xD4] = [](GameBoy* gb)
+	{
+		unsigned short callLoc = gb->getCPU()->readProgramWord();
+		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
+		{
+			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
+			gb->getCPU()->registers.pc = callLoc;
 		}
 	};
 
@@ -1316,10 +1382,10 @@ void CPU::setupOperations()
 	// RET C
 	this->operations[0xD8] = [](GameBoy* gb)
 	{
-		if ((gb->getCPU()->registers.f & FLAG_CARRY))
+		if (gb->getCPU()->registers.f & FLAG_CARRY)
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 1;
+			gb->getCPU()->registers.m++;
 		}
 	};
 
@@ -1339,30 +1405,38 @@ void CPU::setupOperations()
 		gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
 	};
 
+	// JP C,nn
+	this->operations[0xDA] = [](GameBoy* gb)
+	{
+		unsigned short jumpLoc = gb->getCPU()->readProgramWord();
+		if (gb->getCPU()->registers.f & FLAG_CARRY)
+		{
+			gb->getCPU()->registers.pc = jumpLoc;
+			gb->getCPU()->registers.m++;
+		}
+	};
+
+	// CALL C,nn
+	this->operations[0xDC] = [](GameBoy* gb)
+	{
+		unsigned short callLoc = gb->getCPU()->readProgramWord();
+		if (gb->getCPU()->registers.f & FLAG_CARRY)
+		{
+			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
+			gb->getCPU()->registers.pc = callLoc;
+		}
+	};
+
 	// SBC A,n
 	this->operations[0xDE] = [](GameBoy* gb)
 	{
-		char value = gb->getCPU()->readProgramByte();
-		value += (gb->getCPU()->registers.f & FLAG_CARRY) ? 1 : 0;
-
-		gb->getCPU()->registers.f |= FLAG_NEGATIVE;
-
-		if (value > gb->getCPU()->registers.a) gb->getCPU()->registers.f |= FLAG_CARRY;
-		else gb->getCPU()->registers.f &= ~FLAG_CARRY;
-
-		if (value == gb->getCPU()->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
-		else gb->getCPU()->registers.f &= ~FLAG_ZERO;
-
-		if ((value & 0x0F) > (gb->getCPU()->registers.a & 0x0F))  gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-		else gb->getCPU()->registers.f &= ~FLAG_HALF_CARRY;
-
-		gb->getCPU()->registers.a -= value;
+		gb->getCPU()->sbc(gb->getCPU()->readProgramByte());
 	};
 
 	// RST 18
 	this->operations[0xDF] = [](GameBoy* gb)
 	{
-		gb->getCPU()->executeRst(0x28);
+		gb->getCPU()->executeRst(0x18);
 	};
 
 	// LDH (n),A
@@ -1413,6 +1487,12 @@ void CPU::setupOperations()
 		gb->getMMU()->writeByte(gb->getCPU()->readProgramWord(), gb->getCPU()->registers.a);
 	};
 
+	// XOR n
+	this->operations[0xEE] = [](GameBoy* gb)
+	{
+		gb->getCPU()->xor(gb->getCPU()->readProgramByte());
+	};
+
 	// RST 28
 	this->operations[0xEF] = [](GameBoy* gb)
 	{
@@ -1449,6 +1529,12 @@ void CPU::setupOperations()
 		gb->getCPU()->stackPushWord(gb->getCPU()->registers.af);
 	};
 
+	// OR n
+	this->operations[0xF6] = [](GameBoy* gb)
+	{
+		gb->getCPU()->or(gb->getCPU()->readProgramByte());
+	};
+
 	// RST 30
 	this->operations[0xF7] = [](GameBoy* gb)
 	{
@@ -1470,18 +1556,7 @@ void CPU::setupOperations()
 	// CP n
 	this->operations[0xFE] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f |= FLAG_NEGATIVE;
-		char value = gb->getCPU()->readProgramByte();
-		char regA = gb->getCPU()->registers.a;
-
-		if(regA == value) gb->getCPU()->registers.f |= FLAG_ZERO;
-		else gb->getCPU()->registers.f &= ~FLAG_ZERO;
-
-		if (regA < value) gb->getCPU()->registers.f |= FLAG_CARRY;
-		else gb->getCPU()->registers.f &= ~FLAG_CARRY;
-
-		if ((regA & 0x0F) < (value & 0x0F)) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-		else gb->getCPU()->registers.f &= ~FLAG_HALF_CARRY;
+		gb->getCPU()->cp(gb->getCPU()->readProgramByte());
 	};
 
 	// RST 38
@@ -1609,6 +1684,20 @@ void CPU::adc(unsigned char reg)
 	else this->registers.f &= ~FLAG_HALF_CARRY;
 
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
+}
+
+void CPU::sbc(unsigned char reg)
+{
+	int carry = (this->registers.f & FLAG_CARRY) ? 1 : 0;
+	int result = this->registers.a - reg - carry;
+
+	this->registers.f = FLAG_NEGATIVE;
+	if(!(result & 0xFF)) this->registers.f |= FLAG_ZERO;
+
+	if (result < 0) this->registers.f |= FLAG_CARRY;
+	if (((this->registers.a & 0x0F) - (reg & 0x0F) - carry) < 0) this->registers.f |= FLAG_HALF_CARRY;
+
+	this->registers.a = static_cast<unsigned char>(result);
 }
 
 void CPU::sub(unsigned char reg)

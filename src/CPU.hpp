@@ -113,4 +113,5 @@ private:
 	void or(unsigned char reg);
 	void cp(unsigned char reg);
 	void adc(unsigned char reg);
+	void sbc(unsigned char reg);
 };
