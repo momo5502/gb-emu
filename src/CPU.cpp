@@ -127,24 +127,20 @@ void CPU::setupOperations()
 		unsigned char co = cpu->registers.a & FLAG_ZERO ? FLAG_CARRY : 0;
 
 		cpu->registers.a = (cpu->registers.a << 1) + ci;
-		cpu->registers.a &= 255;
-		cpu->registers.a = (cpu->registers.f & 0xEF) + co;
+		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
 	};
 	// ADD HL,BC
 	this->operations[0x09] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		short value = cpu->registers.bc;
 		unsigned int result = cpu->registers.hl + value;
 
-		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		if (result > 0xFFFF) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
-
-		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
@@ -227,7 +223,6 @@ void CPU::setupOperations()
 		unsigned char co = cpu->registers.a & FLAG_ZERO ? FLAG_CARRY : 0;
 
 		cpu->registers.a = (cpu->registers.a << 1) + ci;
-		cpu->registers.a &= 255;
 		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
 	};
 
@@ -243,18 +238,15 @@ void CPU::setupOperations()
 	// ADD HL,DE
 	this->operations[0x19] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		short value = cpu->registers.de;
 		unsigned int result = cpu->registers.hl + value;
 
-		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		if (result > 0xFFFF) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
-
-		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
@@ -359,18 +351,15 @@ void CPU::setupOperations()
 	// ADD HL,HL
 	this->operations[0x29] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		short value = cpu->registers.hl;
 		unsigned int result = cpu->registers.hl + value;
 
-		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		if (result > 0xFFFF) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
-
-		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
@@ -467,18 +456,15 @@ void CPU::setupOperations()
 	// ADD HL,SP
 	this->operations[0x39] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		short value = cpu->registers.sp;
 		unsigned int result = cpu->registers.hl + value;
 
-		if (result & 0xFFFF0000) cpu->registers.f |= FLAG_CARRY;
+		if (result > 0xFFFF) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
 
-		cpu->registers.hl = static_cast<unsigned char>(result & 0xFFFF);
-
-		if (!cpu->registers.hl) cpu->registers.f |= FLAG_ZERO;
-		else cpu->registers.f &= ~FLAG_ZERO;
+		cpu->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
 
 		if (((cpu->registers.hl & 0x0F) + (value & 0x0F)) > 0x0F) cpu->registers.f |= FLAG_HALF_CARRY;
 		else cpu->registers.f &= ~FLAG_HALF_CARRY;
@@ -836,7 +822,7 @@ void CPU::setupOperations()
 	// ADD A,B
 	this->operations[0x80] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.b;
 		unsigned int result = cpu->registers.a + value;
@@ -856,7 +842,7 @@ void CPU::setupOperations()
 	// ADD A,C
 	this->operations[0x81] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.c;
 		unsigned int result = cpu->registers.a + value;
@@ -876,7 +862,7 @@ void CPU::setupOperations()
 	// ADD A,D
 	this->operations[0x82] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.d;
 		unsigned int result = cpu->registers.a + value;
@@ -896,7 +882,7 @@ void CPU::setupOperations()
 	// ADD A,E
 	this->operations[0x83] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.e;
 		unsigned int result = cpu->registers.a + value;
@@ -916,7 +902,7 @@ void CPU::setupOperations()
 	// ADD A,H
 	this->operations[0x84] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.h;
 		unsigned int result = cpu->registers.a + value;
@@ -936,7 +922,7 @@ void CPU::setupOperations()
 	// ADD A,L
 	this->operations[0x85] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.l;
 		unsigned int result = cpu->registers.a + value;
@@ -956,7 +942,7 @@ void CPU::setupOperations()
 	// ADD A,(HL)
 	this->operations[0x86] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->mmu->readByte(cpu->registers.hl);
 		unsigned int result = cpu->registers.a + value;
@@ -976,7 +962,7 @@ void CPU::setupOperations()
 	// ADD A,B
 	this->operations[0x87] = [](CPU* cpu)
 	{
-		cpu->registers.f &= ~FLAG_NIBBLE;
+		cpu->registers.f &= ~FLAG_NEGATIVE;
 
 		char value = cpu->registers.b;
 		unsigned int result = cpu->registers.a + value;
@@ -996,7 +982,7 @@ void CPU::setupOperations()
 	// SUB A,B
 	this->operations[0x90] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.b;
 
@@ -1015,7 +1001,7 @@ void CPU::setupOperations()
 	// SUB A,C
 	this->operations[0x91] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.c;
 
@@ -1034,7 +1020,7 @@ void CPU::setupOperations()
 	// SUB A,D
 	this->operations[0x92] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.d;
 
@@ -1053,7 +1039,7 @@ void CPU::setupOperations()
 	// SUB A,E
 	this->operations[0x93] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.e;
 
@@ -1072,7 +1058,7 @@ void CPU::setupOperations()
 	// SUB A,H
 	this->operations[0x94] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.h;
 
@@ -1091,7 +1077,7 @@ void CPU::setupOperations()
 	// SUB A,L
 	this->operations[0x95] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.l;
 
@@ -1110,7 +1096,7 @@ void CPU::setupOperations()
 	// SUB A,A
 	this->operations[0x97] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->registers.a;
 
@@ -1276,7 +1262,7 @@ void CPU::setupOperations()
 	// CP B
 	this->operations[0xB8] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.b;
 		char regA = cpu->registers.a;
 
@@ -1293,7 +1279,7 @@ void CPU::setupOperations()
 	// CP C
 	this->operations[0xB9] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.c;
 		char regA = cpu->registers.a;
 
@@ -1310,7 +1296,7 @@ void CPU::setupOperations()
 	// CP D
 	this->operations[0xBA] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.d;
 		char regA = cpu->registers.a;
 
@@ -1327,7 +1313,7 @@ void CPU::setupOperations()
 	// CP E
 	this->operations[0xBB] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.e;
 		char regA = cpu->registers.a;
 
@@ -1344,7 +1330,7 @@ void CPU::setupOperations()
 	// CP H
 	this->operations[0xBC] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.h;
 		char regA = cpu->registers.a;
 
@@ -1361,7 +1347,7 @@ void CPU::setupOperations()
 	// CP L
 	this->operations[0xBD] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.l;
 		char regA = cpu->registers.a;
 
@@ -1378,7 +1364,7 @@ void CPU::setupOperations()
 	// CP (HL)
 	this->operations[0xBE] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->mmu->readByte(cpu->registers.hl);
 		char regA = cpu->registers.a;
 
@@ -1395,7 +1381,7 @@ void CPU::setupOperations()
 	// CP A
 	this->operations[0xBF] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->registers.a;
 		char regA = cpu->registers.a;
 
@@ -1514,7 +1500,7 @@ void CPU::setupOperations()
 	// SUB A,n
 	this->operations[0xD6] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		char value = cpu->readProgramByte();
 
@@ -1552,7 +1538,7 @@ void CPU::setupOperations()
 		char value = cpu->readProgramByte();
 		value += (cpu->registers.f & FLAG_CARRY) ? 1 : 0;
 
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 
 		if (value > cpu->registers.a) cpu->registers.f |= FLAG_CARRY;
 		else cpu->registers.f &= ~FLAG_CARRY;
@@ -1594,7 +1580,7 @@ void CPU::setupOperations()
 	{
 		cpu->registers.a &= cpu->readProgramByte();
 
-		cpu->registers.f &= ~(FLAG_CARRY | FLAG_NIBBLE);
+		cpu->registers.f &= ~(FLAG_CARRY | FLAG_NEGATIVE);
 		cpu->registers.f |= FLAG_HALF_CARRY;
 
 		if(!cpu->registers.a) cpu->registers.f |= FLAG_ZERO;
@@ -1664,7 +1650,7 @@ void CPU::setupOperations()
 	// CP n
 	this->operations[0xFE] = [](CPU* cpu)
 	{
-		cpu->registers.f |= FLAG_NIBBLE;
+		cpu->registers.f |= FLAG_NEGATIVE;
 		char value = cpu->readProgramByte();
 		char regA = cpu->registers.a;
 

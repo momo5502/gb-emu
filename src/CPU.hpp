@@ -3,7 +3,7 @@
 enum Flags
 {
 	FLAG_ZERO = 0x80,
-	FLAG_NIBBLE = 0x40,
+	FLAG_NEGATIVE = 0x40,
 	FLAG_HALF_CARRY = 0x20,
 	FLAG_CARRY = 0x10,
 };
