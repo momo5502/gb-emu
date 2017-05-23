@@ -1206,6 +1206,16 @@ void CPU::setupOperations()
 		cpu->sub(cpu->readProgramByte());
 	};
 
+	// RET C
+	this->operations[0xD8] = [](CPU* cpu)
+	{
+		if ((cpu->registers.f & FLAG_CARRY))
+		{
+			cpu->registers.pc = cpu->stackPopWord();
+			cpu->registers.m += 1;
+		}
+	};
+
 	// RETI
 	this->operations[0xD9] = [](CPU* cpu)
 	{
@@ -1366,6 +1376,21 @@ void CPU::setupCallbacks()
 		cpu->registers.c &= 255;
 		cpu->registers.f |= (cpu->registers.c) ? 0 : FLAG_ZERO;
 		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
+	};
+
+	this->callbacks[0x27] = [](CPU* cpu)
+	{
+		unsigned char co = cpu->registers.a & 0x80 ? FLAG_CARRY : 0;
+		cpu->registers.a = (cpu->registers.a << 1) & 255;
+		cpu->registers.f = (cpu->registers.a) ? 0 : FLAG_ZERO;
+		cpu->registers.f = (cpu->registers.f & 0xEF) + co;
+	};
+
+	this->callbacks[0x37] = [](CPU* cpu)
+	{
+		unsigned char tr = cpu->registers.a;
+		cpu->registers.a = ((tr & 0xF) << 4) | ((tr & 0xF0) >> 4);
+		cpu->registers.f = cpu->registers.a ? 0 : FLAG_ZERO;
 	};
 
 	this->callbacks[0x7C] = [](CPU* cpu)
