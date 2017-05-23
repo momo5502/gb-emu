@@ -360,12 +360,7 @@ void CPU::setupOperations()
 	{
 
 		cpu->registers.a = cpu->mmu->readByte(cpu->registers.hl);
-		cpu->registers.l = (cpu->registers.l + 1) & 0xFF;
-
-		if (!cpu->registers.l)
-		{
-			cpu->registers.h++;
-		}
+		cpu->registers.hl++;
 	};
 
 	// DEC HL
@@ -414,12 +409,7 @@ void CPU::setupOperations()
 	this->operations[0x32] = [](CPU* cpu)
 	{
 		cpu->mmu->writeByte(cpu->registers.hl, cpu->registers.a);
-		cpu->registers.l = (cpu->registers.l + 1) & 0xFF;
-
-		if (!cpu->registers.l)
-		{
-			cpu->registers.h = (cpu->registers.h + 1) & 0xFF;
-		}
+		cpu->registers.hl--;
 	};
 
 	// INC SP
