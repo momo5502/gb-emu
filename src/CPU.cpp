@@ -55,7 +55,7 @@ CPU::CPU(GameBoy* gameBoy) : ime(true), gb(gameBoy)
 	int opSize = ARRAYSIZE(this->operations);
 	int cbSize = ARRAYSIZE(this->callbacks);
 
-	for(int i = 0; i <= min(opSize, cbSize); ++i)
+	for(int i = 0; i < min(opSize, cbSize); ++i)
 	{
 		if (this->operations[i]) implOp++;
 		if (this->callbacks[i]) implCb++;
@@ -1583,93 +1583,340 @@ void CPU::setupOperations()
 
 void CPU::setupCallbacks()
 {
+	this->callbacks[0x00] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x01] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x02] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.d);
+	};
+
+	this->callbacks[0x03] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.e);
+	};
+
+	this->callbacks[0x04] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.h);
+	};
+
+	this->callbacks[0x05] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.l);
+	};
+
+	this->callbacks[0x06] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->rlc(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+	};
+
+	this->callbacks[0x07] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rlc(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x08] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x09] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x0A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.d);
+	};
+
+	this->callbacks[0x0B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.e);
+	};
+
+	this->callbacks[0x0C] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.h);
+	};
+
+	this->callbacks[0x0D] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.l);
+	};
+
+	this->callbacks[0x0E] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->rrc(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+	};
+
+	this->callbacks[0x0F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rrc(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x10] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rl(&gb->getCPU()->registers.b);
+	};
+
 	this->callbacks[0x11] = [](GameBoy* gb)
 	{
-		unsigned char ci = gb->getCPU()->registers.f & FLAG_CARRY ? 1 : 0;
-		unsigned char co = gb->getCPU()->registers.c & FLAG_ZERO ? FLAG_CARRY : 0;
-
-		gb->getCPU()->registers.c = (gb->getCPU()->registers.c << 1) + ci;
-		gb->getCPU()->registers.c &= 255;
-		gb->getCPU()->registers.f |= (gb->getCPU()->registers.c) ? 0 : FLAG_ZERO;
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
+		gb->getCPU()->rl(&gb->getCPU()->registers.c);
 	};
 
 	this->callbacks[0x12] = [](GameBoy* gb)
 	{
-		unsigned char ci = gb->getCPU()->registers.f & FLAG_CARRY ? 1 : 0;
-		unsigned char co = gb->getCPU()->registers.d & FLAG_ZERO ? FLAG_CARRY : 0;
+		gb->getCPU()->rl(&gb->getCPU()->registers.d);
+	};
 
-		gb->getCPU()->registers.d = (gb->getCPU()->registers.d << 1) + ci;
-		gb->getCPU()->registers.d &= 255;
-		gb->getCPU()->registers.f |= (gb->getCPU()->registers.d) ? 0 : FLAG_ZERO;
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
+	this->callbacks[0x13] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rl(&gb->getCPU()->registers.e);
+	};
+
+	this->callbacks[0x14] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rl(&gb->getCPU()->registers.h);
+	};
+
+	this->callbacks[0x15] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rl(&gb->getCPU()->registers.l);
+	};
+
+	this->callbacks[0x16] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->rl(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+	};
+
+	this->callbacks[0x17] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rl(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x18] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rr(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x19] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rr(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x1A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rr(&gb->getCPU()->registers.d);
+	};
+
+	this->callbacks[0x1B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rr(&gb->getCPU()->registers.e);
 	};
 
 	this->callbacks[0x1C] = [](GameBoy* gb)
 	{
-		bool carry = gb->getCPU()->registers.h & 0x01;
-		gb->getCPU()->registers.h >>= 1;
-		gb->getCPU()->registers.h |= carry ? 0x80 : 0;
-
-		gb->getCPU()->registers.f = carry ? FLAG_CARRY : 0;
-		if (!gb->getCPU()->registers.h) gb->getCPU()->registers.f |= FLAG_ZERO;
+		gb->getCPU()->rr(&gb->getCPU()->registers.h);
 	};
 
 	this->callbacks[0x1D] = [](GameBoy* gb)
 	{
-		bool carry = gb->getCPU()->registers.l & 0x01;
-		gb->getCPU()->registers.l >>= 1;
-		gb->getCPU()->registers.l |= carry ? 0x80 : 0;
+		gb->getCPU()->rr(&gb->getCPU()->registers.l);
+	};
 
-		gb->getCPU()->registers.f = carry ? FLAG_CARRY : 0;
-		if (!gb->getCPU()->registers.l) gb->getCPU()->registers.f |= FLAG_ZERO;
+	this->callbacks[0x1E] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->rr(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+	};
+
+	this->callbacks[0x1F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rr(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x20] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sla(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x21] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sla(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x22] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sla(&gb->getCPU()->registers.d);
 	};
 
 	this->callbacks[0x23] = [](GameBoy* gb)
 	{
-		unsigned char co = gb->getCPU()->registers.e & 0x80 ? FLAG_CARRY : 0;
-		gb->getCPU()->registers.e = (gb->getCPU()->registers.e << 1) & 255;
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.e) ? 0 : FLAG_ZERO;
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
+		gb->getCPU()->sla(&gb->getCPU()->registers.e);
+	};
+
+	this->callbacks[0x24] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sla(&gb->getCPU()->registers.h);
+	};
+
+	this->callbacks[0x25] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sla(&gb->getCPU()->registers.l);
+	};
+
+	this->callbacks[0x26] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->sla(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
 	};
 
 	this->callbacks[0x27] = [](GameBoy* gb)
 	{
-		unsigned char co = gb->getCPU()->registers.a & 0x80 ? FLAG_CARRY : 0;
-		gb->getCPU()->registers.a = (gb->getCPU()->registers.a << 1) & 255;
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.a) ? 0 : FLAG_ZERO;
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.f & 0xEF) + co;
+		gb->getCPU()->sla(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x28] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x29] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x2A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.d);
+	};
+
+	this->callbacks[0x2B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.e);
+	};
+
+	this->callbacks[0x2C] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.h);
+	};
+
+	this->callbacks[0x2D] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.l);
+	};
+
+	this->callbacks[0x2E] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->sra(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+	};
+
+	this->callbacks[0x2F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->sra(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x30] = [](GameBoy* gb)
+	{
+		gb->getCPU()->swap(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x31] = [](GameBoy* gb)
+	{
+		gb->getCPU()->swap(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x32] = [](GameBoy* gb)
+	{
+		gb->getCPU()->swap(&gb->getCPU()->registers.d);
+	};
+
+	this->callbacks[0x33] = [](GameBoy* gb)
+	{
+		gb->getCPU()->swap(&gb->getCPU()->registers.e);
+	};
+
+	this->callbacks[0x34] = [](GameBoy* gb)
+	{
+		gb->getCPU()->swap(&gb->getCPU()->registers.h);
+	};
+
+	this->callbacks[0x35] = [](GameBoy* gb)
+	{
+		gb->getCPU()->swap(&gb->getCPU()->registers.l);
+	};
+
+	this->callbacks[0x36] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->swap(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
 	};
 
 	this->callbacks[0x37] = [](GameBoy* gb)
 	{
-		unsigned char tr = gb->getCPU()->registers.a;
-		gb->getCPU()->registers.a = ((tr & 0xF) << 4) | ((tr & 0xF0) >> 4);
-		gb->getCPU()->registers.f = gb->getCPU()->registers.a ? 0 : FLAG_ZERO;
+		gb->getCPU()->swap(&gb->getCPU()->registers.a);
+	};
+
+	this->callbacks[0x38] = [](GameBoy* gb)
+	{
+		gb->getCPU()->srl(&gb->getCPU()->registers.b);
+	};
+
+	this->callbacks[0x39] = [](GameBoy* gb)
+	{
+		gb->getCPU()->srl(&gb->getCPU()->registers.c);
+	};
+
+	this->callbacks[0x3A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->srl(&gb->getCPU()->registers.d);
+	};
+
+	this->callbacks[0x3B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->srl(&gb->getCPU()->registers.e);
 	};
 
 	this->callbacks[0x3C] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.h & 0x01) ? FLAG_CARRY : 0;
-		gb->getCPU()->registers.h >>= 1;
-
-		if (!gb->getCPU()->registers.h) gb->getCPU()->registers.f |= FLAG_ZERO;
+		gb->getCPU()->srl(&gb->getCPU()->registers.h);
 	};
 
 	this->callbacks[0x3D] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.l & 0x01) ? FLAG_CARRY : 0;
-		gb->getCPU()->registers.l >>= 1;
+		gb->getCPU()->srl(&gb->getCPU()->registers.l);
+	};
 
-		if (!gb->getCPU()->registers.l) gb->getCPU()->registers.f |= FLAG_ZERO;
+	this->callbacks[0x3E] = [](GameBoy* gb)
+	{
+		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->srl(&hlVal);
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
 	};
 
 	this->callbacks[0x3F] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f = (gb->getCPU()->registers.a & 0x01) ? FLAG_CARRY : 0;
-		gb->getCPU()->registers.a >>= 1;
-
-		if (!gb->getCPU()->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+		gb->getCPU()->srl(&gb->getCPU()->registers.a);
 	};
 
 	this->callbacks[0x40] = [](GameBoy* gb)
@@ -1992,9 +2239,324 @@ void CPU::setupCallbacks()
 		gb->getCPU()->bit(gb->getCPU()->registers.a, 7);
 	};
 
+	this->callbacks[0x80] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 0);
+	};
+
+	this->callbacks[0x81] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 0);
+	};
+
+	this->callbacks[0x82] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 0);
+	};
+
+	this->callbacks[0x83] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 0);
+	};
+
+	this->callbacks[0x84] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 0);
+	};
+
+	this->callbacks[0x85] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 0);
+	};
+
+	this->callbacks[0x86] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 0));
+	};
+
 	this->callbacks[0x87] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.a &= 0xFE;
+		gb->getCPU()->registers.a &= ~(1 << 0);
+	};
+
+	this->callbacks[0x88] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 1);
+	};
+
+	this->callbacks[0x89] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 1);
+	};
+
+	this->callbacks[0x8A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 1);
+	};
+
+	this->callbacks[0x8B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 1);
+	};
+
+	this->callbacks[0x8C] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 1);
+	};
+
+	this->callbacks[0x8D] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 1);
+	};
+
+	this->callbacks[0x8E] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 1));
+	};
+
+	this->callbacks[0x8F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 1);
+	};
+
+	this->callbacks[0x90] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 2);
+	};
+
+	this->callbacks[0x91] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 2);
+	};
+
+	this->callbacks[0x92] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 2);
+	};
+
+	this->callbacks[0x93] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 2);
+	};
+
+	this->callbacks[0x94] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 2);
+	};
+
+	this->callbacks[0x95] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 2);
+	};
+
+	this->callbacks[0x96] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 2));
+	};
+
+	this->callbacks[0x97] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 2);
+	};
+
+	this->callbacks[0x98] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 3);
+	};
+
+	this->callbacks[0x99] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 3);
+	};
+
+	this->callbacks[0x9A] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 3);
+	};
+
+	this->callbacks[0x9B] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 3);
+	};
+
+	this->callbacks[0x9C] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 3);
+	};
+
+	this->callbacks[0x9D] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 3);
+	};
+
+	this->callbacks[0x9E] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 3));
+	};
+
+	this->callbacks[0x9F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 3);
+	};
+
+	this->callbacks[0xA0] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA1] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA2] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA3] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA4] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA5] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA6] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 4));
+	};
+
+	this->callbacks[0xA7] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 4);
+	};
+
+	this->callbacks[0xA8] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 5);
+	};
+
+	this->callbacks[0xA9] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 5);
+	};
+
+	this->callbacks[0xAA] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 5);
+	};
+
+	this->callbacks[0xAB] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 5);
+	};
+
+	this->callbacks[0xAC] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 5);
+	};
+
+	this->callbacks[0xAD] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 5);
+	};
+
+	this->callbacks[0xAE] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 5));
+	};
+
+	this->callbacks[0xAF] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 5);
+	};
+
+	this->callbacks[0xB0] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB1] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB2] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB3] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB4] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB5] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB6] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 6));
+	};
+
+	this->callbacks[0xB7] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 6);
+	};
+
+	this->callbacks[0xB8] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.b &= ~(1 << 7);
+	};
+
+	this->callbacks[0xB9] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.c &= ~(1 << 7);
+	};
+
+	this->callbacks[0xBA] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.d &= ~(1 << 7);
+	};
+
+	this->callbacks[0xBB] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.e &= ~(1 << 7);
+	};
+
+	this->callbacks[0xBC] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.h &= ~(1 << 7);
+	};
+
+	this->callbacks[0xBD] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.l &= ~(1 << 7);
+	};
+
+	this->callbacks[0xBE] = [](GameBoy* gb)
+	{
+		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 7));
+	};
+
+	this->callbacks[0xBF] = [](GameBoy* gb)
+	{
+		gb->getCPU()->registers.a &= ~(1 << 7);
 	};
 
 	this->callbacks[0xC0] = [](GameBoy* gb)
@@ -2446,6 +3008,77 @@ void CPU::bit(unsigned char reg, unsigned char _bit)
 	gb->getCPU()->registers.f &= ~(FLAG_ZERO | FLAG_NEGATIVE);
 	gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
 	if (reg & (1 << _bit)) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::rlc(unsigned char* reg)
+{
+	bool carry = (*reg & 0x80) == 0x80;
+	*reg <<= 1;
+	*reg |= carry ? 0x01 : 0;
+
+	gb->getCPU()->registers.f = carry ? FLAG_CARRY : 0;
+	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::rrc(unsigned char* reg)
+{
+	bool carry = *reg & 0x01;
+	*reg >>= 1;
+	*reg |= carry ? 0x80 : 0;
+
+	gb->getCPU()->registers.f = carry ? FLAG_CARRY : 0;
+	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::rl(unsigned char* reg)
+{
+	unsigned char carry = (this->registers.f & FLAG_CARRY) == FLAG_CARRY;
+	gb->getCPU()->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
+
+	*reg <<= 1;
+	*reg |= carry;
+
+	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::rr(unsigned char* reg)
+{
+	unsigned char carry = this->registers.f & FLAG_CARRY;
+	gb->getCPU()->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+
+	*reg >>= 1;
+	*reg |= carry;
+
+	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::sla(unsigned char* reg)
+{
+	gb->getCPU()->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
+	*reg <<= 1;
+	if (!*reg) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::sra(unsigned char* reg)
+{
+	unsigned char carry = (*reg & 0x80);
+	gb->getCPU()->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	*reg >>= 1;
+	*reg |= carry;
+	if (!*reg) gb->getCPU()->registers.f |= FLAG_ZERO;
+}
+
+void CPU::swap(unsigned char* reg)
+{
+	*reg = ((*reg & 0x0F) << 4) | ((*reg >> 4) & 0x0F);
+	gb->getCPU()->registers.f = !*reg ? FLAG_ZERO : 0;
+}
+
+void CPU::srl(unsigned char* reg)
+{
+	gb->getCPU()->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	*reg >>= 1;
+	if (!*reg) gb->getCPU()->registers.f |= FLAG_ZERO;
 }
 
 void CPU::executeRst(unsigned short num)

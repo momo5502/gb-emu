@@ -30,6 +30,8 @@ unsigned char Joypad::read()
 	}
 	else input = 0xF;
 
+	input |= this->column;
+
 	return input;
 }
 
