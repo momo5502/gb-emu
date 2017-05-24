@@ -12,22 +12,23 @@ Joypad::~Joypad()
 
 unsigned char Joypad::read()
 {
-	unsigned char input = 0xFF;
+	unsigned char input = 0;
 
 	if(this->column == 0x10)
 	{
-		input &= (this->a()      ? ~KEY_A     : 0);
-		input &= (this->b()      ? ~KEY_B     : 0);
-		input &= (this->select() ? ~KEY_A     : 0);
-		input &= (this->start()  ? ~KEY_START : 0);
+		input |= (!this->a()      ? KEY_A     : 0);
+		input |= (!this->b()      ? KEY_B     : 0);
+		input |= (!this->select() ? KEY_A     : 0);
+		input |= (!this->start()  ? KEY_START : 0);
 	}
 	else if (this->column == 0x20)
 	{
-		input &= (this->up()    ? ~KEY_UP    : 0);
-		input &= (this->down()  ? ~KEY_DOWN  : 0);
-		input &= (this->left()  ? ~KEY_LEFT  : 0);
-		input &= (this->right() ? ~KEY_RIGHT : 0);
+		input |= (!this->up()    ? KEY_UP    : 0);
+		input |= (!this->down()  ? KEY_DOWN  : 0);
+		input |= (!this->left()  ? KEY_LEFT  : 0);
+		input |= (!this->right() ? KEY_RIGHT : 0);
 	}
+	else input = 0xF;
 
 	return input;
 }

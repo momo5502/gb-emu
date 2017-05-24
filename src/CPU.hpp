@@ -114,4 +114,6 @@ private:
 	void cp(unsigned char reg);
 	void adc(unsigned char reg);
 	void sbc(unsigned char reg);
+
+	void bit(unsigned char reg, unsigned char _bit);
 };
