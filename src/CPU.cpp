@@ -268,6 +268,12 @@ void CPU::setupOperations()
 		gb->getCPU()->registers.e = gb->getCPU()->readProgramByte();
 	};
 
+	// RR a
+	this->operations[0x1F] = [](GameBoy* gb)
+	{
+		gb->getCPU()->rr(&gb->getCPU()->registers.a);
+	};
+
 	// JR NZ,n
 	this->operations[0x20] = [](GameBoy* gb)
 	{
