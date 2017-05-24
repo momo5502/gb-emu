@@ -32,11 +32,15 @@ workspace "gb-emu"
 		kind "WindowedApp"
 		language "C++"
 		files {
+			"./src/**.rc",
 			"./src/**.hpp",
 			"./src/**.cpp",
 		}
 		includedirs {
 			"./src"
+		}
+		resincludedirs {
+			"$(ProjectDir)src" -- fix for VS IDE
 		}
 
 		-- Pre-compiled header

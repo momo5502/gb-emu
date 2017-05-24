@@ -6,18 +6,14 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include <conio.h>
-
-#include <d3d9.h>
-#pragma comment (lib, "d3d9.lib")
 
 #pragma warning(push)
 #pragma warning(disable: 4244)
 #include <map>
-#include <mutex>
 #include <string>
 #include <vector>
+#include <thread>
 #include <fstream>
 #pragma warning(pop)
 

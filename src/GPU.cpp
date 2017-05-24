@@ -19,6 +19,8 @@ void GPU::windowRunner()
 	wc.lpfnWndProc = GPU::WindowProc;
 	wc.hInstance = GetModuleHandle(nullptr);
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wc.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(102));
+	wc.hIconSm = wc.hIcon;
 	wc.hbrBackground = HBRUSH(COLOR_WINDOW);
 	wc.lpszClassName = L"GBAWindow";
 	RegisterClassEx(&wc);
