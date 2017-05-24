@@ -19,6 +19,8 @@ public:
 	void updateTile(unsigned short address);
 	void closeWindow();
 
+	void setTitle(std::string title);
+
 private:
 	struct Memory
 	{

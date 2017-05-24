@@ -43,4 +43,11 @@ bool GameBoy::frame()
 void GameBoy::loadRom(std::string data)
 {
 	this->mmu.loadRom(std::basic_string<unsigned char>(data.begin(), data.end()));
+
+	if (data.size() >= 0x143)
+	{
+		std::string rom(data.data() + 0x134, 16);
+		while (!rom.empty() && !rom.back()) rom.pop_back();
+		this->gpu.setTitle(rom);
+	}
 }

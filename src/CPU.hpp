@@ -83,7 +83,7 @@ public:
 	unsigned short readProgramWord();
 
 	bool execute();
-	void executeCallback(unsigned char instruction);
+	void executeExt(unsigned char instruction);
 
 	Registers registers;
 	Timer timer;
@@ -92,15 +92,15 @@ private:
 	Operation operations[0x100];
 	static const unsigned char OperationTicks[0x100];
 
-	Operation callbacks[0x100];
-	static const unsigned char CallbackTicks[0x100];
+	Operation extOperations[0x100];
+	static const unsigned char ExtOperationTicks[0x100];
 
 	bool ime;
 	GameBoy* gb;
 	Registers savRegisters;
 
 	void setupOperations();
-	void setupCallbacks();
+	void setupExtOperations();
 
 	void executeRst(unsigned short num);
 

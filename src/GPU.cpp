@@ -280,3 +280,8 @@ void GPU::closeWindow()
 		this->window = nullptr;
 	}
 }
+
+void GPU::setTitle(std::string title)
+{
+	if(this->working()) SetWindowTextA(this->window, Utils::VA("GB-EMU - %s", title.data()));
+}
