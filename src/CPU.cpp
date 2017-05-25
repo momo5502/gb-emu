@@ -3250,27 +3250,27 @@ bool CPU::execute()
 				this->ime = false;
 
 				unsigned char ifired = this->gb->getMMU()->iE & this->gb->getMMU()->iF;
-				if (ifired & 1)
+				if (ifired & 1) // VBlank
 				{
 					this->gb->getMMU()->iF &= 0xFE;
 					this->executeRst(0x40);
 				}
-				else if (ifired & 2)
+				else if (ifired & 2) // LCDStat
 				{
 					this->gb->getMMU()->iF &= 0xFD;
 					this->executeRst(0x48);
 				}
-				else if (ifired & 4)
+				else if (ifired & 4) // Timer
 				{
 					this->gb->getMMU()->iF &= 0xFB;
 					this->executeRst(0x50);
 				}
-				else if (ifired & 8)
+				else if (ifired & 8) // Serial
 				{
 					this->gb->getMMU()->iF &= 0xF7;
 					this->executeRst(0x58);
 				}
-				else if (ifired & 16)
+				else if (ifired & 16) // Joypad
 				{
 					this->gb->getMMU()->iF &= 0xEF;
 					this->executeRst(0x60);

@@ -30,6 +30,11 @@ unsigned char Joypad::read()
 	}
 	else input = 0xF;
 
+	if((input & 0xF) != 0xF && this->gb->getMMU()->iE & 16)
+	{
+		this->gb->getMMU()->iF |= 16;
+	}
+
 	input |= this->column;
 
 	return input;
