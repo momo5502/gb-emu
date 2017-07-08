@@ -5,9 +5,6 @@ workspace "gb-emu"
 	configurations { "Debug", "Release" }
 	platforms { "x32", "x64" }
 
-	-- VS 2015 toolset only
-	toolset "msc-140"
-
 	configuration "windows"
 		defines { "_WINDOWS", "WIN32" }
 		flags { "StaticRuntime" }

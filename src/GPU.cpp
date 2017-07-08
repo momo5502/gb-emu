@@ -31,14 +31,17 @@ void GPU::windowRunner()
 	SetWindowLongPtrA(this->window, GWLP_USERDATA, LONG_PTR(this));
 
 	MSG msg;
-	while (this->working() && (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE) || []()
+	while (this->working())
 	{
-		std::this_thread::sleep_for(1ms);
-		return true;
-	}()))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+		{
+			std::this_thread::sleep_for(1ms);
+		}
 	}
 }
 
