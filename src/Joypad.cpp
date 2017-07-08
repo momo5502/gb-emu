@@ -16,10 +16,10 @@ unsigned char Joypad::read()
 
 	if(this->column == 0x10)
 	{
-		input |= (!this->a()      ? KEY_A     : 0);
-		input |= (!this->b()      ? KEY_B     : 0);
-		input |= (!this->select() ? KEY_A     : 0);
-		input |= (!this->start()  ? KEY_START : 0);
+		input |= (!this->a()      ? KEY_A      : 0);
+		input |= (!this->b()      ? KEY_B      : 0);
+		input |= (!this->select() ? KEY_SELECT : 0);
+		input |= (!this->start()  ? KEY_START  : 0);
 	}
 	else if (this->column == 0x20)
 	{
@@ -30,9 +30,9 @@ unsigned char Joypad::read()
 	}
 	else input = 0xF;
 
-	if((input & 0xF) != 0xF && this->gb->getMMU()->iE & 16)
+	if((input & 0xF) != 0xF && this->gb->getMMU()->iE & 0x10)
 	{
-		this->gb->getMMU()->iF |= 16;
+		this->gb->getMMU()->iF |= 0x10;
 	}
 
 	input |= this->column;
@@ -47,45 +47,45 @@ void Joypad::write(unsigned char val)
 
 bool Joypad::up()
 {
-	return this->isKeyPressed(VK_UP);
+	return Joypad::IsKeyPressed(VK_UP);
 }
 
 bool Joypad::down()
 {
-	return this->isKeyPressed(VK_DOWN);
+	return Joypad::IsKeyPressed(VK_DOWN);
 }
 
 bool Joypad::left()
 {
-	return this->isKeyPressed(VK_LEFT);
+	return Joypad::IsKeyPressed(VK_LEFT);
 }
 
 bool Joypad::right()
 {
-	return this->isKeyPressed(VK_RIGHT);
+	return Joypad::IsKeyPressed(VK_RIGHT);
 }
 
 bool Joypad::a()
 {
-	return this->isKeyPressed('S');
+	return Joypad::IsKeyPressed('S');
 }
 
 bool Joypad::b()
 {
-	return this->isKeyPressed('A');
+	return Joypad::IsKeyPressed('A');
 }
 
 bool Joypad::start()
 {
-	return this->isKeyPressed(VK_RETURN);
+	return Joypad::IsKeyPressed(VK_RETURN);
 }
 
 bool Joypad::select()
 {
-	return this->isKeyPressed(VK_SPACE);
+	return Joypad::IsKeyPressed(VK_SPACE);
 }
 
-bool Joypad::isKeyPressed(int vk)
+bool Joypad::IsKeyPressed(int vk)
 {
 	return (GetKeyState(vk) & 0x8000) != 0;
 }
