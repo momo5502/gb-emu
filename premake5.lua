@@ -1,7 +1,7 @@
 workspace "gb-emu"
 	location "./build"
 	objdir "%{wks.location}/obj"
-	targetdir "%{wks.location}/bin/%{cfg.buildcfg}"
+	targetdir "%{wks.location}/bin/%{cfg.platform}/%{cfg.buildcfg}"
 	configurations { "Debug", "Release" }
 	platforms { "x32", "x64" }
 
