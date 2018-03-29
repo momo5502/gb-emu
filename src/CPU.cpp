@@ -2987,17 +2987,20 @@ void CPU::setupExtOperations()
 void CPU::inc(unsigned char* reg)
 {
 	(*reg)++;
-	this->registers.f = (this->registers.f & FLAG_CARRY);
+	this->registers.f &= ~(FLAG_NEGATIVE | FLAG_ZERO | FLAG_HALF_CARRY);
 	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::dec(unsigned char* reg)
 {
+	auto value = *reg;
+
 	(*reg)--;
-	this->registers.f = (this->registers.f & FLAG_CARRY) | FLAG_NEGATIVE;
-	if ((*reg & 0x0F) == 0x00) this->registers.f |= FLAG_HALF_CARRY;
+	this->registers.f &= ~(FLAG_ZERO | FLAG_HALF_CARRY);
+	if (((value ^ 0x01 ^ *reg) & 0x10) == 0x10) this->registers.f |= FLAG_HALF_CARRY;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
+	this->registers.f |= FLAG_NEGATIVE;
 }
 
 void CPU::add(unsigned char reg)
@@ -3225,9 +3228,22 @@ unsigned char CPU::stackPopByte()
 	return value;
 }
 
+static bool showDbg = false;
+static unsigned short _target = 0x225;
+
 bool CPU::execute()
 {
 	unsigned short pc = this->registers.pc;
+
+	//if (pc == _target) showDbg = true;
+
+	if (showDbg)
+	{
+		char buffer[0x1000] = { 0 };
+		_snprintf_s(buffer, sizeof(buffer), "af=\t%04X\nbc=\t%04X\nde=\t%04X\nhl=\t%04X\nsp=\t%04X\npc=\t%04X\n", this->registers.af, this->registers.bc, this->registers.de, this->registers.hl, this->registers.sp, this->registers.pc);
+		MessageBoxA(0, buffer, 0, 0);
+	}
+
 	unsigned char instruction = this->readProgramByte();
 
 	auto operation = this->operations[instruction];

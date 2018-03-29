@@ -5,6 +5,8 @@ workspace "gb-emu"
 	configurations { "Debug", "Release" }
 	platforms { "x32", "x64" }
 
+	buildoptions "/std:c++latest"
+
 	configuration "windows"
 		defines { "_WINDOWS", "WIN32" }
 		flags { "StaticRuntime" }
