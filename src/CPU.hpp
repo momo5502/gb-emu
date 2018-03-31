@@ -99,10 +99,14 @@ private:
 	GameBoy* gb;
 	Registers savRegisters;
 
+	bool halted = false;
+
 	void setupOperations();
 	void setupExtOperations();
 
 	void executeRst(unsigned short num);
+
+	void addHL(unsigned short reg);
 
 	void inc(unsigned char* reg);
 	void dec(unsigned char* reg);

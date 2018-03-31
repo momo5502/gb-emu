@@ -2,10 +2,10 @@
 
 const unsigned char CPU::OperationTicks[0x100] =
 {
-	2, 6, 4, 4, 2, 2, 4, 4, 10, 4, 4, 4, 2, 2, 4, 4, // 0x0_
-	2, 6, 4, 4, 2, 2, 4, 4,  4, 4, 4, 4, 2, 2, 4, 4, // 0x1_
-	0, 6, 4, 4, 2, 2, 4, 2,  0, 4, 4, 4, 2, 2, 4, 2, // 0x2_
-	4, 6, 4, 4, 6, 6, 6, 2,  0, 4, 4, 4, 2, 2, 4, 2, // 0x3_
+	2, 6, 4, 4, 2, 2, 4, 2, 10, 4, 4, 4, 2, 2, 4, 2, // 0x0_
+	2, 6, 4, 4, 2, 2, 4, 2,  6, 4, 4, 4, 2, 2, 4, 2, // 0x1_
+	4, 6, 4, 4, 2, 2, 4, 2,  4, 4, 4, 4, 2, 2, 4, 2, // 0x2_
+	4, 6, 4, 4, 6, 6, 6, 2,  4, 4, 4, 4, 2, 2, 4, 2, // 0x3_
 	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x4_
 	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x5_
 	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x6_
@@ -14,10 +14,10 @@ const unsigned char CPU::OperationTicks[0x100] =
 	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x9_
 	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0xa_
 	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0xb_
-	0, 6, 0, 6, 0, 8, 4, /*8*/ 0,  0, 2, 0, 0, 0, 6, 4, /*8*/ 0, // 0xc_
-	0, 6, 0, 0, 0, 8, 4, /*8*/ 0,  0, 8, 0, 0, 0, 0, 4, /*8*/ 0, // 0xd_
-	6, 6, 4, 0, 0, 8, 4, /*8*/ 0,  8, 2, 8, 0, 0, 0, 4, /*8*/ 0, // 0xe_
-	6, 6, 4, 2, 0, 8, 4, /*8*/ 0,  6, 4, 8, 2, 0, 0, 4, /*8*/ 0  // 0xf_
+	4, 6, 6, 8, 6, 8, 4, 0,  4, 8, 6, 0, 6,12, 4, 0, // 0xc_
+	4, 6, 6, 0, 6, 8, 4, 0,  4, 8, 6, 0, 6, 0, 4, 0, // 0xd_
+	6, 4, 4, 0, 0, 8, 4, 0,  8, 2, 8, 0, 0, 0, 4, 0, // 0xe_
+	6, 4, 4, 2, 0, 8, 4, 0,  6, 4, 8, 2, 0, 0, 4, 0  // 0xf_
 };
 
 const unsigned char CPU::ExtOperationTicks[0x100] =
@@ -126,16 +126,7 @@ void CPU::setupOperations()
 	// ADD HL,BC
 	this->operations[0x09] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_ZERO;
-
-		unsigned short value = gb->getCPU()->registers.bc;
-		int result = gb->getCPU()->registers.hl + value;
-
-		if (result > 0xFFFF) gb->getCPU()->registers.f |= FLAG_CARRY;
-
-		if ((gb->getCPU()->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-
-		gb->getCPU()->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
+		gb->getCPU()->addHL(gb->getCPU()->registers.bc);
 	};
 
 	// LD A,(BC)
@@ -227,22 +218,12 @@ void CPU::setupOperations()
 	{
 		char jumpLoc = gb->getCPU()->readProgramByte();
 		gb->getCPU()->registers.pc += jumpLoc;
-		gb->getCPU()->registers.m++;
 	};
 
 	// ADD HL,DE
 	this->operations[0x19] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_ZERO;
-
-		unsigned short value = gb->getCPU()->registers.de;
-		int result = gb->getCPU()->registers.hl + value;
-
-		if (result > 0xFFFF) gb->getCPU()->registers.f |= FLAG_CARRY;
-
-		if ((gb->getCPU()->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-
-		gb->getCPU()->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
+		gb->getCPU()->addHL(gb->getCPU()->registers.de);
 	};
 
 	// LD A,(DE)
@@ -329,6 +310,38 @@ void CPU::setupOperations()
 		gb->getCPU()->registers.h = gb->getCPU()->readProgramByte();
 	};
 
+	// DAA
+	this->operations[0x27] = [](GameBoy* gb)
+	{
+		int a = gb->getCPU()->registers.a;
+		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
+		{
+			if(gb->getCPU()->registers.f & FLAG_HALF_CARRY || ((a & 0xF) > 9))
+				a += 0x06;
+
+			if (gb->getCPU()->registers.f & FLAG_CARRY || (a > 0x9F))
+				a += 0x60;
+		}
+		else
+		{
+			if (gb->getCPU()->registers.f & FLAG_HALF_CARRY)
+				a = (a - 6) & 0xFF;
+
+			if (gb->getCPU()->registers.f & FLAG_CARRY)
+				a -= 0x60;
+		}
+
+		gb->getCPU()->registers.f &= ~(FLAG_HALF_CARRY | FLAG_ZERO);
+
+		if ((a & 0x100) == 0x100)
+			gb->getCPU()->registers.f |= FLAG_CARRY;
+
+		a &= 0xFF;
+		if(!a) gb->getCPU()->registers.f |= FLAG_ZERO;
+
+		gb->getCPU()->registers.a = static_cast<unsigned char>(a);
+	};
+
 	// JR Z,n
 	this->operations[0x28] = [](GameBoy* gb)
 	{
@@ -343,16 +356,7 @@ void CPU::setupOperations()
 	// ADD HL,HL
 	this->operations[0x29] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_ZERO;
-
-		unsigned short value = gb->getCPU()->registers.hl;
-		int result = gb->getCPU()->registers.hl + value;
-
-		if (result > 0xFFFF) gb->getCPU()->registers.f |= FLAG_CARRY;
-
-		if ((gb->getCPU()->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-
-		gb->getCPU()->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
+		gb->getCPU()->addHL(gb->getCPU()->registers.hl);
 	};
 
 	// LDI A,(HL)
@@ -476,16 +480,7 @@ void CPU::setupOperations()
 	// ADD HL,SP
 	this->operations[0x39] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_ZERO;
-
-		unsigned short value = gb->getCPU()->registers.hl;
-		int result = gb->getCPU()->registers.hl + value;
-
-		if (result > 0xFFFF) gb->getCPU()->registers.f |= FLAG_CARRY;
-
-		if ((gb->getCPU()->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-
-		gb->getCPU()->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
+		gb->getCPU()->addHL(gb->getCPU()->registers.hl);
 	};
 
 	// LDD A,(HL)
@@ -852,10 +847,12 @@ void CPU::setupOperations()
 	};
 
 	// HALT
-	this->operations[0x76] = [](GameBoy*)
+	this->operations[0x76] = [](GameBoy* gb)
 	{
 		//printf("Halt called :(\n");
-		throw std::runtime_error("Halt not implemented!");
+		//throw std::runtime_error("Halt not implemented!");
+		gb->getCPU()->halted = true;
+		gb->getCPU()->ime = true;
 	};
 
 	// LD(HL), A
@@ -1302,7 +1299,7 @@ void CPU::setupOperations()
 		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m++;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1337,6 +1334,7 @@ void CPU::setupOperations()
 		{
 			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
 			gb->getCPU()->registers.pc = callLoc;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1364,7 +1362,7 @@ void CPU::setupOperations()
 		if (gb->getCPU()->registers.f & FLAG_ZERO)
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m++;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1385,10 +1383,11 @@ void CPU::setupOperations()
 		}
 	};
 
-	// Ext ops (callbacks)
+	// Ext ops
 	this->operations[0xCB] = [](GameBoy* gb)
 	{
 		gb->getCPU()->executeExt(gb->getCPU()->readProgramByte());
+		// TODO: Check if timing needs 4 extra ticks to the additional 8/16 ticks of the extop
 	};
 
 	// CALL Z,nn
@@ -1399,6 +1398,7 @@ void CPU::setupOperations()
 		{
 			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
 			gb->getCPU()->registers.pc = callLoc;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 	
@@ -1427,7 +1427,7 @@ void CPU::setupOperations()
 		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m++;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1456,6 +1456,7 @@ void CPU::setupOperations()
 		{
 			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
 			gb->getCPU()->registers.pc = callLoc;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1483,7 +1484,7 @@ void CPU::setupOperations()
 		if (gb->getCPU()->registers.f & FLAG_CARRY)
 		{
 			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m++;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1522,6 +1523,7 @@ void CPU::setupOperations()
 		{
 			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
 			gb->getCPU()->registers.pc = callLoc;
+			gb->getCPU()->registers.m += 3;
 		}
 	};
 
@@ -1581,6 +1583,7 @@ void CPU::setupOperations()
 		unsigned short value = gb->getCPU()->readProgramByte();
 		int result = gb->getCPU()->registers.sp + value;
 
+		gb->getCPU()->registers.f = 0;
 		if (((gb->getCPU()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100) gb->getCPU()->registers.f |= FLAG_CARRY;
 		if (((gb->getCPU()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
 
@@ -1590,7 +1593,8 @@ void CPU::setupOperations()
 	// JP (HL)
 	this->operations[0xE9] = [](GameBoy* gb)
 	{
-		gb->getCPU()->registers.pc = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		//gb->getCPU()->registers.pc = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->getCPU()->registers.pc = gb->getCPU()->registers.hl;
 	};
 
 	// LD (nn),A
@@ -2984,60 +2988,59 @@ void CPU::setupExtOperations()
 	};
 }
 
+void CPU::addHL(unsigned short value)
+{
+	int result = this->registers.hl + value;
+
+	this->registers.f &= FLAG_ZERO;
+	if (result & 0x10000) this->registers.f |= FLAG_CARRY;
+	if ((this->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) this->registers.f |= FLAG_HALF_CARRY;
+
+	this->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
+}
+
 void CPU::inc(unsigned char* reg)
 {
 	(*reg)++;
-	this->registers.f &= ~(FLAG_NEGATIVE | FLAG_ZERO | FLAG_HALF_CARRY);
-	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
+	this->registers.f &= FLAG_CARRY;
+	if ((*reg & 0x0F) == 0x00) this->registers.f |= FLAG_HALF_CARRY;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::dec(unsigned char* reg)
 {
-	auto value = *reg;
-
 	(*reg)--;
-	this->registers.f &= ~(FLAG_ZERO | FLAG_HALF_CARRY);
-	if (((value ^ 0x01 ^ *reg) & 0x10) == 0x10) this->registers.f |= FLAG_HALF_CARRY;
+	this->registers.f &= FLAG_CARRY;
+	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
 	if (!*reg) this->registers.f |= FLAG_ZERO;
 	this->registers.f |= FLAG_NEGATIVE;
 }
 
 void CPU::add(unsigned char reg)
 {
-	this->registers.f &= ~FLAG_NEGATIVE;
-
 	char value = reg;
 	unsigned int result = this->registers.a + value;
-
-	if (result > 0xFF) this->registers.f |= FLAG_CARRY;
-	else this->registers.f &= ~FLAG_CARRY;
+	int carrybits = this->registers.a ^ value ^ result;
 
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 
+	this->registers.f = 0;
+	if ((carrybits & 0x100) != 0) this->registers.f |= FLAG_CARRY;
 	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
-	else this->registers.f &= ~FLAG_ZERO;
-
-	if (((this->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
-	else this->registers.f &= ~FLAG_HALF_CARRY;
+	if ((carrybits & 0x10) != 0) this->registers.f |= FLAG_HALF_CARRY;
 }
 
 void CPU::adc(unsigned char reg)
 {
-	this->registers.f |= FLAG_NEGATIVE;
-	reg += (this->registers.f & FLAG_CARRY) ? 1 : 0;
+	int carry = (this->registers.f & FLAG_CARRY) ? 1 : 0;
 
-	int value = reg;
+	int value = reg + carry;
 	int result = this->registers.a + value;
 
+	this->registers.f = 0;
 	if (result > 0xFF) this->registers.f |= FLAG_CARRY;
-	else this->registers.f &= ~FLAG_CARRY;
-
-	if (this->registers.a == value) this->registers.f |= FLAG_ZERO;
-	else this->registers.f &= ~FLAG_ZERO;
-
-	if (((this->registers.a & 0x0F) + (value & 0x0F)) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
-	else this->registers.f &= ~FLAG_HALF_CARRY;
+	if (!result) this->registers.f |= FLAG_ZERO;
+	if (((this->registers.a & 0x0F) + (reg & 0x0F) + carry) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
 
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 }
@@ -3049,7 +3052,6 @@ void CPU::sbc(unsigned char reg)
 
 	this->registers.f = FLAG_NEGATIVE;
 	if(!(result & 0xFF)) this->registers.f |= FLAG_ZERO;
-
 	if (result < 0) this->registers.f |= FLAG_CARRY;
 	if (((this->registers.a & 0x0F) - (reg & 0x0F) - carry) < 0) this->registers.f |= FLAG_HALF_CARRY;
 
@@ -3058,20 +3060,16 @@ void CPU::sbc(unsigned char reg)
 
 void CPU::sub(unsigned char reg)
 {
-	this->registers.f |= FLAG_NEGATIVE;
-
 	char value = reg;
+	unsigned int result = this->registers.a - value;
+	int carrybits = this->registers.a ^ value ^ result;
 
-	if (value > this->registers.a) this->registers.f |= FLAG_CARRY;
-	else this->registers.f &= ~FLAG_CARRY;
+	this->registers.f = FLAG_NEGATIVE;
+	if ((carrybits & 0x100) != 0) this->registers.f |= FLAG_CARRY;
+	if ((carrybits & 0x10) != 0) this->registers.f |= FLAG_HALF_CARRY;
+	if (!result) this->registers.f |= FLAG_ZERO;
 
-	if ((value & 0x0F) > (this->registers.a & 0x0F)) this->registers.f |= FLAG_HALF_CARRY;
-	else this->registers.f &= ~FLAG_HALF_CARRY;
-
-	this->registers.a -= value;
-
-	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
-	else this->registers.f &= ~FLAG_ZERO;
+	this->registers.a = static_cast<unsigned char>(result);
 }
 
 void CPU::and(unsigned char reg)
@@ -3104,9 +3102,9 @@ void CPU::cp(unsigned char reg)
 
 void CPU::bit(unsigned char reg, unsigned char _bit)
 {
-	gb->getCPU()->registers.f &= ~(FLAG_ZERO | FLAG_NEGATIVE);
-	gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
-	if (reg & (1 << _bit)) gb->getCPU()->registers.f |= FLAG_ZERO;
+	this->registers.f &= ~(FLAG_ZERO | FLAG_NEGATIVE);
+	this->registers.f |= FLAG_HALF_CARRY;
+	if (((reg >> _bit) & 0x01) == 0) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::rlc(unsigned char* reg)
@@ -3115,8 +3113,8 @@ void CPU::rlc(unsigned char* reg)
 	*reg <<= 1;
 	*reg |= carry ? 0x01 : 0;
 
-	gb->getCPU()->registers.f = carry ? FLAG_CARRY : 0;
-	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+	this->registers.f = carry ? FLAG_CARRY : 0;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::rrc(unsigned char* reg)
@@ -3125,59 +3123,59 @@ void CPU::rrc(unsigned char* reg)
 	*reg >>= 1;
 	*reg |= carry ? 0x80 : 0;
 
-	gb->getCPU()->registers.f = carry ? FLAG_CARRY : 0;
-	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+	this->registers.f = carry ? FLAG_CARRY : 0;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::rl(unsigned char* reg)
 {
-	unsigned char carry = (this->registers.f & FLAG_CARRY) == FLAG_CARRY;
-	gb->getCPU()->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
+	unsigned char carry = (this->registers.f & FLAG_CARRY) ? 1 : 0;
+	this->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
 
 	*reg <<= 1;
 	*reg |= carry;
 
-	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::rr(unsigned char* reg)
 {
-	unsigned char carry = this->registers.f & FLAG_CARRY;
-	gb->getCPU()->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	unsigned char carry = (this->registers.f & FLAG_CARRY) ? 0x80 : 0;
+	this->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
 
 	*reg >>= 1;
 	*reg |= carry;
 
-	if (!*reg && reg != &this->registers.a) gb->getCPU()->registers.f |= FLAG_ZERO;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::sla(unsigned char* reg)
 {
-	gb->getCPU()->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
+	this->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
 	*reg <<= 1;
-	if (!*reg) gb->getCPU()->registers.f |= FLAG_ZERO;
+	if (!*reg) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::sra(unsigned char* reg)
 {
 	unsigned char carry = (*reg & 0x80);
-	gb->getCPU()->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	this->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
 	*reg >>= 1;
 	*reg |= carry;
-	if (!*reg) gb->getCPU()->registers.f |= FLAG_ZERO;
+	if (!*reg) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::swap(unsigned char* reg)
 {
 	*reg = ((*reg & 0x0F) << 4) | ((*reg >> 4) & 0x0F);
-	gb->getCPU()->registers.f = !*reg ? FLAG_ZERO : 0;
+	this->registers.f = !*reg ? FLAG_ZERO : 0;
 }
 
 void CPU::srl(unsigned char* reg)
 {
-	gb->getCPU()->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	this->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
 	*reg >>= 1;
-	if (!*reg) gb->getCPU()->registers.f |= FLAG_ZERO;
+	if (!*reg) this->registers.f |= FLAG_ZERO;
 }
 
 void CPU::executeRst(unsigned short num)
@@ -3185,7 +3183,7 @@ void CPU::executeRst(unsigned short num)
 	std::memcpy(&this->savRegisters, &this->registers, sizeof this->registers);
 	this->stackPushWord(this->registers.pc);
 	this->registers.pc = num;
-	this->registers.m += 3;
+	this->registers.m += 4;
 }
 
 unsigned char CPU::readProgramByte()
@@ -3228,23 +3226,11 @@ unsigned char CPU::stackPopByte()
 	return value;
 }
 
-static bool showDbg = false;
-static unsigned short _target = 0x225;
-
 bool CPU::execute()
 {
 	unsigned short pc = this->registers.pc;
 
-	//if (pc == _target) showDbg = true;
-
-	if (showDbg)
-	{
-		char buffer[0x1000] = { 0 };
-		_snprintf_s(buffer, sizeof(buffer), "af=\t%04X\nbc=\t%04X\nde=\t%04X\nhl=\t%04X\nsp=\t%04X\npc=\t%04X\n", this->registers.af, this->registers.bc, this->registers.de, this->registers.hl, this->registers.sp, this->registers.pc);
-		MessageBoxA(0, buffer, 0, 0);
-	}
-
-	unsigned char instruction = this->readProgramByte();
+	unsigned char instruction = this->halted ? 0 : this->readProgramByte();
 
 	auto operation = this->operations[instruction];
 
@@ -3252,17 +3238,21 @@ bool CPU::execute()
 	{
 		try
 		{
-			operation(this->gb);
-			this->registers.m += (CPU::OperationTicks[instruction] / 2);
-
-#ifdef DEBUG
-			printf("Operation %X (%X) executed\n", instruction, this->registers.pc);
+			if (!this->halted)
+			{
+#ifdef DEBUG_OPS
+				printf("Operation %X (%X) execution |\taf= %04X\tbc= %04X\tde= %04X\thl= %04X\tsp= %04X\tpc= %04X\n", instruction, pc, this->registers.af, this->registers.bc, this->registers.de, this->registers.hl, this->registers.sp, pc);
 #endif
+
+				operation(this->gb);
+				this->registers.m += (CPU::OperationTicks[instruction] / 2);
+			}
 
 			this->timer.increment(this->gb);
 
 			if (this->ime && this->gb->getMMU()->iE && this->gb->getMMU()->iF)
 			{
+				this->halted = false;
 				this->ime = false;
 
 				unsigned char ifired = this->gb->getMMU()->iE & this->gb->getMMU()->iF;
@@ -3333,7 +3323,7 @@ void CPU::executeExt(unsigned char instruction)
 			extOp(this->gb);
 			this->registers.m += (CPU::ExtOperationTicks[instruction] / 4);
 
-#ifdef DEBUG
+#ifdef DEBUG_OPS
 			printf("Extended operation %X (%X) executed\n", instruction, this->registers.pc);
 #endif
 			return;

@@ -44,10 +44,12 @@ void GameBoy::loadRom(std::string data)
 {
 	this->mmu.loadRom(std::basic_string<unsigned char>(data.begin(), data.end()));
 
-	if (data.size() >= 0x143)
+	if (data.size() >= sizeof(Rom))
 	{
-		std::string rom(data.data() + 0x134, 16);
-		while (!rom.empty() && !rom.back()) rom.pop_back();
-		this->gpu.setTitle(rom);
+		Rom* rom = reinterpret_cast<Rom*>(data.data());
+
+		std::string romName(rom->title, 16);
+		while (!romName.empty() && !romName.back()) romName.pop_back();
+		this->gpu.setTitle(romName);
 	}
 }

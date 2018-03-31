@@ -28,3 +28,5 @@ using namespace std::literals;
 #include "CPU.hpp"
 
 #include "GameBoy.hpp"
+
+//#define DEBUG_OPS

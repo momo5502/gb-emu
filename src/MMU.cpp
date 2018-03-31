@@ -30,9 +30,15 @@ MMU::MMU(GameBoy* gameBoy) : iF(0), iE(0), passedBios(false), gb(gameBoy)
 	ZeroObject(this->oam);
 }
 
+Rom* MMU::getRom()
+{
+	return reinterpret_cast<Rom*>(this->rom.data());
+}
+
 void MMU::loadRom(std::basic_string<unsigned char> data)
 {
 	this->rom = data;
+	this->cartridgeType = this->getRom()->cartridgeType;
 }
 
 unsigned char MMU::readByte(unsigned short address)
@@ -59,6 +65,9 @@ unsigned short MMU::readWord(unsigned short address)
 
 void MMU::writeByte(unsigned short address, unsigned char value)
 {
+	this->controlMBC(address, value);
+	if (address < 0x8000) return;
+
 	if(auto mem = this->getMemoryPtr(address))
 	{
 		*mem = value;
@@ -96,6 +105,79 @@ void MMU::markBiosPass()
 }
 #pragma optimize("", on)
 
+void MMU::controlMBC(unsigned short address, unsigned char value)
+{
+	switch (address & 0xF000)
+	{
+		// MBC1: External RAM switch
+	case 0x0000:
+	case 0x1000:
+		switch (this->cartridgeType)
+		{
+		case 2:
+		case 3:
+			this->mbc[1].ramOn = ((value & 0x0F) == 0x0A) ? 1 : 0;
+			break;
+		}
+		break;
+
+		// MBC1: ROM bank
+	case 0x2000:
+	case 0x3000:
+		switch (this->cartridgeType)
+		{
+		case 1:
+		case 2:
+		case 3:
+			// Set lower 5 bits of ROM bank (skipping #0)
+			value &= 0x1F;
+			if (!value) value = 1;
+			this->mbc[1].romBank = (this->mbc[1].romBank & 0x60) + value;
+
+			// Calculate ROM offset from bank
+			this->romOffset = this->mbc[1].romBank * 0x4000;
+			break;
+		}
+		break;
+
+		// MBC1: RAM bank
+	case 0x4000:
+	case 0x5000:
+		switch (this->cartridgeType)
+		{
+		case 1:
+		case 2:
+		case 3:
+			if (this->mbc[1].mode)
+			{
+				// RAM mode: Set bank
+				this->mbc[1].ramBank = value & 3;
+				this->ramOffset = this->mbc[1].ramBank * 0x2000;
+			}
+			else
+			{
+				// ROM mode: Set high bits of bank
+				this->mbc[1].romBank = (this->mbc[1].romBank & 0x1F) + ((value & 3) << 5);
+				this->romOffset = this->mbc[1].romBank * 0x4000;
+			}
+			break;
+		}
+		break;
+
+	// MBC1: Mode switch
+	case 0x6000:
+	case 0x7000:
+		switch (this->cartridgeType)
+		{
+		case 2:
+		case 3:
+			this->mbc[1].mode = value & 1;
+			break;
+		}
+		break;
+	}
+}
+
 unsigned char* MMU::getMemoryPtr(unsigned short address)
 {
 	switch(address & 0xF000)
@@ -119,14 +201,21 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 		case 0x1000:
 		case 0x2000:
 		case 0x3000:
+		{
+			if (address >= this->rom.size()) throw std::runtime_error("Rom not loaded!");
+			return &const_cast<unsigned char*>(this->rom.data())[address];
+		}
+
 		// ROM1
 		case 0x4000:
 		case 0x5000:
 		case 0x6000:
 		case 0x7000:
 		{
-			if (address >= this->rom.size()) throw std::runtime_error("Rom not loaded!");
-			return &const_cast<unsigned char*>(this->rom.data())[address];
+			int newAddress = this->romOffset + (address - 0x4000);
+
+			if (newAddress >= this->rom.size()) throw std::runtime_error("Rom not loaded!");
+			return &const_cast<unsigned char*>(this->rom.data())[newAddress];
 		}
 
 		// VRAM
@@ -140,7 +229,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 		case 0xA000:
 		case 0xB000:
 		{
-			return &this->eram[address & 0x1FFF];
+			return &this->eram[this->ramOffset + (address - 0xA000)];
 		}
 
 		// WRAM

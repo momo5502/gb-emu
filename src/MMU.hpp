@@ -1,6 +1,16 @@
 #pragma once
 
+struct Rom;
 class CPU;
+
+class MBC
+{
+public:
+	int romBank = 0;
+	int ramBank = 0;
+	int ramOn = 0;
+	int mode = 0;
+};
 
 class MMU
 {
@@ -18,6 +28,8 @@ public:
 
 	unsigned char* getMemoryPtr(unsigned short address);
 
+	void controlMBC(unsigned short address, unsigned char value);
+
 	void markBiosPass();
 
 	unsigned char vram[0x2000];
@@ -27,6 +39,14 @@ public:
 
 	unsigned char iF;
 	unsigned char iE;
+
+	unsigned int romOffset = 0x4000;
+	unsigned int ramOffset = 0x0000;
+	unsigned char cartridgeType = 0;
+
+	MBC mbc[4];
+
+	Rom* getRom();
 
 private:
 	static unsigned char Bios[256];

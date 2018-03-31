@@ -1,5 +1,23 @@
 #pragma once
 
+struct Rom
+{
+	unsigned char padding[0x100];
+	unsigned char entryPoint[4];
+	unsigned char logo[48];
+	char title[16];
+	unsigned short publisher;
+	unsigned char sgbFlag;
+	unsigned char cartridgeType;
+	unsigned char romSize;
+	unsigned char ramSize;
+	unsigned char destination;
+	unsigned char oldPublisher;
+	unsigned char romVersion;
+	unsigned char headerChecksum;
+	unsigned short globalChecksum;
+};
+
 class GameBoy
 {
 public:

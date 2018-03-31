@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 	freopen_s(&fp, "conout$", "w", stdout);
 	freopen_s(&fp, "conout$", "w", stderr);
 
-#ifdef DEBUG
+#ifdef DEBUG_OPS
 	freopen_s(&fp, "out.txt", "w", stdout);
 	freopen_s(&fp, "out.txt", "w", stderr);
 #endif
