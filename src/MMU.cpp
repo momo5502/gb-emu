@@ -72,9 +72,23 @@ void MMU::writeByte(unsigned short address, unsigned char value)
 	{
 		*mem = value;
 
+		if (address == 0xFF46) // OAM DMA
+		{
+			for (unsigned short i = 0; i < 160; ++i)
+			{
+				auto val = *this->getMemoryPtr((value << 8) + i);
+				this->oam[i] = val;
+				this->gb->getGPU()->updateObject(0xFE00 + i, val);
+			}
+		}
+
 		if(mem >= this->vram && mem < &this->vram[sizeof this->vram])
 		{
 			this->gb->getGPU()->updateTile(address);
+		}
+		else if (address >= 0xFE00 && address <= 0xFEFF)
+		{
+			this->gb->getGPU()->updateObject(address, value);
 		}
 		else if (static_cast<void*>(mem) == &this->gb->getCPU()->timer.div)
 		{

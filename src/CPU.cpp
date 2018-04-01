@@ -3245,9 +3245,9 @@ bool CPU::execute()
 #endif
 
 				operation(this->gb);
-				this->registers.m += (CPU::OperationTicks[instruction] / 2);
 			}
 
+			this->registers.m += (CPU::OperationTicks[instruction] / 2);
 			this->timer.increment(this->gb);
 
 			if (this->ime && this->gb->getMMU()->iE && this->gb->getMMU()->iF)

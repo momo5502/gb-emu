@@ -17,6 +17,7 @@ public:
 
 	unsigned char* getMemoryPtr(unsigned short address);
 	void updateTile(unsigned short address);
+	void updateObject(unsigned short address, unsigned char value);
 	void closeWindow();
 
 	void setTitle(std::string title);
@@ -34,6 +35,17 @@ private:
 		unsigned char palette[3];
 
 		unsigned char reg[0xFF];
+	};
+
+	struct Object
+	{
+		int y;
+		int x;
+		int tile;
+		int palette;
+		int xFlip;
+		int yFlip;
+		int priority;
 	};
 
 	enum GBColor : unsigned char
@@ -85,11 +97,13 @@ private:
 	Mode mode;
 	Memory mem;
 	unsigned int clock;
+	unsigned int lastTime = 0;
 
 	std::thread windowThread;
 
 	COLORREF screenBuffer[GB_WIDTH * GB_HEIGHT];
 	unsigned char tiles[512][8][8];
+	Object objects[40];
 
 	inline COLORREF getColorFromPalette(unsigned int palette, unsigned int index);
 

@@ -5,6 +5,7 @@ GPU::GPU(GameBoy* gameBoy) : window(nullptr), gb(gameBoy), mode(MODE_HBLANK), cl
 	ZeroObject(this->mem);
 	ZeroObject(this->tiles);
 	ZeroObject(this->screenBuffer);
+	ZeroObject(this->objects);
 
 	this->windowThread = std::thread(std::bind(&GPU::windowRunner, this));
 	while(!this->working()) std::this_thread::sleep_for(1ms);
@@ -64,6 +65,8 @@ void GPU::renderTexture()
 
 void GPU::renderScreen()
 {
+	unsigned char scanrow[GB_WIDTH] = { 0 };
+
 	if (this->mem.flags & FLAG_BACKGROUND_ON)
 	{
 		unsigned short linebase = GB_WIDTH * this->mem.curline;
@@ -78,7 +81,8 @@ void GPU::renderScreen()
 			if(this->mem.flags & FLAG_ALT_TILE_SET){}
 			else tile = 0x100 + static_cast<char>(tile);
 
-			this->screenBuffer[linebase + i] = this->getColorFromPalette(0, this->tiles[tile][y][x]);
+			scanrow[i] = this->tiles[tile][y][x];
+			this->screenBuffer[linebase + i] = this->getColorFromPalette(0, scanrow[i]);
 
 			x++;
 			if (x == 8)
@@ -91,13 +95,54 @@ void GPU::renderScreen()
 	}
 	if (this->mem.flags & FLAG_SPRITES_ON)
 	{
+		for (int i = 0; i < 40; i++)
+		{
+			auto obj = this->objects[i];
 
+			// Check if this sprite falls on this scanline
+			if (obj.y <= this->mem.curline && (obj.y + 8) > this->mem.curline)
+			{
+				// Where to render on the canvas
+				auto canvasoffs = (this->mem.curline * 160 + obj.x);
+
+				// If the sprite is Y-flipped,
+				// use the opposite side of the tile
+				unsigned char* tilerow;
+				if (obj.yFlip)
+				{
+					tilerow = this->tiles[obj.tile][7 - (this->mem.curline - obj.y)];
+				}
+				else
+				{
+					tilerow = this->tiles[obj.tile][this->mem.curline - obj.y];
+				}
+
+				for (int x = 0; x < 8; x++)
+				{
+					// If this pixel is still on-screen, AND
+					// if it's not colour 0 (transparent), AND
+					// if this sprite has priority OR shows under the bg
+					// then render the pixel
+					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && tilerow[obj.xFlip ? (7 - x) : x] && (obj.priority || !scanrow[obj.x + x]))
+					{
+						// If the sprite is X-flipped,
+						// write pixels in reverse order
+						auto colour = this->getColorFromPalette(1 + (obj.palette != 0), tilerow[obj.xFlip ? (7 - x) : x]);
+
+						this->screenBuffer[canvasoffs] = colour;
+						canvasoffs++;
+					}
+				}
+			}
+		}
 	}
 }
 
 void GPU::frame()
 {
-	this->clock += this->gb->getCPU()->registers.m;
+	int time = this->gb->getCPU()->registers.m;
+	this->clock += time - this->lastTime;
+	this->lastTime = time;
 
 	switch (this->mode)
 	{
@@ -181,10 +226,44 @@ unsigned char* GPU::getMemoryPtr(unsigned short address)
 
 	if (address < sizeof(this->mem))
 	{
-		return reinterpret_cast<unsigned char*>(&this->mem) + address;
+		auto pointer = reinterpret_cast<unsigned char*>(&this->mem) + address;
+
+		if (pointer == &this->mem.lcdStatus)
+		{
+			this->mem.lcdStatus = static_cast<unsigned char>(this->mode | (this->mem.curline == this->mem.raster ? 0 : 0));
+		}
+
+		return pointer;
 	}
 
 	return nullptr;
+}
+
+void GPU::updateObject(unsigned short address, unsigned char value)
+{
+	int obj = (address - 0xFE00) >> 2;
+	if (obj < 40)
+	{
+		switch (address & 3)
+		{
+			// Y-coordinate
+		case 0: this->objects[obj].y = value - 16; break;
+
+			// X-coordinate
+		case 1: this->objects[obj].x = value - 8; break;
+
+			// Data tile
+		case 2: this->objects[obj].tile = value; break;
+
+			// Options
+		case 3:
+			this->objects[obj].palette = (value & 0x10) ? 1 : 0;
+			this->objects[obj].xFlip = (value & 0x20) ? 1 : 0;
+			this->objects[obj].yFlip = (value & 0x40) ? 1 : 0;
+			this->objects[obj].priority = (value & 0x80) ? 1 : 0;
+			break;
+		}
+	}
 }
 
 void GPU::updateTile(unsigned short addr)
