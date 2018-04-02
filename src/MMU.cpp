@@ -146,7 +146,7 @@ void MMU::controlMBC(unsigned short address, unsigned char value)
 			// Set lower 5 bits of ROM bank (skipping #0)
 			value &= 0x1F;
 			if (!value) value = 1;
-			this->mbc[1].romBank = (this->mbc[1].romBank & 0x60) + value;
+			this->mbc[1].romBank = (this->mbc[1].romBank & 0x60) | value;
 
 			// Calculate ROM offset from bank
 			this->romOffset = this->mbc[1].romBank * 0x4000;
@@ -171,7 +171,7 @@ void MMU::controlMBC(unsigned short address, unsigned char value)
 			else
 			{
 				// ROM mode: Set high bits of bank
-				this->mbc[1].romBank = (this->mbc[1].romBank & 0x1F) + ((value & 3) << 5);
+				this->mbc[1].romBank = (this->mbc[1].romBank & 0x1F) | ((value & 3) << 5);
 				this->romOffset = this->mbc[1].romBank * 0x4000;
 			}
 			break;
