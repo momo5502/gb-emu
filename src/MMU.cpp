@@ -226,7 +226,7 @@ unsigned char* MMU::getMemoryPtr(unsigned short address)
 		case 0x6000:
 		case 0x7000:
 		{
-			int newAddress = this->romOffset + (address - 0x4000);
+			size_t newAddress = this->romOffset + (address - 0x4000);
 
 			if (newAddress >= this->rom.size()) throw std::runtime_error("Rom not loaded!");
 			return &const_cast<unsigned char*>(this->rom.data())[newAddress];

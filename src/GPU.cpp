@@ -27,7 +27,11 @@ void GPU::windowRunner()
 	RegisterClassEx(&wc);
 
 	const int scale = 3;
-	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, GB_WIDTH * scale, GB_HEIGHT * scale, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+
+	int width = GB_WIDTH * scale;
+	int height = GB_HEIGHT * scale;
+
+	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 500, 200, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
 	SetWindowLongPtrA(this->window, GWLP_USERDATA, LONG_PTR(this));
 
@@ -49,7 +53,7 @@ void GPU::windowRunner()
 void GPU::renderTexture()
 {
 	RECT rect;
-	GetWindowRect(this->window, &rect);
+	GetClientRect(this->window, &rect);
 
 	HDC hdc = GetDC(this->window);
 	HDC src = CreateCompatibleDC(hdc);
@@ -153,7 +157,7 @@ void GPU::frame()
 				this->clock -= 51;
 				this->mem.curline++;
 
-				if(this->mem.curline == (GB_HEIGHT - 1))
+				if(this->mem.curline == GB_HEIGHT)
 				{
 					this->mode = MODE_VBLANK;
 					this->renderTexture();
