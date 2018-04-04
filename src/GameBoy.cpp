@@ -16,6 +16,11 @@ void GameBoy::run()
 	this->gpu.closeWindow();
 }
 
+void GameBoy::skipBIOS()
+{
+	this->cpu.skipBIOS();
+}
+
 bool GameBoy::frame()
 {
 	unsigned int endTick = this->cpu.registers.m + 17556;

@@ -88,6 +88,8 @@ public:
 	Registers registers;
 	Timer timer;
 
+	void skipBIOS();
+
 private:
 	Operation operations[0x100];
 	static const unsigned char OperationTicks[0x100];

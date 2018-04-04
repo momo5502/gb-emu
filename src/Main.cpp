@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-//#ifdef DEBUG
+#ifdef DEBUG
 	AllocConsole();
 	AttachConsole(GetCurrentProcessId());
 
@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 	freopen_s(&fp, "out.txt", "w", stdout);
 	freopen_s(&fp, "out.txt", "w", stderr);
 #endif
-//#endif
+#endif
 
 	if (argc < 2)
 	{
@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
 
 	GameBoy gameBoy;
 	gameBoy.loadRom(data);
+	gameBoy.skipBIOS();
 	gameBoy.run();
 
 	printf("Terminated!\n");

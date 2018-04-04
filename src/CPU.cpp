@@ -3344,3 +3344,47 @@ void CPU::executeExt(unsigned char instruction)
 
 	throw std::exception();
 }
+
+void CPU::skipBIOS()
+{
+	this->registers.af = 0x01B0;
+	this->registers.bc = 0x0013;
+	this->registers.de = 0x00D8;
+	this->registers.hl = 0x014D;
+	this->registers.sp = 0xFFFE;
+	this->registers.pc = 0x100;
+
+	this->gb->getMMU()->markBiosPass();
+
+	this->gb->getMMU()->writeByte(0xFF05, 0x00);
+	this->gb->getMMU()->writeByte(0xFF06, 0x00);
+	this->gb->getMMU()->writeByte(0xFF07, 0x00);
+	this->gb->getMMU()->writeByte(0xFF10, 0x80);
+	this->gb->getMMU()->writeByte(0xFF11, 0xBF);
+	this->gb->getMMU()->writeByte(0xFF12, 0xF3);
+	this->gb->getMMU()->writeByte(0xFF14, 0xBF);
+	this->gb->getMMU()->writeByte(0xFF16, 0x3F);
+	this->gb->getMMU()->writeByte(0xFF17, 0x00);
+	this->gb->getMMU()->writeByte(0xFF19, 0xBF);
+	this->gb->getMMU()->writeByte(0xFF1A, 0x7F);
+	this->gb->getMMU()->writeByte(0xFF1B, 0xFF);
+	this->gb->getMMU()->writeByte(0xFF1C, 0x9F);
+	this->gb->getMMU()->writeByte(0xFF1E, 0xBF);
+	this->gb->getMMU()->writeByte(0xFF20, 0xFF);
+	this->gb->getMMU()->writeByte(0xFF21, 0x00);
+	this->gb->getMMU()->writeByte(0xFF22, 0x00);
+	this->gb->getMMU()->writeByte(0xFF23, 0xBF);
+	this->gb->getMMU()->writeByte(0xFF24, 0x77);
+	this->gb->getMMU()->writeByte(0xFF25, 0xF3);
+	this->gb->getMMU()->writeByte(0xFF26, 0xF1);
+	this->gb->getMMU()->writeByte(0xFF40, 0x91);
+	this->gb->getMMU()->writeByte(0xFF42, 0x00);
+	this->gb->getMMU()->writeByte(0xFF43, 0x00);
+	this->gb->getMMU()->writeByte(0xFF45, 0x00);
+	this->gb->getMMU()->writeByte(0xFF47, 0xFC);
+	this->gb->getMMU()->writeByte(0xFF48, 0xFF);
+	this->gb->getMMU()->writeByte(0xFF49, 0xFF);
+	this->gb->getMMU()->writeByte(0xFF4A, 0x00);
+	this->gb->getMMU()->writeByte(0xFF4B, 0x00);
+	this->gb->getMMU()->writeByte(0xFFFF, 0x00);
+}

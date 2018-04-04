@@ -32,6 +32,8 @@ public:
 	void loadRom(std::string data);
 	void run();
 
+	void skipBIOS();
+
 private:
 
 	Joypad joypad;

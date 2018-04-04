@@ -31,7 +31,7 @@ void GPU::windowRunner()
 	int width = GB_WIDTH * scale;
 	int height = GB_HEIGHT * scale;
 
-	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 500, 200, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
 	SetWindowLongPtrA(this->window, GWLP_USERDATA, LONG_PTR(this));
 
