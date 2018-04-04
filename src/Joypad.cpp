@@ -47,45 +47,45 @@ void Joypad::write(unsigned char val)
 
 bool Joypad::up()
 {
-	return Joypad::IsKeyPressed(VK_UP);
+	return this->isKeyPressed(VK_UP);
 }
 
 bool Joypad::down()
 {
-	return Joypad::IsKeyPressed(VK_DOWN);
+	return this->isKeyPressed(VK_DOWN);
 }
 
 bool Joypad::left()
 {
-	return Joypad::IsKeyPressed(VK_LEFT);
+	return this->isKeyPressed(VK_LEFT);
 }
 
 bool Joypad::right()
 {
-	return Joypad::IsKeyPressed(VK_RIGHT);
+	return this->isKeyPressed(VK_RIGHT);
 }
 
 bool Joypad::a()
 {
-	return Joypad::IsKeyPressed('S');
+	return this->isKeyPressed('S');
 }
 
 bool Joypad::b()
 {
-	return Joypad::IsKeyPressed('A');
+	return this->isKeyPressed('A');
 }
 
 bool Joypad::start()
 {
-	return Joypad::IsKeyPressed(VK_RETURN);
+	return this->isKeyPressed(VK_RETURN);
 }
 
 bool Joypad::select()
 {
-	return Joypad::IsKeyPressed(VK_SPACE);
+	return this->isKeyPressed(VK_SPACE);
 }
 
-bool Joypad::IsKeyPressed(int vk)
+bool Joypad::isKeyPressed(int vk)
 {
-	return (GetKeyState(vk) & 0x8000) != 0;
+	return (GetKeyState(vk) & 0x8000) != 0 && this->gb->getGPU()->isWindowActive();
 }

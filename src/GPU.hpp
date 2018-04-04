@@ -22,6 +22,8 @@ public:
 
 	void setTitle(std::string title);
 
+	bool isWindowActive();
+
 private:
 	struct Memory
 	{

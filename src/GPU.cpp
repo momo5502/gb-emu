@@ -373,3 +373,8 @@ void GPU::setTitle(std::string title)
 {
 	if(this->working()) SetWindowTextA(this->window, Utils::VA("GB-EMU - %s", title.data()));
 }
+
+bool GPU::isWindowActive()
+{
+	return this->window && GetForegroundWindow() == this->window;
+}

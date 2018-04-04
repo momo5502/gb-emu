@@ -40,7 +40,7 @@ private:
 	bool start();
 	bool select();
 
-	static bool IsKeyPressed(int vk);
+	bool isKeyPressed(int vk);
 
 	unsigned char column;
 };
