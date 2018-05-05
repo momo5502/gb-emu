@@ -1,4 +1,9 @@
-# GB-EMU
+# GameBoy Emulator
+
+Yet another gameboy emulator.  
+It's far from being complete, but already plays tetris in a recognizable manner.
+
+## License
 
 MIT License
 
