@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Windows.h>
+
 class GameBoy;
 #define GB_WIDTH (160)
 #define GB_HEIGHT (144)
@@ -89,7 +91,7 @@ private:
 	struct D3DTLVERTEX
 	{
 		float x, y, z, rhw;
-		FLOAT tu, tv;
+		float tu, tv;
 	};
 
 	HWND window;

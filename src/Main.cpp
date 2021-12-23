@@ -1,6 +1,6 @@
 #include "STDInclude.hpp"
 
-int main(int argc, char* argv[])
+int _main(int argc, char* argv[])
 {
 #ifdef DEBUG
 	AllocConsole();
@@ -42,4 +42,9 @@ int main(int argc, char* argv[])
 
 	_getch();
 	return 0;
+}
+
+int __stdcall WinMain(HINSTANCE, HINSTANCE, char*, int)
+{
+    return _main(__argc, __argv);
 }

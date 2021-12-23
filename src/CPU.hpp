@@ -114,9 +114,9 @@ private:
 	void dec(unsigned char* reg);
 	void add(unsigned char reg);
 	void sub(unsigned char reg);
-	void and(unsigned char reg);
-	void xor(unsigned char reg);
-	void or(unsigned char reg);
+	void _and(unsigned char reg);
+	void _xor(unsigned char reg);
+	void _or(unsigned char reg);
 	void cp(unsigned char reg);
 	void adc(unsigned char reg);
 	void sbc(unsigned char reg);

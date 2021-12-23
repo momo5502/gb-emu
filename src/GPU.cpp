@@ -7,7 +7,10 @@ GPU::GPU(GameBoy* gameBoy) : window(nullptr), gb(gameBoy), mode(MODE_HBLANK), cl
 	ZeroObject(this->screenBuffer);
 	ZeroObject(this->objects);
 
-	this->windowThread = std::thread(std::bind(&GPU::windowRunner, this));
+	this->windowThread = std::thread([this]
+	{
+		this->windowRunner();
+	});
 	while(!this->working()) std::this_thread::sleep_for(1ms);
 }
 
