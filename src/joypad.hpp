@@ -1,46 +1,18 @@
 #pragma once
 
-class game_boy;
-
 class joypad
 {
 public:
-	joypad(game_boy* game_boy);
-	~joypad() = default;
+	virtual ~joypad() = default;
+	
+	virtual bool is_up_pressed() = 0;
+	virtual bool is_down_pressed() = 0;
+	virtual bool is_left_pressed() = 0;
+	virtual bool is_right_pressed() = 0;
 
-	unsigned char read() const;
-	void write(unsigned char val);
+	virtual bool is_a_pressed() = 0;
+	virtual bool is_b_pressed() = 0;
 
-private:
-	enum key_bits
-	{
-		// High column (0x20)
-		key_right = 1,
-		key_left = 2,
-		key_up = 4,
-		key_down = 8,
-
-		// Low column (0x10)
-		key_a = 1,
-		key_b = 2,
-		key_select = 4,
-		key_start = 8,
-	};
-
-	game_boy* gb_;
-
-	bool up() const;
-	bool down() const;
-	bool left() const;
-	bool right() const;
-
-	bool a() const;
-	bool b() const;
-
-	bool start() const;
-	bool select() const;
-
-	bool is_key_pressed(int vk) const;
-
-	unsigned char column_;
+	virtual bool is_start_pressed() = 0;
+	virtual bool is_select_pressed() = 0;
 };

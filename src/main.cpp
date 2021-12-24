@@ -1,4 +1,11 @@
 #include "std_include.hpp"
+#include <Windows.h>
+
+#include "utils/utils.hpp"
+
+#include "game_boy.hpp"
+#include "joypad_win.hpp"
+#include "display_win.hpp"
 
 int main(const int argc, char* argv[])
 {
@@ -33,7 +40,10 @@ int main(const int argc, char* argv[])
 
 	printf("Loaded game!\n");
 
-	game_boy game_boy{};
+	display_win display{};
+	joypad_win joypad{&display};
+
+	game_boy game_boy{&joypad, &display};
 	game_boy.load_rom(data);
 	game_boy.skip_bios();
 	game_boy.run();

@@ -1,4 +1,5 @@
 #include "std_include.hpp"
+#include <cstdarg>
 
 #define VA_BUFFER_COUNT		4
 #define VA_BUFFER_SIZE		65536

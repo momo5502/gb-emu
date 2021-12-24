@@ -1,5 +1,11 @@
 #include "std_include.hpp"
 
+#include "mmu.hpp"
+#include "game_boy.hpp"
+
+#include "utils/utils.hpp"
+
+
 unsigned char mmu::bios_[256] =
 {
 	0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
@@ -20,7 +26,7 @@ unsigned char mmu::bios_[256] =
 	0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50
 };
 
-mmu::mmu(game_boy* game_boy) : passed_bios_(false), gb_(game_boy)
+mmu::mmu(game_boy* game_boy) : gb_(game_boy)
 {
 	zero_object(this->vram);
 	zero_object(this->eram);
@@ -48,7 +54,7 @@ unsigned char mmu::read_byte(const unsigned short address)
 	{
 		if (address == 0xFF00)
 		{
-			return this->gb_->get_joypad()->read();
+			return this->gb_->get_input()->read();
 		}
 
 		return *mem;
@@ -101,7 +107,7 @@ void mmu::write_byte(const unsigned short address, const unsigned char value)
 		}
 		else if (address == 0xFF00)
 		{
-			this->gb_->get_joypad()->write(value);
+			this->gb_->get_input()->write(value);
 		}
 	}
 	else throw std::runtime_error("Nullptr dereferenced!");

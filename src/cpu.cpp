@@ -1,4 +1,8 @@
 #include "std_include.hpp"
+#include "cpu.hpp"
+#include "game_boy.hpp"
+
+#include "utils/utils.hpp"
 
 const unsigned char cpu::operation_ticks[0x100] =
 {
@@ -52,10 +56,10 @@ cpu::cpu(game_boy* game_boy) : ime_(true), gb_(game_boy)
 	int impl_op = 0;
 	int impl_cb = 0;
 
-	int op_size = ARRAYSIZE(this->operations_);
-	int cb_size = ARRAYSIZE(this->ext_operations_);
+	int op_size = array_size(this->operations_);
+	int cb_size = array_size(this->ext_operations_);
 
-	for (int i = 0; i < min(op_size, cb_size); ++i)
+	for (int i = 0; i < std::min(op_size, cb_size); ++i)
 	{
 		if (this->operations_[i]) impl_op++;
 		if (this->ext_operations_[i]) impl_cb++;
@@ -344,10 +348,10 @@ void cpu::setup_operations()
 	// JR Z,n
 	this->operations_[0x28] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->get_cpu()->read_program_byte();
+		const char jump_loc = gb->get_cpu()->read_program_byte();
 		if (gb->get_cpu()->registers.f & flag_zero)
 		{
-			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.pc += jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -3313,7 +3317,7 @@ bool cpu::execute()
 
 			this->timer.increment(this->gb_);
 
-			if (!this->gb_->get_gpu()->working()) return false;
+			if (!this->gb_->get_display()->is_on()) return false;
 			this->gb_->get_gpu()->frame();
 
 			if (this->registers.pc == 0x100) this->gb_->get_mmu()->mark_bios_pass();

@@ -1,4 +1,5 @@
 #pragma once
+#include "timer.hpp"
 
 class game_boy;
 

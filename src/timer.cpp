@@ -1,4 +1,6 @@
 #include "std_include.hpp"
+#include "timer.hpp"
+#include "game_boy.hpp"
 
 timer::timer() : div(0), tma(0), tima(0), tac(0), main_clock(0), sub_clock(0), div_clock(0)
 {

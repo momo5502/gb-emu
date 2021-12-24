@@ -1,11 +1,5 @@
 #pragma once
-
-#include <Windows.h>
-
-#define GB_WIDTH (160)
-#define GB_HEIGHT (144)
-
-#define WM_KILL_WINDOW (WM_USER+0)
+#include "display.hpp"
 
 class game_boy;
 
@@ -16,16 +10,10 @@ public:
 	~gpu();
 
 	void frame();
-	bool working() const;
 
 	unsigned char* get_memory_ptr(unsigned short address);
 	void update_tile(unsigned short address);
 	void update_object(unsigned short address, unsigned char value);
-	void close_window();
-
-	void set_title(std::string title);
-
-	bool is_window_active() const;
 
 private:
 	struct memory
@@ -89,8 +77,6 @@ private:
 		flag_display_on = (1 << 7)
 	};
 
-	HWND window_;
-
 	game_boy* gb_;
 
 	mode mode_;
@@ -98,22 +84,15 @@ private:
 	unsigned int clock_;
 	unsigned int last_time_ = 0;
 
-	std::thread window_thread_;
-
-	COLORREF screen_buffer_[GB_WIDTH * GB_HEIGHT]{};
+	color screen_buffer_[GB_WIDTH * GB_HEIGHT]{};
 	unsigned char tiles_[512][8][8]{};
 	object objects_[40]{};
 
-	inline COLORREF get_color_from_palette(unsigned int palette, unsigned int index);
+	inline color get_color_from_palette(unsigned int palette, unsigned int index);
 
-	static inline COLORREF get_gb_color(gb_color pixel);
-	static inline COLORREF get_gb_color(unsigned char pixel);
-
-	static LRESULT CALLBACK window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param);
-	LRESULT window_proc(UINT message, WPARAM w_param, LPARAM l_param) const;
+	static inline color get_gb_color(gb_color pixel);
+	static inline color get_gb_color(unsigned char pixel);
 
 	void render_screen();
 	void render_texture() const;
-
-	void window_runner();
 };

@@ -1,74 +1,21 @@
 #include "std_include.hpp"
+#include "gpu.hpp"
+#include "game_boy.hpp"
+#include "utils/utils.hpp"
 
-gpu::gpu(game_boy* game_boy) : window_(nullptr), gb_(game_boy), mode_(mode_hblank), clock_(0)
+gpu::gpu(game_boy* game_boy) : gb_(game_boy), mode_(mode_hblank), clock_(0)
 {
 	zero_object(this->mem_);
 	zero_object(this->tiles_);
 	zero_object(this->screen_buffer_);
 	zero_object(this->objects_);
-
-	this->window_thread_ = std::thread([this]
-	{
-		this->window_runner();
-	});
-	while (!this->working()) std::this_thread::sleep_for(1ms);
 }
 
-void gpu::window_runner()
-{
-	WNDCLASSEX wc;
-	zero_object(wc);
-	wc.cbSize = sizeof(wc);
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = gpu::window_proc;
-	wc.hInstance = GetModuleHandle(nullptr);
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(102));
-	wc.hIconSm = wc.hIcon;
-	wc.hbrBackground = HBRUSH(COLOR_WINDOW);
-	wc.lpszClassName = L"GBAWindow";
-	RegisterClassEx(&wc);
-
-	const int scale = 3;
-
-	const int width = GB_WIDTH * scale;
-	const int height = GB_HEIGHT * scale;
-
-	this->window_ = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
-	                                CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
-
-	SetWindowLongPtrA(this->window_, GWLP_USERDATA, LONG_PTR(this));
-
-	MSG msg;
-	while (this->working())
-	{
-		if (PeekMessageA(&msg, nullptr, NULL, NULL, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		else
-		{
-			std::this_thread::sleep_for(1ms);
-		}
-	}
-}
+gpu::~gpu() = default;
 
 void gpu::render_texture() const
 {
-	RECT rect;
-	GetClientRect(this->window_, &rect);
-
-	const HDC hdc = GetDC(this->window_);
-	const HDC src = CreateCompatibleDC(hdc);
-	const HBITMAP map = CreateBitmap(GB_WIDTH, GB_HEIGHT, 1, 8 * 4, this->screen_buffer_);
-
-	SelectObject(src, map);
-	StretchBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, src, 0, 0, GB_WIDTH, GB_HEIGHT, SRCCOPY);
-
-	DeleteDC(src);
-	DeleteObject(map);
-	ReleaseDC(this->window_, hdc);
+	this->gb_->get_display()->draw_frame(this->screen_buffer_);
 }
 
 void gpu::render_screen()
@@ -78,7 +25,8 @@ void gpu::render_screen()
 	if (this->mem_.flags & flag_background_on)
 	{
 		const unsigned short linebase = GB_WIDTH * this->mem_.curline;
-		const unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.curline +
+		const unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.
+			curline +
 			this->mem_.yscrl) & 255) >> 3) << 5);
 		const unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
 		unsigned char x = this->mem_.xscrl & 7;
@@ -139,10 +87,10 @@ void gpu::render_screen()
 					{
 						// If the sprite is X-flipped,
 						// write pixels in reverse order
-						const auto colour = this->get_color_from_palette(1 + (obj.palette != 0),
-						                                                 tilerow[obj.x_flip ? (7 - x) : x]);
+						const auto color = this->get_color_from_palette(1 + (obj.palette != 0),
+						                                                tilerow[obj.x_flip ? (7 - x) : x]);
 
-						this->screen_buffer_[canvasoffs] = colour;
+						this->screen_buffer_[canvasoffs] = color;
 						canvasoffs++;
 					}
 				}
@@ -234,11 +182,6 @@ void gpu::frame()
 	}
 }
 
-bool gpu::working() const
-{
-	return (IsWindow(this->window_) != FALSE);
-}
-
 unsigned char* gpu::get_memory_ptr(unsigned short address)
 {
 	address -= 0xFF40;
@@ -308,13 +251,13 @@ void gpu::update_tile(unsigned short addr)
 	}
 }
 
-COLORREF gpu::get_color_from_palette(const unsigned int palette, const unsigned int index)
+color gpu::get_color_from_palette(const unsigned int palette, const unsigned int index)
 {
-	if (palette > 3 || index > 4) return 0;
+	if (palette > 3 || index > 4) return color{0, 0, 0, 0};
 
 	auto* quad = reinterpret_cast<gpu::gbc_pixel_quad*>(&this->mem_.palette[palette]);
 
-	gpu::gb_color color;
+	gpu::gb_color color{};
 	switch (index)
 	{
 	case 0: color = quad->_1;
@@ -332,73 +275,19 @@ COLORREF gpu::get_color_from_palette(const unsigned int palette, const unsigned 
 	return gpu::get_gb_color(color);
 }
 
-COLORREF gpu::get_gb_color(const gpu::gb_color pixel)
+color gpu::get_gb_color(const gpu::gb_color pixel)
 {
 	switch (pixel)
 	{
-	case gbc_black: return RGB(0, 0, 0);
-	case gbc_dark_gray: return RGB(192, 192, 192);
-	case gbc_light_gray: return RGB(96, 96, 96);
-	case gbc_white: return RGB(255, 255, 255);
+	case gbc_black: return color{0, 0, 0, 255};
+	case gbc_dark_gray: return color{192, 192, 192, 255};
+	case gbc_light_gray: return color{96, 96, 96, 255};
+	case gbc_white: return color{255, 255, 255, 255};
 	}
-	return 0;
+	return color{0, 0, 0, 0};
 }
 
-COLORREF gpu::get_gb_color(unsigned char pixel)
+color gpu::get_gb_color(unsigned char pixel)
 {
 	return gpu::get_gb_color(*reinterpret_cast<gpu::gb_color*>(&pixel));
-}
-
-LRESULT gpu::window_proc(const UINT message, const WPARAM w_param, const LPARAM l_param) const
-{
-	switch (message)
-	{
-	case WM_SIZE:
-		{
-			this->render_texture();
-			break;
-		}
-
-	case WM_KILL_WINDOW:
-		{
-			DestroyWindow(this->window_);
-			return 0;
-		}
-
-	default: break;
-	}
-
-	return DefWindowProc(this->window_, message, w_param, l_param);
-}
-
-LRESULT CALLBACK gpu::window_proc(const HWND h_wnd, const UINT message, const WPARAM w_param, const LPARAM l_param)
-{
-	auto* gpu_ = reinterpret_cast<gpu*>(GetWindowLongPtr(h_wnd, GWLP_USERDATA));
-	if (gpu_) return gpu_->window_proc(message, w_param, l_param);
-	return DefWindowProc(h_wnd, message, w_param, l_param);
-}
-
-gpu::~gpu()
-{
-	this->close_window();
-	if (this->window_thread_.joinable()) this->window_thread_.join();
-}
-
-void gpu::close_window()
-{
-	if (this->working())
-	{
-		SendMessageA(this->window_, WM_KILL_WINDOW, NULL, NULL);
-		this->window_ = nullptr;
-	}
-}
-
-void gpu::set_title(std::string title)
-{
-	if (this->working()) SetWindowTextA(this->window_, utils::va("GB-EMU - %s", title.data()));
-}
-
-bool gpu::is_window_active() const
-{
-	return this->window_ && GetForegroundWindow() == this->window_;
 }

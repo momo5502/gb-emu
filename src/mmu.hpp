@@ -2,6 +2,7 @@
 
 struct gb_rom;
 class cpu;
+class game_boy;
 
 struct mbc
 {
@@ -50,13 +51,10 @@ public:
 private:
 	static unsigned char bios_[256];
 
-	std::vector<uint8_t> rom_;
-
-	unsigned char oam_[160];
-
-	unsigned char zero_[2];
-
-	bool passed_bios_;
+	std::vector<uint8_t> rom_{};
+	unsigned char oam_[160]{};
+	unsigned char zero_[2]{};
+	bool passed_bios_{false};
 
 	game_boy* gb_;
 };

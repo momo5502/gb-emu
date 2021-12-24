@@ -1,4 +1,11 @@
 #pragma once
+#include "joypad.hpp"
+#include "display.hpp"
+
+#include "cpu.hpp"
+#include "gpu.hpp"
+#include "mmu.hpp"
+#include "input.hpp"
 
 struct gb_rom
 {
@@ -21,24 +28,31 @@ struct gb_rom
 class game_boy
 {
 public:
-	game_boy();
+	game_boy(joypad* joypad, display* display);
 	~game_boy();
 
 	mmu* get_mmu() { return &this->mmu_; }
 	gpu* get_gpu() { return &this->gpu_; }
 	cpu* get_cpu() { return &this->cpu_; }
-	joypad* get_joypad() { return &this->joypad_; }
+	input* get_input() { return &this->input_; }
+	joypad* get_joypad() const { return this->joypad_; }
+	display* get_display() const { return this->display_; }
 
 	void load_rom(std::vector<uint8_t> data);
 	void run();
 
 	void skip_bios();
 
+	void turn_off();
+
 private:
-	joypad joypad_;
+	joypad* joypad_;
+	display* display_;
+	input input_;
 	cpu cpu_;
 	mmu mmu_;
 	gpu gpu_;
+	std::atomic<bool> off_{false};
 
 	bool frame();
 };

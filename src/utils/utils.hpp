@@ -1,6 +1,7 @@
 #pragma once
 
-#define zero_object(x) ZeroMemory(&(x), sizeof(x))
+#define zero_object(x) memset(&(x), 0, sizeof(x))
+#define array_size(x) (sizeof(x) / sizeof(x[0]))
 
 namespace utils
 {

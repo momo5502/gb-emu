@@ -1,22 +1,37 @@
 #include "std_include.hpp"
+#include "game_boy.hpp"
 
-game_boy::game_boy() : joypad_(this), cpu_(this), mmu_(this), gpu_(this)
+game_boy::game_boy(joypad* joypad, display* display)
+	: joypad_(joypad)
+	  , display_(display)
+	  , input_(this)
+	  , cpu_(this)
+	  , mmu_(this)
+	  , gpu_(this)
 {
 }
 
-game_boy::~game_boy() = default;
+game_boy::~game_boy()
+{
+	this->off_ = true;
+}
 
 void game_boy::run()
 {
-	while (this->frame())
+	this->off_ = false;
+	while (!this->off_ && this->frame())
 	{
 	}
-	this->gpu_.close_window();
 }
 
 void game_boy::skip_bios()
 {
 	this->cpu_.skip_bios();
+}
+
+void game_boy::turn_off()
+{
+	this->off_ = true;
 }
 
 bool game_boy::frame()
@@ -55,7 +70,7 @@ void game_boy::load_rom(std::vector<uint8_t> data)
 
 	std::string rom_name(rom->title, 16);
 	while (!rom_name.empty() && !rom_name.back()) rom_name.pop_back();
-	this->gpu_.set_title(rom_name);
+	this->display_->set_title(std::move(rom_name));
 
 	this->mmu_.load_rom(std::move(data));
 }
