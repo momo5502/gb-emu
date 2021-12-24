@@ -11,7 +11,7 @@ gpu::gpu(game_boy* game_boy) : window_(nullptr), gb_(game_boy), mode_(mode_hblan
 	{
 		this->window_runner();
 	});
-	while(!this->working()) std::this_thread::sleep_for(1ms);
+	while (!this->working()) std::this_thread::sleep_for(1ms);
 }
 
 void gpu::window_runner()
@@ -34,7 +34,8 @@ void gpu::window_runner()
 	int width = GB_WIDTH * scale;
 	int height = GB_HEIGHT * scale;
 
-	this->window_ = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+	this->window_ = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
+	                                CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
 	SetWindowLongPtrA(this->window_, GWLP_USERDATA, LONG_PTR(this));
 
@@ -72,20 +73,23 @@ void gpu::render_texture()
 
 void gpu::render_screen()
 {
-	unsigned char scanrow[GB_WIDTH] = { 0 };
+	unsigned char scanrow[GB_WIDTH] = {0};
 
 	if (this->mem_.flags & flag_background_on)
 	{
 		unsigned short linebase = GB_WIDTH * this->mem_.curline;
-		unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.curline + this->mem_.yscrl) & 255) >> 3) << 5);
+		unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.curline +
+			this->mem_.yscrl) & 255) >> 3) << 5);
 		unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
 		unsigned char x = this->mem_.xscrl & 7;
 		unsigned char t = (this->mem_.xscrl >> 3) & 31;
 
 		unsigned short tile = this->gb_->get_mmu()->vram[mapbase + t];
-		for(int i = 0; i < GB_WIDTH; ++i)
+		for (int i = 0; i < GB_WIDTH; ++i)
 		{
-			if(this->mem_.flags & flag_alt_tile_set){}
+			if (this->mem_.flags & flag_alt_tile_set)
+			{
+			}
 			else tile = 0x100 + static_cast<char>(tile);
 
 			scanrow[i] = this->tiles_[tile][y][x];
@@ -130,11 +134,13 @@ void gpu::render_screen()
 					// if it's not colour 0 (transparent), AND
 					// if this sprite has priority OR shows under the bg
 					// then render the pixel
-					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && tilerow[obj.x_flip ? (7 - x) : x] && (obj.priority || !scanrow[obj.x + x]))
+					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && tilerow[obj.x_flip ? (7 - x) : x] && (obj.priority || !
+						scanrow[obj.x + x]))
 					{
 						// If the sprite is X-flipped,
 						// write pixels in reverse order
-						auto colour = this->get_color_from_palette(1 + (obj.palette != 0), tilerow[obj.x_flip ? (7 - x) : x]);
+						auto colour = this->get_color_from_palette(1 + (obj.palette != 0),
+						                                           tilerow[obj.x_flip ? (7 - x) : x]);
 
 						this->screen_buffer_[canvasoffs] = colour;
 						canvasoffs++;
@@ -153,50 +159,56 @@ void gpu::frame()
 
 	switch (this->mode_)
 	{
-		case mode_hblank:
+	case mode_hblank:
 		{
-			if(this->clock_ >= 51)
+			if (this->clock_ >= 51)
 			{
 				this->clock_ -= 51;
 				this->mem_.curline++;
 
-				if(this->mem_.curline == GB_HEIGHT)
+				if (this->mem_.curline == GB_HEIGHT)
 				{
 					this->mode_ = mode_vblank;
 					this->render_texture();
-					if(this->gb_->get_mmu()->i_e & 1) this->gb_->get_mmu()->i_f |= 1;
-					if (this->mem_.lcd_status & (1 << 4) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
+					if (this->gb_->get_mmu()->i_e & 1) this->gb_->get_mmu()->i_f |= 1;
+					if (this->mem_.lcd_status & (1 << 4) && this->gb_->get_mmu()->i_e & 2)
+						this->gb_->get_mmu()->i_f |=
+							2;
 				}
 				else
 				{
 					this->mode_ = mode_oam;
-					if (this->mem_.lcd_status & (1 << 5) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
+					if (this->mem_.lcd_status & (1 << 5) && this->gb_->get_mmu()->i_e & 2)
+						this->gb_->get_mmu()->i_f |=
+							2;
 				}
 			}
 			break;
 		}
 
-		case mode_vblank:
+	case mode_vblank:
 		{
-			if(this->clock_ >= 114)
+			if (this->clock_ >= 114)
 			{
 				this->clock_ -= 114;
 				this->mem_.curline++;
 
-				if(this->mem_.curline > 153)
+				if (this->mem_.curline > 153)
 				{
 					this->mode_ = mode_oam;
 					this->mem_.curline = 0;
 
-					if (this->mem_.lcd_status & (1 << 5) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
+					if (this->mem_.lcd_status & (1 << 5) && this->gb_->get_mmu()->i_e & 2)
+						this->gb_->get_mmu()->i_f |=
+							2;
 				}
 			}
 			break;
 		}
 
-		case mode_oam:
+	case mode_oam:
 		{
-			if(this->clock_ >= 20)
+			if (this->clock_ >= 20)
 			{
 				this->clock_ -= 20;
 				this->mode_ = mode_vram;
@@ -204,15 +216,15 @@ void gpu::frame()
 			break;
 		}
 
-		case mode_vram:
+	case mode_vram:
 		{
-			if(this->clock_ >= 43)
+			if (this->clock_ >= 43)
 			{
 				this->clock_ -= 43;
 				this->mode_ = mode_hblank;
 				if (this->mem_.lcd_status & (1 << 3) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
 
-				if(this->mem_.flags & flag_display_on)
+				if (this->mem_.flags & flag_display_on)
 				{
 					this->render_screen();
 				}
@@ -237,7 +249,9 @@ unsigned char* gpu::get_memory_ptr(unsigned short address)
 
 		if (pointer == &this->mem_.lcd_status)
 		{
-			this->mem_.lcd_status = static_cast<unsigned char>(this->mode_ | (this->mem_.curline == this->mem_.raster ? 0 : 0));
+			this->mem_.lcd_status = static_cast<unsigned char>(this->mode_ | (this->mem_.curline == this->mem_.raster
+				                                                                  ? 0
+				                                                                  : 0));
 		}
 
 		return pointer;
@@ -254,13 +268,16 @@ void gpu::update_object(unsigned short address, unsigned char value)
 		switch (address & 3)
 		{
 			// Y-coordinate
-		case 0: this->objects_[obj].y = value - 16; break;
+		case 0: this->objects_[obj].y = value - 16;
+			break;
 
 			// X-coordinate
-		case 1: this->objects_[obj].x = value - 8; break;
+		case 1: this->objects_[obj].x = value - 8;
+			break;
 
 			// Data tile
-		case 2: this->objects_[obj].tile = value; break;
+		case 2: this->objects_[obj].tile = value;
+			break;
 
 			// Options
 		case 3:
@@ -301,11 +318,16 @@ COLORREF gpu::get_color_from_palette(unsigned int palette, unsigned int index)
 	gpu::gb_color color;
 	switch (index)
 	{
-	case 0: color = quad->_1; break;
-	case 1: color = quad->_2; break;
-	case 2: color = quad->_3; break;
-	case 3: color = quad->_4; break;
-	default: color = gbc_white; break;
+	case 0: color = quad->_1;
+		break;
+	case 1: color = quad->_2;
+		break;
+	case 2: color = quad->_3;
+		break;
+	case 3: color = quad->_4;
+		break;
+	default: color = gbc_white;
+		break;
 	}
 
 	return gpu::get_gb_color(color);
@@ -313,7 +335,7 @@ COLORREF gpu::get_color_from_palette(unsigned int palette, unsigned int index)
 
 COLORREF gpu::get_gb_color(gpu::gb_color pixel)
 {
-	switch(pixel)
+	switch (pixel)
 	{
 	case gbc_black: return RGB(0, 0, 0);
 	case gbc_dark_gray: return RGB(192, 192, 192);
@@ -332,19 +354,19 @@ LRESULT gpu::window_proc(UINT message, WPARAM w_param, LPARAM l_param)
 {
 	switch (message)
 	{
-		case WM_SIZE:
+	case WM_SIZE:
 		{
 			this->render_texture();
 			break;
 		}
 
-		case WM_KILL_WINDOW:
+	case WM_KILL_WINDOW:
 		{
 			DestroyWindow(this->window_);
 			return 0;
 		}
 
-		default: break;
+	default: break;
 	}
 
 	return DefWindowProc(this->window_, message, w_param, l_param);
@@ -360,7 +382,7 @@ LRESULT CALLBACK gpu::window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPAR
 gpu::~gpu()
 {
 	this->close_window();
-	if(this->window_thread_.joinable()) this->window_thread_.join();
+	if (this->window_thread_.joinable()) this->window_thread_.join();
 }
 
 void gpu::close_window()
@@ -374,10 +396,10 @@ void gpu::close_window()
 
 void gpu::set_title(std::string title)
 {
-	if(this->working()) SetWindowTextA(this->window_, utils::va("GB-EMU - %s", title.data()));
+	if (this->working()) SetWindowTextA(this->window_, utils::va("GB-EMU - %s", title.data()));
 }
 
-bool gpu::is_window_active()
+bool gpu::is_window_active() const
 {
 	return this->window_ && GetForegroundWindow() == this->window_;
 }

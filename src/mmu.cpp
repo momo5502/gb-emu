@@ -20,7 +20,7 @@ unsigned char mmu::bios_[256] =
 	0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50
 };
 
-mmu::mmu(game_boy* game_boy) : i_f(0), i_e(0), passed_bios_(false), gb_(game_boy)
+mmu::mmu(game_boy* game_boy) : passed_bios_(false), gb_(game_boy)
 {
 	zero_object(this->vram);
 	zero_object(this->eram);
@@ -36,15 +36,15 @@ gb_rom* mmu::get_rom()
 	return reinterpret_cast<gb_rom*>(this->rom_.data());
 }
 
-void mmu::load_rom(std::basic_string<unsigned char> data)
+void mmu::load_rom(const std::basic_string<unsigned char> data)
 {
 	this->rom_ = data;
 	this->cartridge_type = this->get_rom()->cartridge_type;
 }
 
-unsigned char mmu::read_byte(unsigned short address)
+unsigned char mmu::read_byte(const unsigned short address)
 {
-	if (auto mem = this->get_memory_ptr(address))
+	if (const auto mem = this->get_memory_ptr(address))
 	{
 		if (address == 0xFF00)
 		{
@@ -57,19 +57,19 @@ unsigned char mmu::read_byte(unsigned short address)
 	throw std::runtime_error("Nullptr dereferenced!");
 }
 
-unsigned short mmu::read_word(unsigned short address)
+unsigned short mmu::read_word(const unsigned short address)
 {
-	unsigned short low = this->read_byte(address);
-	unsigned short high = this->read_byte(address + 1);
+	const unsigned short low = this->read_byte(address);
+	const unsigned short high = this->read_byte(address + 1);
 	return low | (high << 8);
 }
 
-void mmu::write_byte(unsigned short address, unsigned char value)
+void mmu::write_byte(const unsigned short address, const unsigned char value)
 {
 	this->control_mbc(address, value);
 	if (address < 0x8000) return;
 
-	if(auto mem = this->get_memory_ptr(address))
+	if (const auto mem = this->get_memory_ptr(address))
 	{
 		*mem = value;
 
@@ -77,13 +77,13 @@ void mmu::write_byte(unsigned short address, unsigned char value)
 		{
 			for (unsigned short i = 0; i < 160; ++i)
 			{
-				auto val = *this->get_memory_ptr((value << 8) + i);
+				const auto val = *this->get_memory_ptr((value << 8) + i);
 				this->oam_[i] = val;
 				this->gb_->get_gpu()->update_object(0xFE00 + i, val);
 			}
 		}
 
-		if(mem >= this->vram && mem < &this->vram[sizeof this->vram])
+		if (mem >= this->vram && mem < &this->vram[sizeof this->vram])
 		{
 			this->gb_->get_gpu()->update_tile(address);
 		}
@@ -99,7 +99,7 @@ void mmu::write_byte(unsigned short address, unsigned char value)
 		{
 			this->gb_->get_cpu()->timer.tac &= 7;
 		}
-		else if(address == 0xFF00)
+		else if (address == 0xFF00)
 		{
 			this->gb_->get_joypad()->write(value);
 		}
@@ -107,20 +107,18 @@ void mmu::write_byte(unsigned short address, unsigned char value)
 	else throw std::runtime_error("Nullptr dereferenced!");
 }
 
-void mmu::write_word(unsigned short address, unsigned short value)
+void mmu::write_word(const unsigned short address, const unsigned short value)
 {
 	this->write_byte(address, value & 0xFF);
 	this->write_byte(address + 1, value >> 8);
 }
 
-#pragma optimize("", off)
 void mmu::mark_bios_pass()
 {
 	this->passed_bios_ = true;
 }
-#pragma optimize("", on)
 
-void mmu::control_mbc(unsigned short address, unsigned char value)
+void mmu::control_mbc(const unsigned short address, unsigned char value)
 {
 	switch (address & 0xF000)
 	{
@@ -179,7 +177,7 @@ void mmu::control_mbc(unsigned short address, unsigned char value)
 		}
 		break;
 
-	// MBC1: Mode switch
+		// MBC1: Mode switch
 	case 0x6000:
 	case 0x7000:
 		switch (this->cartridge_type)
@@ -193,16 +191,16 @@ void mmu::control_mbc(unsigned short address, unsigned char value)
 	}
 }
 
-unsigned char* mmu::get_memory_ptr(unsigned short address)
+unsigned char* mmu::get_memory_ptr(const unsigned short address)
 {
-	switch(address & 0xF000)
+	switch (address & 0xF000)
 	{
 		// BIOS / ROM0
-		case 0x0000:
+	case 0x0000:
 		{
-			if(!this->passed_bios_)
+			if (!this->passed_bios_)
 			{
-				if(address < 0x100)
+				if (address < 0x100)
 				{
 					return &mmu::bios_[address];
 				}
@@ -213,52 +211,51 @@ unsigned char* mmu::get_memory_ptr(unsigned short address)
 		}
 
 		// ROM0
-		case 0x1000:
-		case 0x2000:
-		case 0x3000:
+	case 0x1000:
+	case 0x2000:
+	case 0x3000:
 		{
 			if (address >= this->rom_.size()) throw std::runtime_error("Rom not loaded!");
 			return &const_cast<unsigned char*>(this->rom_.data())[address];
 		}
 
 		// ROM1
-		case 0x4000:
-		case 0x5000:
-		case 0x6000:
-		case 0x7000:
+	case 0x4000:
+	case 0x5000:
+	case 0x6000:
+	case 0x7000:
 		{
-			size_t newAddress = this->rom_offset + (address - 0x4000);
-
-			if (newAddress >= this->rom_.size()) throw std::runtime_error("Rom not loaded!");
-			return &const_cast<unsigned char*>(this->rom_.data())[newAddress];
+			const size_t new_address = this->rom_offset + (address - 0x4000);
+			if (new_address >= this->rom_.size()) throw std::runtime_error("Rom not loaded!");
+			return &const_cast<unsigned char*>(this->rom_.data())[new_address];
 		}
 
 		// VRAM
-		case 0x8000:
-		case 0x9000:
+	case 0x8000:
+	case 0x9000:
 		{
 			return &this->vram[address & 0x1FFF];
 		}
 
 		// ERAM
-		case 0xA000:
-		case 0xB000:
+	case 0xA000:
+	case 0xB000:
 		{
 			return &this->eram[this->ram_offset + (address - 0xA000)];
 		}
 
 		// WRAM
-		case 0xC000:
-		case 0xD000:
-		case 0xE000: // Shadow
+	case 0xC000:
+	case 0xD000:
+	case 0xE000: // Shadow
 		{
 			return &this->wram[address & 0x1FFF];
 		}
 
-		case 0xF000:
+	case 0xF000:
 		{
-			unsigned short lhAddr = address & 0x0F00;
-			if(lhAddr == 0x0F00) // Zero page
+			const unsigned short lh_addr = address & 0x0F00;
+			if (lh_addr == 0x0F00) // Zero page
 			{
 				if (address == 0xFFFF) return &this->i_e;
 
@@ -268,13 +265,13 @@ unsigned char* mmu::get_memory_ptr(unsigned short address)
 				}
 				else // TODO: Implement
 				{
-					if(address & 0x30)
+					if (address & 0x30)
 					{
 						this->zero_[0] = 0;
 						this->zero_[1] = 0;
 						return &this->zero_[0];
 					}
-					else if((address & 0xF0) >= 0x40 && (address & 0xF0) <= 0x70)
+					if ((address & 0xF0) >= 0x40 && (address & 0xF0) <= 0x70)
 					{
 						return this->gb_->get_gpu()->get_memory_ptr(address);
 					}
@@ -294,7 +291,7 @@ unsigned char* mmu::get_memory_ptr(unsigned short address)
 					if (address == 0xFF07) return reinterpret_cast<unsigned char*>(&this->gb_->get_cpu()->timer.tac);
 
 					// Others
-					if(address >= 0xFF08 && address <= 0xFF0E)
+					if (address >= 0xFF08 && address <= 0xFF0E)
 					{
 						this->zero_[0] = 0;
 						this->zero_[1] = 0;
@@ -314,7 +311,7 @@ unsigned char* mmu::get_memory_ptr(unsigned short address)
 					*/
 				}
 			}
-			else if(lhAddr == 0x0E00) // OAM
+			else if (lh_addr == 0x0E00) // OAM
 			{
 				if (address < 0xFEA0)
 				{
@@ -333,7 +330,7 @@ unsigned char* mmu::get_memory_ptr(unsigned short address)
 			}
 		}
 
-		default:
+	default:
 		{
 			return nullptr;
 		}
@@ -342,5 +339,4 @@ unsigned char* mmu::get_memory_ptr(unsigned short address)
 
 mmu::~mmu()
 {
-	
 }

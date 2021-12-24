@@ -2,17 +2,15 @@
 
 game_boy::game_boy() : joypad_(this), cpu_(this), mmu_(this), gpu_(this)
 {
-
 }
 
-game_boy::~game_boy()
-{
-
-}
+game_boy::~game_boy() = default;
 
 void game_boy::run()
 {
-	while (this->frame());
+	while (this->frame())
+	{
+	}
 	this->gpu_.close_window();
 }
 
@@ -23,11 +21,11 @@ void game_boy::skip_bios()
 
 bool game_boy::frame()
 {
-	unsigned int endTick = this->cpu_.registers.m + 17556;
+	const unsigned int end_tick = this->cpu_.registers.m + 17556;
 
-	auto start = std::chrono::high_resolution_clock::now();
+	const auto start = std::chrono::high_resolution_clock::now();
 
-	while (this->cpu_.registers.m < endTick)
+	while (this->cpu_.registers.m < end_tick)
 	{
 		if (!this->cpu_.execute())
 		{
@@ -35,7 +33,8 @@ bool game_boy::frame()
 		}
 	}
 
-	auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+	const auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::high_resolution_clock::now() - start);
 
 	if (delta < (15ms))
 	{
@@ -51,10 +50,10 @@ void game_boy::load_rom(std::string data)
 
 	if (data.size() >= sizeof(gb_rom))
 	{
-		gb_rom* rom = reinterpret_cast<gb_rom*>(data.data());
+		auto* rom = reinterpret_cast<gb_rom*>(data.data());
 
-		std::string romName(rom->title, 16);
-		while (!romName.empty() && !romName.back()) romName.pop_back();
-		this->gpu_.set_title(romName);
+		std::string rom_name(rom->title, 16);
+		while (!rom_name.empty() && !rom_name.back()) rom_name.pop_back();
+		this->gpu_.set_title(rom_name);
 	}
 }

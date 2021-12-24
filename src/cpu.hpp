@@ -68,7 +68,7 @@ struct cpu_registers
 class cpu
 {
 public:
-	typedef void(*operation)(game_boy*);
+	typedef void (*operation)(game_boy*);
 
 	cpu(game_boy* game_boy);
 	~cpu();

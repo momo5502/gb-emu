@@ -5,7 +5,7 @@
 
 namespace utils
 {
-	const char *va(const char *fmt, ...)
+	const char* va(const char* fmt, ...)
 	{
 		static char va_buffer[VA_BUFFER_COUNT][VA_BUFFER_SIZE];
 		static int va_next_buffer_index = 0;
@@ -22,7 +22,7 @@ namespace utils
 	bool read_file(const std::string& name, std::string& data)
 	{
 		std::ifstream stream(name, std::ios::binary);
-		if(stream.is_open())
+		if (stream.is_open())
 		{
 			stream.seekg(0, std::ios::end);
 			const std::streampos size = stream.tellg();

@@ -8,7 +8,7 @@ public:
 	joypad(game_boy* game_boy);
 	~joypad();
 
-	unsigned char read();
+	unsigned char read() const;
 	void write(unsigned char val);
 
 private:
@@ -16,9 +16,9 @@ private:
 	{
 		// High column (0x20)
 		key_right = 1,
-		key_left  = 2,
-		key_up    = 4,
-		key_down  = 8,
+		key_left = 2,
+		key_up = 4,
+		key_down = 8,
 
 		// Low column (0x10)
 		key_a = 1,
@@ -29,18 +29,18 @@ private:
 
 	game_boy* gb_;
 
-	bool up();
-	bool down();
-	bool left();
-	bool right();
+	bool up() const;
+	bool down() const;
+	bool left() const;
+	bool right() const;
 
-	bool a();
-	bool b();
+	bool a() const;
+	bool b() const;
 
-	bool start();
-	bool select();
+	bool start() const;
+	bool select() const;
 
-	bool is_key_pressed(int vk);
+	bool is_key_pressed(int vk) const;
 
 	unsigned char column_;
 };

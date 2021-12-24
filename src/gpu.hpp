@@ -25,7 +25,7 @@ public:
 
 	void set_title(std::string title);
 
-	bool is_window_active();
+	bool is_window_active() const;
 
 private:
 	struct memory

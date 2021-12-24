@@ -31,19 +31,19 @@ public:
 
 	void mark_bios_pass();
 
-	unsigned char vram[0x2000];
-	unsigned char eram[0x8000];
-	unsigned char wram[0x2000];
-	unsigned char zram[0x7F];
+	unsigned char vram[0x2000]{};
+	unsigned char eram[0x8000]{};
+	unsigned char wram[0x2000]{};
+	unsigned char zram[0x7F]{};
 
-	unsigned char i_f;
-	unsigned char i_e;
+	unsigned char i_f{};
+	unsigned char i_e{};
 
 	unsigned int rom_offset = 0x4000;
 	unsigned int ram_offset = 0x0000;
 	unsigned char cartridge_type = 0;
 
-	mbc mbc[4];
+	mbc mbc[4]{};
 
 	gb_rom* get_rom();
 

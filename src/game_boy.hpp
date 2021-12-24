@@ -35,7 +35,6 @@ public:
 	void skip_bios();
 
 private:
-
 	joypad joypad_;
 	cpu cpu_;
 	mmu mmu_;

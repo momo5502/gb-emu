@@ -3,21 +3,21 @@
 const unsigned char cpu::operation_ticks[0x100] =
 {
 	2, 6, 4, 4, 2, 2, 4, 2, 10, 4, 4, 4, 2, 2, 4, 2, // 0x0_
-	2, 6, 4, 4, 2, 2, 4, 2,  6, 4, 4, 4, 2, 2, 4, 2, // 0x1_
-	4, 6, 4, 4, 2, 2, 4, 2,  4, 4, 4, 4, 2, 2, 4, 2, // 0x2_
-	4, 6, 4, 4, 6, 6, 6, 2,  4, 4, 4, 4, 2, 2, 4, 2, // 0x3_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x4_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x5_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x6_
-	4, 4, 4, 4, 4, 4, 2, 4,  2, 2, 2, 2, 2, 2, 4, 2, // 0x7_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x8_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0x9_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0xa_
-	2, 2, 2, 2, 2, 2, 4, 2,  2, 2, 2, 2, 2, 2, 4, 2, // 0xb_
-	4, 6, 6, 8, 6, 8, 4, 0,  4, 8, 6, 0, 6,12, 4, 0, // 0xc_
-	4, 6, 6, 0, 6, 8, 4, 0,  4, 8, 6, 0, 6, 0, 4, 0, // 0xd_
-	6, 4, 4, 0, 0, 8, 4, 0,  8, 2, 8, 0, 0, 0, 4, 0, // 0xe_
-	6, 4, 4, 2, 0, 8, 4, 0,  6, 4, 8, 2, 0, 0, 4, 0  // 0xf_
+	2, 6, 4, 4, 2, 2, 4, 2, 6, 4, 4, 4, 2, 2, 4, 2, // 0x1_
+	4, 6, 4, 4, 2, 2, 4, 2, 4, 4, 4, 4, 2, 2, 4, 2, // 0x2_
+	4, 6, 4, 4, 6, 6, 6, 2, 4, 4, 4, 4, 2, 2, 4, 2, // 0x3_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0x4_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0x5_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0x6_
+	4, 4, 4, 4, 4, 4, 2, 4, 2, 2, 2, 2, 2, 2, 4, 2, // 0x7_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0x8_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0x9_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0xa_
+	2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2, // 0xb_
+	4, 6, 6, 8, 6, 8, 4, 0, 4, 8, 6, 0, 6, 12, 4, 0, // 0xc_
+	4, 6, 6, 0, 6, 8, 4, 0, 4, 8, 6, 0, 6, 0, 4, 0, // 0xd_
+	6, 4, 4, 0, 0, 8, 4, 0, 8, 2, 8, 0, 0, 0, 4, 0, // 0xe_
+	6, 4, 4, 2, 0, 8, 4, 0, 6, 4, 8, 2, 0, 0, 4, 0 // 0xf_
 };
 
 const unsigned char cpu::ext_operation_ticks[0x100] =
@@ -37,7 +37,7 @@ const unsigned char cpu::ext_operation_ticks[0x100] =
 	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xc_
 	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xd_
 	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8, // 0xe_
-	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8  // 0xf_
+	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8 // 0xf_
 };
 
 cpu::cpu(game_boy* game_boy) : ime_(true), gb_(game_boy)
@@ -49,31 +49,30 @@ cpu::cpu(game_boy* game_boy) : ime_(true), gb_(game_boy)
 	this->setup_operations();
 	this->setup_ext_operations();
 
-	int implOp = 0;
-	int implCb = 0;
+	int impl_op = 0;
+	int impl_cb = 0;
 
-	int opSize = ARRAYSIZE(this->operations_);
-	int cbSize = ARRAYSIZE(this->ext_operations_);
+	int op_size = ARRAYSIZE(this->operations_);
+	int cb_size = ARRAYSIZE(this->ext_operations_);
 
-	for(int i = 0; i < min(opSize, cbSize); ++i)
+	for (int i = 0; i < min(op_size, cb_size); ++i)
 	{
-		if (this->operations_[i]) implOp++;
-		if (this->ext_operations_[i]) implCb++;
+		if (this->operations_[i]) impl_op++;
+		if (this->ext_operations_[i]) impl_cb++;
 	}
 
-	printf("Operation coverage: %d/%d\n", implOp, opSize);
-	printf("Extended operation coverage: %d/%d\n", implCb, cbSize);
+	printf("Operation coverage: %d/%d\n", impl_op, op_size);
+	printf("Extended operation coverage: %d/%d\n", impl_cb, cb_size);
 }
 
-cpu::~cpu()
-{
-
-}
+cpu::~cpu() = default;
 
 void cpu::setup_operations()
 {
 	// NOP
-	this->operations_[0x00] = [](game_boy*) { };
+	this->operations_[0x00] = [](game_boy*)
+	{
+	};
 
 	// LD BC,nn
 	this->operations_[0x01] = [](game_boy* gb)
@@ -216,8 +215,8 @@ void cpu::setup_operations()
 	// JR n
 	this->operations_[0x18] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->get_cpu()->read_program_byte();
-		gb->get_cpu()->registers.pc += jumpLoc;
+		const char jump_loc = gb->get_cpu()->read_program_byte();
+		gb->get_cpu()->registers.pc += jump_loc;
 	};
 
 	// ADD HL,DE
@@ -265,10 +264,10 @@ void cpu::setup_operations()
 	// JR NZ,n
 	this->operations_[0x20] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->get_cpu()->read_program_byte();
+		const char jump_loc = gb->get_cpu()->read_program_byte();
 		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.pc += jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -316,7 +315,7 @@ void cpu::setup_operations()
 		int a = gb->get_cpu()->registers.a;
 		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			if(gb->get_cpu()->registers.f & flag_half_carry || ((a & 0xF) > 9))
+			if (gb->get_cpu()->registers.f & flag_half_carry || ((a & 0xF) > 9))
 				a += 0x06;
 
 			if (gb->get_cpu()->registers.f & flag_carry || (a > 0x9F))
@@ -337,7 +336,7 @@ void cpu::setup_operations()
 			gb->get_cpu()->registers.f |= flag_carry;
 
 		a &= 0xFF;
-		if(!a) gb->get_cpu()->registers.f |= flag_zero;
+		if (!a) gb->get_cpu()->registers.f |= flag_zero;
 
 		gb->get_cpu()->registers.a = static_cast<unsigned char>(a);
 	};
@@ -400,10 +399,10 @@ void cpu::setup_operations()
 	// JR NC,n
 	this->operations_[0x30] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->get_cpu()->read_program_byte();
+		const char jump_loc = gb->get_cpu()->read_program_byte();
 		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
-			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.pc += jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -432,7 +431,7 @@ void cpu::setup_operations()
 	{
 		gb->get_cpu()->registers.f &= flag_carry;
 
-		unsigned char value = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) + 1;
+		const unsigned char value = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) + 1;
 		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, value);
 
 		if (!value) gb->get_cpu()->registers.f |= flag_zero;
@@ -445,11 +444,11 @@ void cpu::setup_operations()
 		gb->get_cpu()->registers.f &= flag_carry;
 		gb->get_cpu()->registers.f |= flag_negative;
 
-		unsigned char value = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) - 1;
+		const unsigned char value = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) - 1;
 		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, value);
 
-		if(!value) gb->get_cpu()->registers.f |= flag_zero;
-		if((value & 0x0F) == 0x0F) gb->get_cpu()->registers.f |= flag_half_carry;
+		if (!value) gb->get_cpu()->registers.f |= flag_zero;
+		if ((value & 0x0F) == 0x0F) gb->get_cpu()->registers.f |= flag_half_carry;
 	};
 
 	// LD (HL),n
@@ -469,10 +468,10 @@ void cpu::setup_operations()
 	// JR C,n
 	this->operations_[0x38] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->get_cpu()->read_program_byte();
+		const char jump_loc = gb->get_cpu()->read_program_byte();
 		if (gb->get_cpu()->registers.f & flag_carry)
 		{
-			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.pc += jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -525,6 +524,7 @@ void cpu::setup_operations()
 	// LD B,B
 	this->operations_[0x40] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.b = gb->get_cpu()->registers.b;
 	};
 
@@ -579,6 +579,7 @@ void cpu::setup_operations()
 	// LD C,C
 	this->operations_[0x49] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.c = gb->get_cpu()->registers.c;
 	};
 
@@ -611,7 +612,7 @@ void cpu::setup_operations()
 	{
 		gb->get_cpu()->registers.c = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
-	
+
 	// LD C,A
 	this->operations_[0x4F] = [](game_boy* gb)
 	{
@@ -633,6 +634,7 @@ void cpu::setup_operations()
 	// LD D,D
 	this->operations_[0x52] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.d = gb->get_cpu()->registers.d;
 	};
 
@@ -687,6 +689,7 @@ void cpu::setup_operations()
 	// LD E,E
 	this->operations_[0x5B] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.e = gb->get_cpu()->registers.e;
 	};
 
@@ -741,6 +744,7 @@ void cpu::setup_operations()
 	// LD H,H
 	this->operations_[0x64] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.h = gb->get_cpu()->registers.h;
 	};
 
@@ -795,6 +799,7 @@ void cpu::setup_operations()
 	// LD L,L
 	this->operations_[0x6D] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.l = gb->get_cpu()->registers.l;
 	};
 
@@ -906,6 +911,7 @@ void cpu::setup_operations()
 	// LD A,A
 	this->operations_[0x7F] = [](game_boy* gb)
 	{
+		// ReSharper disable once CppIdenticalOperandsInBinaryExpression
 		gb->get_cpu()->registers.a = gb->get_cpu()->registers.a;
 	};
 
@@ -1312,10 +1318,10 @@ void cpu::setup_operations()
 	// JP NZ,nn
 	this->operations_[0xC2] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		const unsigned short jump_loc = gb->get_cpu()->read_program_word();
 		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.pc = jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -1329,11 +1335,11 @@ void cpu::setup_operations()
 	// CALL NZ,nn
 	this->operations_[0xC4] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		const unsigned short call_loc = gb->get_cpu()->read_program_word();
 		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
 			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
-			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.pc = call_loc;
 			gb->get_cpu()->registers.m += 3;
 		}
 	};
@@ -1375,10 +1381,10 @@ void cpu::setup_operations()
 	// JP Z,nn
 	this->operations_[0xCA] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		const unsigned short jump_loc = gb->get_cpu()->read_program_word();
 		if (gb->get_cpu()->registers.f & flag_zero)
 		{
-			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.pc = jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -1393,15 +1399,15 @@ void cpu::setup_operations()
 	// CALL Z,nn
 	this->operations_[0xCC] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		const unsigned short call_loc = gb->get_cpu()->read_program_word();
 		if (gb->get_cpu()->registers.f & flag_zero)
 		{
 			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
-			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.pc = call_loc;
 			gb->get_cpu()->registers.m += 3;
 		}
 	};
-	
+
 	// CALL nn
 	this->operations_[0xCD] = [](game_boy* gb)
 	{
@@ -1440,10 +1446,10 @@ void cpu::setup_operations()
 	// JP NC,nn
 	this->operations_[0xD2] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		const unsigned short jump_loc = gb->get_cpu()->read_program_word();
 		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
-			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.pc = jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -1451,11 +1457,11 @@ void cpu::setup_operations()
 	// CALL NC,nn
 	this->operations_[0xD4] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		const unsigned short call_loc = gb->get_cpu()->read_program_word();
 		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
 			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
-			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.pc = call_loc;
 			gb->get_cpu()->registers.m += 3;
 		}
 	};
@@ -1507,10 +1513,10 @@ void cpu::setup_operations()
 	// JP C,nn
 	this->operations_[0xDA] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		const unsigned short jump_loc = gb->get_cpu()->read_program_word();
 		if (gb->get_cpu()->registers.f & flag_carry)
 		{
-			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.pc = jump_loc;
 			gb->get_cpu()->registers.m++;
 		}
 	};
@@ -1518,11 +1524,11 @@ void cpu::setup_operations()
 	// CALL C,nn
 	this->operations_[0xDC] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		const unsigned short call_loc = gb->get_cpu()->read_program_word();
 		if (gb->get_cpu()->registers.f & flag_carry)
 		{
 			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
-			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.pc = call_loc;
 			gb->get_cpu()->registers.m += 3;
 		}
 	};
@@ -1580,12 +1586,16 @@ void cpu::setup_operations()
 	{
 		gb->get_cpu()->registers.f = 0;
 
-		unsigned short value = gb->get_cpu()->read_program_byte();
-		int result = gb->get_cpu()->registers.sp + value;
+		const unsigned short value = gb->get_cpu()->read_program_byte();
+		const int result = gb->get_cpu()->registers.sp + value;
 
 		gb->get_cpu()->registers.f = 0;
-		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100) gb->get_cpu()->registers.f |= flag_carry;
-		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10) gb->get_cpu()->registers.f |= flag_half_carry;
+		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100)
+			gb->get_cpu()->registers.f |=
+				flag_carry;
+		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10)
+			gb->get_cpu()->registers.f |=
+				flag_half_carry;
 
 		gb->get_cpu()->registers.sp = static_cast<unsigned short>(result & 0xFFFF);
 	};
@@ -1723,9 +1733,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x06] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->rlc(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rlc(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x07] = [](game_boy* gb)
@@ -1765,9 +1775,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x0E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->rrc(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rrc(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x0F] = [](game_boy* gb)
@@ -1807,9 +1817,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x16] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->rl(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rl(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x17] = [](game_boy* gb)
@@ -1849,9 +1859,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x1E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->rr(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rr(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x1F] = [](game_boy* gb)
@@ -1891,9 +1901,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x26] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->sla(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->sla(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x27] = [](game_boy* gb)
@@ -1933,9 +1943,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x2E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->sra(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->sra(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x2F] = [](game_boy* gb)
@@ -1975,9 +1985,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x36] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->swap(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->swap(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x37] = [](game_boy* gb)
@@ -2017,9 +2027,9 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x3E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
-		gb->get_cpu()->srl(&hlVal);
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
+		unsigned char hl_val = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->srl(&hl_val);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hl_val);
 	};
 
 	this->ext_operations_[0x3F] = [](game_boy* gb)
@@ -2379,7 +2389,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x86] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 0));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 0));
 	};
 
 	this->ext_operations_[0x87] = [](game_boy* gb)
@@ -2419,7 +2430,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x8E] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 1));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 1));
 	};
 
 	this->ext_operations_[0x8F] = [](game_boy* gb)
@@ -2459,7 +2471,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x96] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 2));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 2));
 	};
 
 	this->ext_operations_[0x97] = [](game_boy* gb)
@@ -2499,7 +2512,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x9E] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 3));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 3));
 	};
 
 	this->ext_operations_[0x9F] = [](game_boy* gb)
@@ -2539,7 +2553,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xA6] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 4));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 4));
 	};
 
 	this->ext_operations_[0xA7] = [](game_boy* gb)
@@ -2579,7 +2594,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xAE] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 5));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 5));
 	};
 
 	this->ext_operations_[0xAF] = [](game_boy* gb)
@@ -2619,7 +2635,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xB6] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 6));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 6));
 	};
 
 	this->ext_operations_[0xB7] = [](game_boy* gb)
@@ -2659,7 +2676,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xBE] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 7));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 7));
 	};
 
 	this->ext_operations_[0xBF] = [](game_boy* gb)
@@ -2699,7 +2717,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xC6] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 0));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 0));
 	};
 
 	this->ext_operations_[0xC7] = [](game_boy* gb)
@@ -2739,7 +2758,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xCE] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 1));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 1));
 	};
 
 	this->ext_operations_[0xCF] = [](game_boy* gb)
@@ -2779,7 +2799,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xD6] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 2));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 2));
 	};
 
 	this->ext_operations_[0xD7] = [](game_boy* gb)
@@ -2819,7 +2840,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xDE] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 3));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 3));
 	};
 
 	this->ext_operations_[0xDF] = [](game_boy* gb)
@@ -2859,7 +2881,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xE6] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 4));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 4));
 	};
 
 	this->ext_operations_[0xE7] = [](game_boy* gb)
@@ -2899,7 +2922,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xEE] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 5));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 5));
 	};
 
 	this->ext_operations_[0xEF] = [](game_boy* gb)
@@ -2939,7 +2963,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xF6] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 6));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 6));
 	};
 
 	this->ext_operations_[0xF7] = [](game_boy* gb)
@@ -2979,7 +3004,8 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0xFE] = [](game_boy* gb)
 	{
-		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 7));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl,
+		                          gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 7));
 	};
 
 	this->ext_operations_[0xFF] = [](game_boy* gb)
@@ -2988,9 +3014,9 @@ void cpu::setup_ext_operations()
 	};
 }
 
-void cpu::add_hl(unsigned short value)
+void cpu::add_hl(const unsigned short value)
 {
-	int result = this->registers.hl + value;
+	const int result = this->registers.hl + value;
 
 	this->registers.f &= flag_zero;
 	if (result & 0x10000) this->registers.f |= flag_carry;
@@ -3016,11 +3042,11 @@ void cpu::dec(unsigned char* reg)
 	this->registers.f |= flag_negative;
 }
 
-void cpu::add(unsigned char reg)
+void cpu::add(const unsigned char reg)
 {
-	char value = reg;
-	unsigned int result = this->registers.a + value;
-	int carrybits = this->registers.a ^ value ^ result;
+	const char value = reg;
+	const unsigned int result = this->registers.a + value;
+	const int carrybits = this->registers.a ^ value ^ result;
 
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 
@@ -3030,12 +3056,12 @@ void cpu::add(unsigned char reg)
 	if ((carrybits & 0x10) != 0) this->registers.f |= flag_half_carry;
 }
 
-void cpu::adc(unsigned char reg)
+void cpu::adc(const unsigned char reg)
 {
-	int carry = (this->registers.f & flag_carry) ? 1 : 0;
+	const int carry = (this->registers.f & flag_carry) ? 1 : 0;
 
-	int value = reg + carry;
-	int result = this->registers.a + value;
+	const int value = reg + carry;
+	const int result = this->registers.a + value;
 
 	this->registers.f = 0;
 	if (result > 0xFF) this->registers.f |= flag_carry;
@@ -3045,24 +3071,24 @@ void cpu::adc(unsigned char reg)
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 }
 
-void cpu::sbc(unsigned char reg)
+void cpu::sbc(const unsigned char reg)
 {
-	int carry = (this->registers.f & flag_carry) ? 1 : 0;
-	int result = this->registers.a - reg - carry;
+	const int carry = (this->registers.f & flag_carry) ? 1 : 0;
+	const int result = this->registers.a - reg - carry;
 
 	this->registers.f = flag_negative;
-	if(!(result & 0xFF)) this->registers.f |= flag_zero;
+	if (!(result & 0xFF)) this->registers.f |= flag_zero;
 	if (result < 0) this->registers.f |= flag_carry;
 	if (((this->registers.a & 0x0F) - (reg & 0x0F) - carry) < 0) this->registers.f |= flag_half_carry;
 
 	this->registers.a = static_cast<unsigned char>(result);
 }
 
-void cpu::sub(unsigned char reg)
+void cpu::sub(const unsigned char reg)
 {
-	char value = reg;
-	unsigned int result = this->registers.a - value;
-	int carrybits = this->registers.a ^ value ^ result;
+	const char value = reg;
+	const unsigned int result = this->registers.a - value;
+	const int carrybits = this->registers.a ^ value ^ result;
 
 	this->registers.f = flag_negative;
 	if ((carrybits & 0x100) != 0) this->registers.f |= flag_carry;
@@ -3072,7 +3098,7 @@ void cpu::sub(unsigned char reg)
 	this->registers.a = static_cast<unsigned char>(result);
 }
 
-void cpu::_and(unsigned char reg)
+void cpu::_and(const unsigned char reg)
 {
 	this->registers.f = flag_half_carry;
 
@@ -3080,19 +3106,19 @@ void cpu::_and(unsigned char reg)
 	if (!this->registers.a) this->registers.f |= flag_zero;
 }
 
-void cpu::_xor(unsigned char reg)
+void cpu::_xor(const unsigned char reg)
 {
 	this->registers.a ^= reg;
 	this->registers.f = this->registers.a ? 0 : flag_zero;
 }
 
-void cpu::_or(unsigned char reg)
+void cpu::_or(const unsigned char reg)
 {
 	this->registers.a |= reg;
 	this->registers.f = this->registers.a ? 0 : flag_zero;
 }
 
-void cpu::cp(unsigned char reg)
+void cpu::cp(const unsigned char reg)
 {
 	this->registers.f = flag_negative;
 	if (this->registers.a < reg) this->registers.f |= flag_carry;
@@ -3100,7 +3126,7 @@ void cpu::cp(unsigned char reg)
 	if (((this->registers.a - reg) & 0xF) > (this->registers.a & 0xF)) this->registers.f |= flag_half_carry;
 }
 
-void cpu::bit(unsigned char reg, unsigned char _bit)
+auto cpu::bit(const unsigned char reg, const unsigned char _bit) -> void
 {
 	this->registers.f &= ~(flag_zero | flag_negative);
 	this->registers.f |= flag_half_carry;
@@ -3109,7 +3135,7 @@ void cpu::bit(unsigned char reg, unsigned char _bit)
 
 void cpu::rlc(unsigned char* reg)
 {
-	bool carry = (*reg & 0x80) == 0x80;
+	const bool carry = (*reg & 0x80) == 0x80;
 	*reg <<= 1;
 	*reg |= carry ? 0x01 : 0;
 
@@ -3119,7 +3145,7 @@ void cpu::rlc(unsigned char* reg)
 
 void cpu::rrc(unsigned char* reg)
 {
-	bool carry = *reg & 0x01;
+	const bool carry = *reg & 0x01;
 	*reg >>= 1;
 	*reg |= carry ? 0x80 : 0;
 
@@ -3129,7 +3155,7 @@ void cpu::rrc(unsigned char* reg)
 
 void cpu::rl(unsigned char* reg)
 {
-	unsigned char carry = (this->registers.f & flag_carry) ? 1 : 0;
+	const unsigned char carry = (this->registers.f & flag_carry) ? 1 : 0;
 	this->registers.f = (*reg & 0x80) ? flag_carry : 0;
 
 	*reg <<= 1;
@@ -3140,7 +3166,7 @@ void cpu::rl(unsigned char* reg)
 
 void cpu::rr(unsigned char* reg)
 {
-	unsigned char carry = (this->registers.f & flag_carry) ? 0x80 : 0;
+	const unsigned char carry = (this->registers.f & flag_carry) ? 0x80 : 0;
 	this->registers.f = (*reg & 0x01) ? flag_carry : 0;
 
 	*reg >>= 1;
@@ -3158,7 +3184,7 @@ void cpu::sla(unsigned char* reg)
 
 void cpu::sra(unsigned char* reg)
 {
-	unsigned char carry = (*reg & 0x80);
+	const unsigned char carry = (*reg & 0x80);
 	this->registers.f = (*reg & 0x01) ? flag_carry : 0;
 	*reg >>= 1;
 	*reg |= carry;
@@ -3178,7 +3204,7 @@ void cpu::srl(unsigned char* reg)
 	if (!*reg) this->registers.f |= flag_zero;
 }
 
-void cpu::execute_rst(unsigned short num)
+void cpu::execute_rst(const unsigned short num)
 {
 	std::memcpy(&this->sav_registers_, &this->registers, sizeof this->registers);
 	this->stack_push_word(this->registers.pc);
@@ -3188,25 +3214,25 @@ void cpu::execute_rst(unsigned short num)
 
 unsigned char cpu::read_program_byte()
 {
-	unsigned short addr = this->registers.pc++;
+	const unsigned short addr = this->registers.pc++;
 	this->registers.pc &= 0xFFFF;
 	return this->gb_->get_mmu()->read_byte(addr);
 }
 
 unsigned short cpu::read_program_word()
 {
-	unsigned short low = this->read_program_byte();
-	unsigned short high = this->read_program_byte();
+	const unsigned short low = this->read_program_byte();
+	const unsigned short high = this->read_program_byte();
 	return low | (high << 8);
 }
 
-void cpu::stack_push_word(unsigned short value)
+void cpu::stack_push_word(const unsigned short value)
 {
 	this->registers.sp -= 2;
 	this->gb_->get_mmu()->write_word(this->registers.sp, value);
 }
 
-void cpu::stack_push_byte(unsigned char value)
+void cpu::stack_push_byte(const unsigned char value)
 {
 	this->registers.sp -= 1;
 	this->gb_->get_mmu()->write_byte(this->registers.sp, value);
@@ -3214,27 +3240,25 @@ void cpu::stack_push_byte(unsigned char value)
 
 unsigned short cpu::stack_pop_word()
 {
-	unsigned short value = this->gb_->get_mmu()->read_word(this->registers.sp);
+	const unsigned short value = this->gb_->get_mmu()->read_word(this->registers.sp);
 	this->registers.sp += 2;
 	return value;
 }
 
 unsigned char cpu::stack_pop_byte()
 {
-	unsigned char value = this->gb_->get_mmu()->read_byte(this->registers.sp);
+	const unsigned char value = this->gb_->get_mmu()->read_byte(this->registers.sp);
 	this->registers.sp += 1;
 	return value;
 }
 
 bool cpu::execute()
 {
-	unsigned short pc = this->registers.pc;
+	const unsigned short pc = this->registers.pc;
+	const unsigned char instruction = this->halted_ ? 0 : this->read_program_byte();
+	const auto operation = this->operations_[instruction];
 
-	unsigned char instruction = this->halted_ ? 0 : this->read_program_byte();
-
-	auto operation = this->operations_[instruction];
-
-	if(operation)
+	if (operation)
 	{
 		try
 		{
@@ -3255,7 +3279,7 @@ bool cpu::execute()
 				this->halted_ = false;
 				this->ime_ = false;
 
-				unsigned char ifired = this->gb_->get_mmu()->i_e & this->gb_->get_mmu()->i_f;
+				const unsigned char ifired = this->gb_->get_mmu()->i_e & this->gb_->get_mmu()->i_f;
 				if (ifired & 1) // VBlank
 				{
 					this->gb_->get_mmu()->i_f &= 0xFE;
@@ -3292,14 +3316,14 @@ bool cpu::execute()
 			if (!this->gb_->get_gpu()->working()) return false;
 			this->gb_->get_gpu()->frame();
 
-			if(this->registers.pc == 0x100) this->gb_->get_mmu()->mark_bios_pass();
+			if (this->registers.pc == 0x100) this->gb_->get_mmu()->mark_bios_pass();
 			return true;
 		}
-		catch(std::exception e)
+		catch (std::exception& e)
 		{
 			printf("Operation %X (%X) has thrown an exception: %s\n", instruction, pc, e.what());
 		}
-		catch(...)
+		catch (...)
 		{
 			printf("Operation %X (%X) has thrown an unknown exception\n", instruction, pc);
 		}
@@ -3312,15 +3336,15 @@ bool cpu::execute()
 	return false;
 }
 
-void cpu::execute_ext(unsigned char instruction)
+void cpu::execute_ext(const unsigned char instruction)
 {
-	auto extOp = this->ext_operations_[instruction];
+	const auto ext_op = this->ext_operations_[instruction];
 
-	if (extOp)
+	if (ext_op)
 	{
 		try
 		{
-			extOp(this->gb_);
+			ext_op(this->gb_);
 			this->registers.m += (cpu::ext_operation_ticks[instruction] / 4);
 
 #ifdef DEBUG_OPS
@@ -3328,9 +3352,10 @@ void cpu::execute_ext(unsigned char instruction)
 #endif
 			return;
 		}
-		catch (std::exception e)
+		catch (std::exception& e)
 		{
-			printf("Extended operation %X (%X) has thrown an exception: %s\n", instruction, this->registers.pc, e.what());
+			printf("Extended operation %X (%X) has thrown an exception: %s\n", instruction, this->registers.pc,
+			       e.what());
 		}
 		catch (...)
 		{

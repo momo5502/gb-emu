@@ -46,5 +46,5 @@ int main(const int argc, char* argv[])
 
 int __stdcall WinMain(HINSTANCE, HINSTANCE, char*, int)
 {
-    return main(__argc, __argv);
+	return main(__argc, __argv);
 }
