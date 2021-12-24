@@ -14,6 +14,7 @@ public:
 	unsigned char* get_memory_ptr(unsigned short address);
 	void update_tile(unsigned short address);
 	void update_object(unsigned short address, unsigned char value);
+	void set_is_color_gb(bool value);
 
 private:
 	struct memory
@@ -83,6 +84,7 @@ private:
 	memory mem_{};
 	unsigned int clock_;
 	unsigned int last_time_ = 0;
+	bool is_color_gb {false};
 
 	color screen_buffer_[GB_WIDTH * GB_HEIGHT]{};
 	unsigned char tiles_[512][8][8]{};

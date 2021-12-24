@@ -72,5 +72,6 @@ void game_boy::load_rom(std::vector<uint8_t> data)
 	while (!rom_name.empty() && !rom_name.back()) rom_name.pop_back();
 	this->display_->set_title(std::move(rom_name));
 
+	this->gpu_.set_is_color_gb(false);
 	this->mmu_.load_rom(std::move(data));
 }

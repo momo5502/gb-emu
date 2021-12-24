@@ -25,8 +25,8 @@ void gpu::render_screen()
 	if (this->mem_.flags & flag_background_on)
 	{
 		const unsigned short linebase = GB_WIDTH * this->mem_.curline;
-		const unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.
-			curline +
+		const unsigned short mapaddress = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800);
+		const unsigned short mapbase = mapaddress + ((((this->mem_.curline +
 			this->mem_.yscrl) & 255) >> 3) << 5);
 		const unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
 		unsigned char x = this->mem_.xscrl & 7;
@@ -82,15 +82,20 @@ void gpu::render_screen()
 					// if it's not colour 0 (transparent), AND
 					// if this sprite has priority OR shows under the bg
 					// then render the pixel
-					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && tilerow[obj.x_flip ? (7 - x) : x] && (obj.priority || !
+					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && (!obj.priority || !
 						scanrow[obj.x + x]))
 					{
-						// If the sprite is X-flipped,
-						// write pixels in reverse order
-						const auto color = this->get_color_from_palette(1 + (obj.palette != 0),
-						                                                tilerow[obj.x_flip ? (7 - x) : x]);
+						const unsigned index = tilerow[obj.x_flip ? (7 - x) : x];
+						if (index)
+						{
+							// If the sprite is X-flipped,
+							// write pixels in reverse order
+							const auto color = this->get_color_from_palette(1 + (obj.palette != 0),
+							                                                index);
+							this->screen_buffer_[canvasoffs] = color;
+						}
 
-						this->screen_buffer_[canvasoffs] = color;
+
 						canvasoffs++;
 					}
 				}
@@ -233,18 +238,22 @@ void gpu::update_object(const unsigned short address, const unsigned char value)
 	}
 }
 
+void gpu::set_is_color_gb(const bool value)
+{
+	this->is_color_gb = value;
+}
+
 void gpu::update_tile(unsigned short addr)
 {
-	addr &= ~1;
-	const unsigned short saddr = addr;
+	addr &= 0x1ffe;
 	const unsigned short tile = (addr >> 4) & 511;
 	const unsigned short y = (addr >> 1) & 7;
 	for (unsigned short x = 0; x < 8; x++)
 	{
 		const unsigned short sx = 1 << (7 - x);
 
-		unsigned char var = (this->gb_->get_mmu()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
-		var |= (this->gb_->get_mmu()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
+		unsigned char var = (this->gb_->get_mmu()->vram[addr] & sx) ? 1 : 0;
+		var |= (this->gb_->get_mmu()->vram[addr + 1] & sx) ? 2 : 0;
 		var &= 3;
 
 		this->tiles_[tile][y][x] = var;

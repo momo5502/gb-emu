@@ -56,8 +56,8 @@ cpu::cpu(game_boy* game_boy) : ime_(true), gb_(game_boy)
 	int impl_op = 0;
 	int impl_cb = 0;
 
-	int op_size = array_size(this->operations_);
-	int cb_size = array_size(this->ext_operations_);
+	const int op_size = array_size(this->operations_);
+	const int cb_size = array_size(this->ext_operations_);
 
 	for (int i = 0; i < std::min(op_size, cb_size); ++i)
 	{
