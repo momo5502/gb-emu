@@ -1,33 +1,33 @@
 #pragma once
 
-class GameBoy;
+class game_boy;
 
-class Joypad
+class joypad
 {
 public:
-	Joypad(GameBoy* gameBoy);
-	~Joypad();
+	joypad(game_boy* game_boy);
+	~joypad();
 
 	unsigned char read();
 	void write(unsigned char val);
 
 private:
-	enum KeyBits
+	enum key_bits
 	{
 		// High column (0x20)
-		KEY_RIGHT = 1,
-		KEY_LEFT  = 2,
-		KEY_UP    = 4,
-		KEY_DOWN  = 8,
+		key_right = 1,
+		key_left  = 2,
+		key_up    = 4,
+		key_down  = 8,
 
 		// Low column (0x10)
-		KEY_A = 1,
-		KEY_B = 2,
-		KEY_SELECT = 4,
-		KEY_START = 8,
+		key_a = 1,
+		key_b = 2,
+		key_select = 4,
+		key_start = 8,
 	};
 
-	GameBoy* gb;
+	game_boy* gb_;
 
 	bool up();
 	bool down();
@@ -40,7 +40,7 @@ private:
 	bool start();
 	bool select();
 
-	bool isKeyPressed(int vk);
+	bool is_key_pressed(int vk);
 
-	unsigned char column;
+	unsigned char column_;
 };

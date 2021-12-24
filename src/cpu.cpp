@@ -1,6 +1,6 @@
 #include "std_include.hpp"
 
-const unsigned char CPU::OperationTicks[0x100] =
+const unsigned char cpu::operation_ticks[0x100] =
 {
 	2, 6, 4, 4, 2, 2, 4, 2, 10, 4, 4, 4, 2, 2, 4, 2, // 0x0_
 	2, 6, 4, 4, 2, 2, 4, 2,  6, 4, 4, 4, 2, 2, 4, 2, // 0x1_
@@ -20,7 +20,7 @@ const unsigned char CPU::OperationTicks[0x100] =
 	6, 4, 4, 2, 0, 8, 4, 0,  6, 4, 8, 2, 0, 0, 4, 0  // 0xf_
 };
 
-const unsigned char CPU::ExtOperationTicks[0x100] =
+const unsigned char cpu::ext_operation_ticks[0x100] =
 {
 	8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8, // 0x0_
 	8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8, // 0x1_
@@ -40,2983 +40,2983 @@ const unsigned char CPU::ExtOperationTicks[0x100] =
 	8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8  // 0xf_
 };
 
-CPU::CPU(GameBoy* gameBoy) : ime(true), gb(gameBoy)
+cpu::cpu(game_boy* game_boy) : ime_(true), gb_(game_boy)
 {
-	ZeroObject(this->registers);
-	ZeroObject(this->operations);
-	ZeroObject(this->extOperations);
+	zero_object(this->registers);
+	zero_object(this->operations_);
+	zero_object(this->ext_operations_);
 
-	this->setupOperations();
-	this->setupExtOperations();
+	this->setup_operations();
+	this->setup_ext_operations();
 
 	int implOp = 0;
 	int implCb = 0;
 
-	int opSize = ARRAYSIZE(this->operations);
-	int cbSize = ARRAYSIZE(this->extOperations);
+	int opSize = ARRAYSIZE(this->operations_);
+	int cbSize = ARRAYSIZE(this->ext_operations_);
 
 	for(int i = 0; i < min(opSize, cbSize); ++i)
 	{
-		if (this->operations[i]) implOp++;
-		if (this->extOperations[i]) implCb++;
+		if (this->operations_[i]) implOp++;
+		if (this->ext_operations_[i]) implCb++;
 	}
 
 	printf("Operation coverage: %d/%d\n", implOp, opSize);
 	printf("Extended operation coverage: %d/%d\n", implCb, cbSize);
 }
 
-CPU::~CPU()
+cpu::~cpu()
 {
 
 }
 
-void CPU::setupOperations()
+void cpu::setup_operations()
 {
 	// NOP
-	this->operations[0x00] = [](GameBoy*) { };
+	this->operations_[0x00] = [](game_boy*) { };
 
 	// LD BC,nn
-	this->operations[0x01] = [](GameBoy* gb)
+	this->operations_[0x01] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.bc = gb->getCPU()->readProgramWord();
+		gb->get_cpu()->registers.bc = gb->get_cpu()->read_program_word();
 	};
 
 	// LD (BC),A
-	this->operations[0x02] = [](GameBoy* gb)
+	this->operations_[0x02] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.bc, gb->getCPU()->registers.a);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.bc, gb->get_cpu()->registers.a);
 	};
 
 	// INC BC
-	this->operations[0x03] = [](GameBoy* gb)
+	this->operations_[0x03] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.bc++;
+		gb->get_cpu()->registers.bc++;
 	};
 
 	// INC B
-	this->operations[0x04] = [](GameBoy* gb)
+	this->operations_[0x04] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.b);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.b);
 	};
 
 	// DEC B
-	this->operations[0x05] = [](GameBoy* gb)
+	this->operations_[0x05] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.b);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.b);
 	};
 
 	// LD B,n
-	this->operations[0x06] = [](GameBoy* gb)
+	this->operations_[0x06] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.b = gb->get_cpu()->read_program_byte();
 	};
 
 	// RLC A
-	this->operations[0x07] = [](GameBoy* gb)
+	this->operations_[0x07] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.a);
 	};
 
 	// LD (nn),SP
-	this->operations[0x08] = [](GameBoy* gb)
+	this->operations_[0x08] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeWord(gb->getCPU()->readProgramWord(), gb->getCPU()->registers.sp);
+		gb->get_mmu()->write_word(gb->get_cpu()->read_program_word(), gb->get_cpu()->registers.sp);
 	};
 
 	// ADD HL,BC
-	this->operations[0x09] = [](GameBoy* gb)
+	this->operations_[0x09] = [](game_boy* gb)
 	{
-		gb->getCPU()->addHL(gb->getCPU()->registers.bc);
+		gb->get_cpu()->add_hl(gb->get_cpu()->registers.bc);
 	};
 
 	// LD A,(BC)
-	this->operations[0x0A] = [](GameBoy* gb)
+	this->operations_[0x0A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(gb->getCPU()->registers.bc);
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(gb->get_cpu()->registers.bc);
 	};
 
 	// DEC BC
-	this->operations[0x0B] = [](GameBoy* gb)
+	this->operations_[0x0B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.bc--;
+		gb->get_cpu()->registers.bc--;
 	};
 
 	// INC C
-	this->operations[0x0C] = [](GameBoy* gb)
+	this->operations_[0x0C] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.c);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.c);
 	};
 
 	// DEC C
-	this->operations[0x0D] = [](GameBoy* gb)
+	this->operations_[0x0D] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.c);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.c);
 	};
 
 	// LD C,n
-	this->operations[0x0E] = [](GameBoy* gb)
+	this->operations_[0x0E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.c = gb->get_cpu()->read_program_byte();
 	};
 
 	// RRCA
-	this->operations[0x0F] = [](GameBoy* gb)
+	this->operations_[0x0F] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.a);
 	};
 
 	// STOP
-	this->operations[0x10] = [](GameBoy*)
+	this->operations_[0x10] = [](game_boy*)
 	{
 		throw std::runtime_error("Stop not implemented!");
 	};
 
 	// LD DE,nn
-	this->operations[0x11] = [](GameBoy* gb)
+	this->operations_[0x11] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.de = gb->getCPU()->readProgramWord();
+		gb->get_cpu()->registers.de = gb->get_cpu()->read_program_word();
 	};
 
 	// LD (DE),A
-	this->operations[0x12] = [](GameBoy* gb)
+	this->operations_[0x12] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.de, gb->getCPU()->registers.a);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.de, gb->get_cpu()->registers.a);
 	};
 
 	// INC DE
-	this->operations[0x13] = [](GameBoy* gb)
+	this->operations_[0x13] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.de++;
+		gb->get_cpu()->registers.de++;
 	};
 
 	// INC D
-	this->operations[0x14] = [](GameBoy* gb)
+	this->operations_[0x14] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.d);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.d);
 	};
 
 	// DEC D
-	this->operations[0x15] = [](GameBoy* gb)
+	this->operations_[0x15] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.d);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.d);
 	};
 
 	// LD D,n
-	this->operations[0x16] = [](GameBoy* gb)
+	this->operations_[0x16] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.d = gb->get_cpu()->read_program_byte();
 	};
 
 	// RL A
-	this->operations[0x17] = [](GameBoy* gb)
+	this->operations_[0x17] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.a);
 	};
 
 	// JR n
-	this->operations[0x18] = [](GameBoy* gb)
+	this->operations_[0x18] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->getCPU()->readProgramByte();
-		gb->getCPU()->registers.pc += jumpLoc;
+		char jumpLoc = gb->get_cpu()->read_program_byte();
+		gb->get_cpu()->registers.pc += jumpLoc;
 	};
 
 	// ADD HL,DE
-	this->operations[0x19] = [](GameBoy* gb)
+	this->operations_[0x19] = [](game_boy* gb)
 	{
-		gb->getCPU()->addHL(gb->getCPU()->registers.de);
+		gb->get_cpu()->add_hl(gb->get_cpu()->registers.de);
 	};
 
 	// LD A,(DE)
-	this->operations[0x1A] = [](GameBoy* gb)
+	this->operations_[0x1A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(gb->getCPU()->registers.de);
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(gb->get_cpu()->registers.de);
 	};
 
 	// DEC DE
-	this->operations[0x1B] = [](GameBoy* gb)
+	this->operations_[0x1B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.de--;
+		gb->get_cpu()->registers.de--;
 	};
 
 	// INC E
-	this->operations[0x1C] = [](GameBoy* gb)
+	this->operations_[0x1C] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.e);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.e);
 	};
 
 	// DEC E
-	this->operations[0x1D] = [](GameBoy* gb)
+	this->operations_[0x1D] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.e);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.e);
 	};
 
 	// LD E,n
-	this->operations[0x1E] = [](GameBoy* gb)
+	this->operations_[0x1E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.e = gb->get_cpu()->read_program_byte();
 	};
 
 	// RR a
-	this->operations[0x1F] = [](GameBoy* gb)
+	this->operations_[0x1F] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.a);
 	};
 
 	// JR NZ,n
-	this->operations[0x20] = [](GameBoy* gb)
+	this->operations_[0x20] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->getCPU()->readProgramByte();
-		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
+		char jumpLoc = gb->get_cpu()->read_program_byte();
+		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			gb->getCPU()->registers.pc += jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// LD HL,nn
-	this->operations[0x21] = [](GameBoy* gb)
+	this->operations_[0x21] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.hl = gb->getCPU()->readProgramWord();
+		gb->get_cpu()->registers.hl = gb->get_cpu()->read_program_word();
 	};
 
 	// LDI (HL),A
-	this->operations[0x22] = [](GameBoy* gb)
+	this->operations_[0x22] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.a);
-		gb->getCPU()->registers.hl++;
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.a);
+		gb->get_cpu()->registers.hl++;
 	};
 
 	// INC HL
-	this->operations[0x23] = [](GameBoy* gb)
+	this->operations_[0x23] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.hl++;
+		gb->get_cpu()->registers.hl++;
 	};
 
 	// INC H
-	this->operations[0x24] = [](GameBoy* gb)
+	this->operations_[0x24] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.h);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.h);
 	};
 
 	// DEC H
-	this->operations[0x25] = [](GameBoy* gb)
+	this->operations_[0x25] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.h);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.h);
 	};
 
 	// LD H,n
-	this->operations[0x26] = [](GameBoy* gb)
+	this->operations_[0x26] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.h = gb->get_cpu()->read_program_byte();
 	};
 
 	// DAA
-	this->operations[0x27] = [](GameBoy* gb)
+	this->operations_[0x27] = [](game_boy* gb)
 	{
-		int a = gb->getCPU()->registers.a;
-		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
+		int a = gb->get_cpu()->registers.a;
+		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			if(gb->getCPU()->registers.f & FLAG_HALF_CARRY || ((a & 0xF) > 9))
+			if(gb->get_cpu()->registers.f & flag_half_carry || ((a & 0xF) > 9))
 				a += 0x06;
 
-			if (gb->getCPU()->registers.f & FLAG_CARRY || (a > 0x9F))
+			if (gb->get_cpu()->registers.f & flag_carry || (a > 0x9F))
 				a += 0x60;
 		}
 		else
 		{
-			if (gb->getCPU()->registers.f & FLAG_HALF_CARRY)
+			if (gb->get_cpu()->registers.f & flag_half_carry)
 				a = (a - 6) & 0xFF;
 
-			if (gb->getCPU()->registers.f & FLAG_CARRY)
+			if (gb->get_cpu()->registers.f & flag_carry)
 				a -= 0x60;
 		}
 
-		gb->getCPU()->registers.f &= ~(FLAG_HALF_CARRY | FLAG_ZERO);
+		gb->get_cpu()->registers.f &= ~(flag_half_carry | flag_zero);
 
 		if ((a & 0x100) == 0x100)
-			gb->getCPU()->registers.f |= FLAG_CARRY;
+			gb->get_cpu()->registers.f |= flag_carry;
 
 		a &= 0xFF;
-		if(!a) gb->getCPU()->registers.f |= FLAG_ZERO;
+		if(!a) gb->get_cpu()->registers.f |= flag_zero;
 
-		gb->getCPU()->registers.a = static_cast<unsigned char>(a);
+		gb->get_cpu()->registers.a = static_cast<unsigned char>(a);
 	};
 
 	// JR Z,n
-	this->operations[0x28] = [](GameBoy* gb)
+	this->operations_[0x28] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->getCPU()->readProgramByte();
-		if (gb->getCPU()->registers.f & FLAG_ZERO)
+		char jumpLoc = gb->get_cpu()->read_program_byte();
+		if (gb->get_cpu()->registers.f & flag_zero)
 		{
-			gb->getCPU()->registers.pc += jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// ADD HL,HL
-	this->operations[0x29] = [](GameBoy* gb)
+	this->operations_[0x29] = [](game_boy* gb)
 	{
-		gb->getCPU()->addHL(gb->getCPU()->registers.hl);
+		gb->get_cpu()->add_hl(gb->get_cpu()->registers.hl);
 	};
 
 	// LDI A,(HL)
-	this->operations[0x2A] = [](GameBoy* gb)
+	this->operations_[0x2A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->registers.hl++;
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->registers.hl++;
 	};
 
 	// DEC HL
-	this->operations[0x2B] = [](GameBoy* gb)
+	this->operations_[0x2B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.hl--;
+		gb->get_cpu()->registers.hl--;
 	};
 
 	// INC L
-	this->operations[0x2C] = [](GameBoy* gb)
+	this->operations_[0x2C] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.l);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.l);
 	};
 
 	// DEC L
-	this->operations[0x2D] = [](GameBoy* gb)
+	this->operations_[0x2D] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.l);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.l);
 	};
 
 	// LD L,n
-	this->operations[0x2E] = [](GameBoy* gb)
+	this->operations_[0x2E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.l = gb->get_cpu()->read_program_byte();
 	};
 
 	// CPL
-	this->operations[0x2F] = [](GameBoy* gb)
+	this->operations_[0x2F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a ^= 0xFF;
-		gb->getCPU()->registers.f |= FLAG_HALF_CARRY | FLAG_NEGATIVE;
+		gb->get_cpu()->registers.a ^= 0xFF;
+		gb->get_cpu()->registers.f |= flag_half_carry | flag_negative;
 	};
 
 	// JR NC,n
-	this->operations[0x30] = [](GameBoy* gb)
+	this->operations_[0x30] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->getCPU()->readProgramByte();
-		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
+		char jumpLoc = gb->get_cpu()->read_program_byte();
+		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
-			gb->getCPU()->registers.pc += jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// LD SP,nn
-	this->operations[0x31] = [](GameBoy* gb)
+	this->operations_[0x31] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.sp = gb->getCPU()->readProgramWord();
+		gb->get_cpu()->registers.sp = gb->get_cpu()->read_program_word();
 	};
 
 	// LDD (HL),A
-	this->operations[0x32] = [](GameBoy* gb)
+	this->operations_[0x32] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.a);
-		gb->getCPU()->registers.hl--;
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.a);
+		gb->get_cpu()->registers.hl--;
 	};
 
 	// INC SP
-	this->operations[0x33] = [](GameBoy* gb)
+	this->operations_[0x33] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.sp++;
+		gb->get_cpu()->registers.sp++;
 	};
 
 	// INC (HL)
-	this->operations[0x34] = [](GameBoy* gb)
+	this->operations_[0x34] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_CARRY;
+		gb->get_cpu()->registers.f &= flag_carry;
 
-		unsigned char value = gb->getMMU()->readByte(gb->getCPU()->registers.hl) + 1;
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, value);
+		unsigned char value = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) + 1;
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, value);
 
-		if (!value) gb->getCPU()->registers.f |= FLAG_ZERO;
-		if ((value & 0x0F) == 0x00) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
+		if (!value) gb->get_cpu()->registers.f |= flag_zero;
+		if ((value & 0x0F) == 0x00) gb->get_cpu()->registers.f |= flag_half_carry;
 	};
 
 	// DEC (HL)
-	this->operations[0x35] = [](GameBoy* gb)
+	this->operations_[0x35] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.f &= FLAG_CARRY;
-		gb->getCPU()->registers.f |= FLAG_NEGATIVE;
+		gb->get_cpu()->registers.f &= flag_carry;
+		gb->get_cpu()->registers.f |= flag_negative;
 
-		unsigned char value = gb->getMMU()->readByte(gb->getCPU()->registers.hl) - 1;
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, value);
+		unsigned char value = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) - 1;
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, value);
 
-		if(!value) gb->getCPU()->registers.f |= FLAG_ZERO;
-		if((value & 0x0F) == 0x0F) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
+		if(!value) gb->get_cpu()->registers.f |= flag_zero;
+		if((value & 0x0F) == 0x0F) gb->get_cpu()->registers.f |= flag_half_carry;
 	};
 
 	// LD (HL),n
-	this->operations[0x36] = [](GameBoy* gb)
+	this->operations_[0x36] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->readProgramByte());
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->read_program_byte());
 	};
 
 	// SCF
-	this->operations[0x37] = [](GameBoy* gb)
+	this->operations_[0x37] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.f |= FLAG_CARRY;
-		gb->getCPU()->registers.f &= ~FLAG_HALF_CARRY;
-		gb->getCPU()->registers.f &= ~FLAG_NEGATIVE;
+		gb->get_cpu()->registers.f |= flag_carry;
+		gb->get_cpu()->registers.f &= ~flag_half_carry;
+		gb->get_cpu()->registers.f &= ~flag_negative;
 	};
 
 	// JR C,n
-	this->operations[0x38] = [](GameBoy* gb)
+	this->operations_[0x38] = [](game_boy* gb)
 	{
-		char jumpLoc = gb->getCPU()->readProgramByte();
-		if (gb->getCPU()->registers.f & FLAG_CARRY)
+		char jumpLoc = gb->get_cpu()->read_program_byte();
+		if (gb->get_cpu()->registers.f & flag_carry)
 		{
-			gb->getCPU()->registers.pc += jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc += jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// ADD HL,SP
-	this->operations[0x39] = [](GameBoy* gb)
+	this->operations_[0x39] = [](game_boy* gb)
 	{
-		gb->getCPU()->addHL(gb->getCPU()->registers.hl);
+		gb->get_cpu()->add_hl(gb->get_cpu()->registers.hl);
 	};
 
 	// LDD A,(HL)
-	this->operations[0x3A] = [](GameBoy* gb)
+	this->operations_[0x3A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->registers.hl--;
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->registers.hl--;
 	};
 
 	// DEC SP
-	this->operations[0x3B] = [](GameBoy* gb)
+	this->operations_[0x3B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.sp--;
+		gb->get_cpu()->registers.sp--;
 	};
 
 	// INC A
-	this->operations[0x3C] = [](GameBoy* gb)
+	this->operations_[0x3C] = [](game_boy* gb)
 	{
-		gb->getCPU()->inc(&gb->getCPU()->registers.a);
+		gb->get_cpu()->inc(&gb->get_cpu()->registers.a);
 	};
 
 	// DEC A
-	this->operations[0x3D] = [](GameBoy* gb)
+	this->operations_[0x3D] = [](game_boy* gb)
 	{
-		gb->getCPU()->dec(&gb->getCPU()->registers.a);
+		gb->get_cpu()->dec(&gb->get_cpu()->registers.a);
 	};
 
 	// LD A,n
-	this->operations[0x3E] = [](GameBoy* gb)
+	this->operations_[0x3E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->readProgramByte();
+		gb->get_cpu()->registers.a = gb->get_cpu()->read_program_byte();
 	};
 
 	// CCF
-	this->operations[0x3F] = [](GameBoy* gb)
+	this->operations_[0x3F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.f ^= FLAG_CARRY;
-		gb->getCPU()->registers.f &= ~FLAG_HALF_CARRY;
-		gb->getCPU()->registers.f &= ~FLAG_NEGATIVE;
+		gb->get_cpu()->registers.f ^= flag_carry;
+		gb->get_cpu()->registers.f &= ~flag_half_carry;
+		gb->get_cpu()->registers.f &= ~flag_negative;
 	};
 
 	// LD B,B
-	this->operations[0x40] = [](GameBoy* gb)
+	this->operations_[0x40] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.b;
 	};
 
 	// LD B,C
-	this->operations[0x41] = [](GameBoy* gb)
+	this->operations_[0x41] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.c;
 	};
 
 	// LD B,D
-	this->operations[0x42] = [](GameBoy* gb)
+	this->operations_[0x42] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.d;
 	};
 
 	// LD B,E
-	this->operations[0x43] = [](GameBoy* gb)
+	this->operations_[0x43] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.e;
 	};
 
 	// LD B,H
-	this->operations[0x44] = [](GameBoy* gb)
+	this->operations_[0x44] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.h;
 	};
 
 	// LD B,L
-	this->operations[0x45] = [](GameBoy* gb)
+	this->operations_[0x45] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.l;
 	};
 
 	// LD B,(HL)
-	this->operations[0x46] = [](GameBoy* gb)
+	this->operations_[0x46] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.b = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 
 	// LD B,A
-	this->operations[0x47] = [](GameBoy* gb)
+	this->operations_[0x47] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.b = gb->get_cpu()->registers.a;
 	};
 
 	// LD C,B
-	this->operations[0x48] = [](GameBoy* gb)
+	this->operations_[0x48] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.b;
 	};
 
 	// LD C,C
-	this->operations[0x49] = [](GameBoy* gb)
+	this->operations_[0x49] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.c;
 	};
 
 	// LD C,D
-	this->operations[0x4A] = [](GameBoy* gb)
+	this->operations_[0x4A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.d;
 	};
 
 	// LD C,E
-	this->operations[0x4B] = [](GameBoy* gb)
+	this->operations_[0x4B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.e;
 	};
 
 	// LD C,H
-	this->operations[0x4C] = [](GameBoy* gb)
+	this->operations_[0x4C] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.h;
 	};
 
 	// LD C,L
-	this->operations[0x4D] = [](GameBoy* gb)
+	this->operations_[0x4D] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.l;
 	};
 
 	// LD C,(HL)
-	this->operations[0x4E] = [](GameBoy* gb)
+	this->operations_[0x4E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.c = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 	
 	// LD C,A
-	this->operations[0x4F] = [](GameBoy* gb)
+	this->operations_[0x4F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.c = gb->get_cpu()->registers.a;
 	};
 
 	// LD D,B
-	this->operations[0x50] = [](GameBoy* gb)
+	this->operations_[0x50] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.b;
 	};
 
 	// LD D,C
-	this->operations[0x51] = [](GameBoy* gb)
+	this->operations_[0x51] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.c;
 	};
 
 	// LD D,D
-	this->operations[0x52] = [](GameBoy* gb)
+	this->operations_[0x52] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.d;
 	};
 
 	// LD D,E
-	this->operations[0x53] = [](GameBoy* gb)
+	this->operations_[0x53] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.e;
 	};
 
 	// LD D,H
-	this->operations[0x54] = [](GameBoy* gb)
+	this->operations_[0x54] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.h;
 	};
 
 	// LD D,L
-	this->operations[0x55] = [](GameBoy* gb)
+	this->operations_[0x55] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.l;
 	};
 
 	// LD D,(HL)
-	this->operations[0x56] = [](GameBoy* gb)
+	this->operations_[0x56] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.d = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 
 	// LD D,A
-	this->operations[0x57] = [](GameBoy* gb)
+	this->operations_[0x57] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.d = gb->get_cpu()->registers.a;
 	};
 
 	// LD E,B
-	this->operations[0x58] = [](GameBoy* gb)
+	this->operations_[0x58] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.b;
 	};
 
 	// LD E,C
-	this->operations[0x59] = [](GameBoy* gb)
+	this->operations_[0x59] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.c;
 	};
 
 	// LD E,D
-	this->operations[0x5A] = [](GameBoy* gb)
+	this->operations_[0x5A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.d;
 	};
 
 	// LD E,E
-	this->operations[0x5B] = [](GameBoy* gb)
+	this->operations_[0x5B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.e;
 	};
 
 	// LD E,H
-	this->operations[0x5C] = [](GameBoy* gb)
+	this->operations_[0x5C] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.h;
 	};
 
 	// LD E,L
-	this->operations[0x5D] = [](GameBoy* gb)
+	this->operations_[0x5D] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.l;
 	};
 
 	// LD E,(HL)
-	this->operations[0x5E] = [](GameBoy* gb)
+	this->operations_[0x5E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.e = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 
 	// LD E,A
-	this->operations[0x5F] = [](GameBoy* gb)
+	this->operations_[0x5F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.e = gb->get_cpu()->registers.a;
 	};
 
 	// LD H,B
-	this->operations[0x60] = [](GameBoy* gb)
+	this->operations_[0x60] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.b;
 	};
 
 	// LD H,C
-	this->operations[0x61] = [](GameBoy* gb)
+	this->operations_[0x61] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.c;
 	};
 
 	// LD H,D
-	this->operations[0x62] = [](GameBoy* gb)
+	this->operations_[0x62] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.d;
 	};
 
 	// LD H,E
-	this->operations[0x63] = [](GameBoy* gb)
+	this->operations_[0x63] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.e;
 	};
 
 	// LD H,H
-	this->operations[0x64] = [](GameBoy* gb)
+	this->operations_[0x64] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.h;
 	};
 
 	// LD H,L
-	this->operations[0x65] = [](GameBoy* gb)
+	this->operations_[0x65] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.l;
 	};
 
 	// LD H,(HL)
-	this->operations[0x66] = [](GameBoy* gb)
+	this->operations_[0x66] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.h = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 
 	// LD H,A
-	this->operations[0x67] = [](GameBoy* gb)
+	this->operations_[0x67] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.h = gb->get_cpu()->registers.a;
 	};
 
 	// LD L,B
-	this->operations[0x68] = [](GameBoy* gb)
+	this->operations_[0x68] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.b;
 	};
 
 	// LD L,C
-	this->operations[0x69] = [](GameBoy* gb)
+	this->operations_[0x69] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.c;
 	};
 
 	// LD L,D
-	this->operations[0x6A] = [](GameBoy* gb)
+	this->operations_[0x6A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.d;
 	};
 
 	// LD L,E
-	this->operations[0x6B] = [](GameBoy* gb)
+	this->operations_[0x6B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.e;
 	};
 
 	// LD L,H
-	this->operations[0x6C] = [](GameBoy* gb)
+	this->operations_[0x6C] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.h;
 	};
 
 	// LD L,L
-	this->operations[0x6D] = [](GameBoy* gb)
+	this->operations_[0x6D] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.l;
 	};
 
 	// LD L,(HL)
-	this->operations[0x6E] = [](GameBoy* gb)
+	this->operations_[0x6E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.l = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 
 	// LD L,A
-	this->operations[0x6F] = [](GameBoy* gb)
+	this->operations_[0x6F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.l = gb->get_cpu()->registers.a;
 	};
 
 	// LD (HL),B
-	this->operations[0x70] = [](GameBoy* gb)
+	this->operations_[0x70] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.b);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.b);
 	};
 
 	// LD (HL),C
-	this->operations[0x71] = [](GameBoy* gb)
+	this->operations_[0x71] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.c);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.c);
 	};
 
 	// LD (HL),D
-	this->operations[0x72] = [](GameBoy* gb)
+	this->operations_[0x72] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.d);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.d);
 	};
 
 	// LD (HL),E
-	this->operations[0x73] = [](GameBoy* gb)
+	this->operations_[0x73] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.e);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.e);
 	};
 
 	// LD (HL),H
-	this->operations[0x74] = [](GameBoy* gb)
+	this->operations_[0x74] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.h);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.h);
 	};
 
 	// LD (HL),L
-	this->operations[0x75] = [](GameBoy* gb)
+	this->operations_[0x75] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.l);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.l);
 	};
 
 	// HALT
-	this->operations[0x76] = [](GameBoy* gb)
+	this->operations_[0x76] = [](game_boy* gb)
 	{
 		//printf("Halt called :(\n");
 		//throw std::runtime_error("Halt not implemented!");
-		gb->getCPU()->halted = true;
-		gb->getCPU()->ime = true;
+		gb->get_cpu()->halted_ = true;
+		gb->get_cpu()->ime_ = true;
 	};
 
 	// LD(HL), A
-	this->operations[0x77] = [](GameBoy* gb)
+	this->operations_[0x77] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getCPU()->registers.a);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_cpu()->registers.a);
 	};
 
 	// LD A,B
-	this->operations[0x78] = [](GameBoy* gb)
+	this->operations_[0x78] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.b;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.b;
 	};
 
 	// LD A,C
-	this->operations[0x79] = [](GameBoy* gb)
+	this->operations_[0x79] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.c;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.c;
 	};
 
 	// LD A,D
-	this->operations[0x7A] = [](GameBoy* gb)
+	this->operations_[0x7A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.d;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.d;
 	};
 
 	// LD A,E
-	this->operations[0x7B] = [](GameBoy* gb)
+	this->operations_[0x7B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.e;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.e;
 	};
 
 	// LD A,H
-	this->operations[0x7C] = [](GameBoy* gb)
+	this->operations_[0x7C] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.h;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.h;
 	};
 
 	// LD A,L
-	this->operations[0x7D] = [](GameBoy* gb)
+	this->operations_[0x7D] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.l;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.l;
 	};
 
 	// LD A,(HL)
-	this->operations[0x7E] = [](GameBoy* gb)
+	this->operations_[0x7E] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
 	};
 
 	// LD A,A
-	this->operations[0x7F] = [](GameBoy* gb)
+	this->operations_[0x7F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->registers.a;
+		gb->get_cpu()->registers.a = gb->get_cpu()->registers.a;
 	};
 
 	// ADD A,B
-	this->operations[0x80] = [](GameBoy* gb)
+	this->operations_[0x80] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.b);
+		gb->get_cpu()->add(gb->get_cpu()->registers.b);
 	};
 
 	// ADD A,C
-	this->operations[0x81] = [](GameBoy* gb)
+	this->operations_[0x81] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.c);
+		gb->get_cpu()->add(gb->get_cpu()->registers.c);
 	};
 
 	// ADD A,D
-	this->operations[0x82] = [](GameBoy* gb)
+	this->operations_[0x82] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.d);
+		gb->get_cpu()->add(gb->get_cpu()->registers.d);
 	};
 
 	// ADD A,E
-	this->operations[0x83] = [](GameBoy* gb)
+	this->operations_[0x83] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.e);
+		gb->get_cpu()->add(gb->get_cpu()->registers.e);
 	};
 
 	// ADD A,H
-	this->operations[0x84] = [](GameBoy* gb)
+	this->operations_[0x84] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.h);
+		gb->get_cpu()->add(gb->get_cpu()->registers.h);
 	};
 
 	// ADD A,L
-	this->operations[0x85] = [](GameBoy* gb)
+	this->operations_[0x85] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.l);
+		gb->get_cpu()->add(gb->get_cpu()->registers.l);
 	};
 
 	// ADD A,(HL)
-	this->operations[0x86] = [](GameBoy* gb)
+	this->operations_[0x86] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->add(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// ADD A,A
-	this->operations[0x87] = [](GameBoy* gb)
+	this->operations_[0x87] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->registers.a);
+		gb->get_cpu()->add(gb->get_cpu()->registers.a);
 	};
 
 	// ADC A,B
-	this->operations[0x88] = [](GameBoy* gb)
+	this->operations_[0x88] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.b);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.b);
 	};
 
 	// ADC A,C
-	this->operations[0x89] = [](GameBoy* gb)
+	this->operations_[0x89] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.c);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.c);
 	};
 
 	// ADC A,D
-	this->operations[0x8A] = [](GameBoy* gb)
+	this->operations_[0x8A] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.d);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.d);
 	};
 
 	// ADC A,E
-	this->operations[0x8B] = [](GameBoy* gb)
+	this->operations_[0x8B] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.e);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.e);
 	};
 
 	// ADC A,H
-	this->operations[0x8C] = [](GameBoy* gb)
+	this->operations_[0x8C] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.h);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.h);
 	};
 
 	// ADC A,L
-	this->operations[0x8D] = [](GameBoy* gb)
+	this->operations_[0x8D] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.l);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.l);
 	};
 
 	// ADC A,(HL)
-	this->operations[0x8E] = [](GameBoy* gb)
+	this->operations_[0x8E] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->adc(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// ADC A,A
-	this->operations[0x8F] = [](GameBoy* gb)
+	this->operations_[0x8F] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->registers.a);
+		gb->get_cpu()->adc(gb->get_cpu()->registers.a);
 	};
 
 	// SUB A,B
-	this->operations[0x90] = [](GameBoy* gb)
+	this->operations_[0x90] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.b);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.b);
 	};
 
 	// SUB A,C
-	this->operations[0x91] = [](GameBoy* gb)
+	this->operations_[0x91] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.c);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.c);
 	};
 
 	// SUB A,D
-	this->operations[0x92] = [](GameBoy* gb)
+	this->operations_[0x92] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.d);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.d);
 	};
 
 	// SUB A,E
-	this->operations[0x93] = [](GameBoy* gb)
+	this->operations_[0x93] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.e);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.e);
 	};
 
 	// SUB A,H
-	this->operations[0x94] = [](GameBoy* gb)
+	this->operations_[0x94] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.h);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.h);
 	};
 
 	// SUB A,L
-	this->operations[0x95] = [](GameBoy* gb)
+	this->operations_[0x95] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.l);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.l);
 	};
 
 	// SUB A,(HL)
-	this->operations[0x96] = [](GameBoy* gb)
+	this->operations_[0x96] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->sub(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// SUB A,A
-	this->operations[0x97] = [](GameBoy* gb)
+	this->operations_[0x97] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->registers.a);
+		gb->get_cpu()->sub(gb->get_cpu()->registers.a);
 	};
 
 	// SBC A,B
-	this->operations[0x98] = [](GameBoy* gb)
+	this->operations_[0x98] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.b);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.b);
 	};
 
 	// SBC A,C
-	this->operations[0x99] = [](GameBoy* gb)
+	this->operations_[0x99] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.c);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.c);
 	};
 
 	// SBC A,D
-	this->operations[0x9A] = [](GameBoy* gb)
+	this->operations_[0x9A] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.d);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.d);
 	};
 
 	// SBC A,E
-	this->operations[0x9B] = [](GameBoy* gb)
+	this->operations_[0x9B] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.e);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.e);
 	};
 
 	// SBC A,H
-	this->operations[0x9C] = [](GameBoy* gb)
+	this->operations_[0x9C] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.h);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.h);
 	};
 
 	// SBC A,L
-	this->operations[0x9D] = [](GameBoy* gb)
+	this->operations_[0x9D] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.l);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.l);
 	};
 
 	// SBC A,(HL)
-	this->operations[0x9E] = [](GameBoy* gb)
+	this->operations_[0x9E] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->sbc(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// SBC A,A
-	this->operations[0x9F] = [](GameBoy* gb)
+	this->operations_[0x9F] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->registers.a);
+		gb->get_cpu()->sbc(gb->get_cpu()->registers.a);
 	};
 
 	// AND B
-	this->operations[0xA0] = [](GameBoy* gb)
+	this->operations_[0xA0] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.b);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.b);
 	};
 
 	// AND C
-	this->operations[0xA1] = [](GameBoy* gb)
+	this->operations_[0xA1] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.c);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.c);
 	};
 
 	// AND D
-	this->operations[0xA2] = [](GameBoy* gb)
+	this->operations_[0xA2] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.d);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.d);
 	};
 
 	// AND E
-	this->operations[0xA3] = [](GameBoy* gb)
+	this->operations_[0xA3] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.e);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.e);
 	};
 
 	// AND H
-	this->operations[0xA4] = [](GameBoy* gb)
+	this->operations_[0xA4] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.h);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.h);
 	};
 
 	// AND L
-	this->operations[0xA5] = [](GameBoy* gb)
+	this->operations_[0xA5] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.l);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.l);
 	};
 
 	// AND A,(HL)
-	this->operations[0xA6] = [](GameBoy* gb)
+	this->operations_[0xA6] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->_and(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// AND A
-	this->operations[0xA7] = [](GameBoy* gb)
+	this->operations_[0xA7] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->registers.a);
+		gb->get_cpu()->_and(gb->get_cpu()->registers.a);
 	};
 
 	// XOR B
-	this->operations[0xA8] = [](GameBoy* gb)
+	this->operations_[0xA8] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.b);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.b);
 	};
 
 	// XOR C
-	this->operations[0xA9] = [](GameBoy* gb)
+	this->operations_[0xA9] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.c);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.c);
 	};
 
 	// XOR D
-	this->operations[0xAA] = [](GameBoy* gb)
+	this->operations_[0xAA] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.d);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.d);
 	};
 
 	// XOR E
-	this->operations[0xAB] = [](GameBoy* gb)
+	this->operations_[0xAB] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.e);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.e);
 	};
 
 	// XOR H
-	this->operations[0xAC] = [](GameBoy* gb)
+	this->operations_[0xAC] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.h);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.h);
 	};
 
 	// XOR L
-	this->operations[0xAD] = [](GameBoy* gb)
+	this->operations_[0xAD] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.l);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.l);
 	};
 
 	// XOR (HL)
-	this->operations[0xAE] = [](GameBoy* gb)
+	this->operations_[0xAE] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->_xor(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// XOR A
-	this->operations[0xAF] = [](GameBoy* gb)
+	this->operations_[0xAF] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->registers.a);
+		gb->get_cpu()->_xor(gb->get_cpu()->registers.a);
 	};
 
 	// OR B
-	this->operations[0xB0] = [](GameBoy* gb)
+	this->operations_[0xB0] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.b);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.b);
 	};
 
 	// OR C
-	this->operations[0xB1] = [](GameBoy* gb)
+	this->operations_[0xB1] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.c);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.c);
 	};
 
 	// OR D
-	this->operations[0xB2] = [](GameBoy* gb)
+	this->operations_[0xB2] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.d);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.d);
 	};
 
 	// OR E
-	this->operations[0xB3] = [](GameBoy* gb)
+	this->operations_[0xB3] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.e);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.e);
 	};
 
 	// OR H
-	this->operations[0xB4] = [](GameBoy* gb)
+	this->operations_[0xB4] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.h);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.h);
 	};
 
 	// OR L
-	this->operations[0xB5] = [](GameBoy* gb)
+	this->operations_[0xB5] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.l);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.l);
 	};
 
 	// OR (HL)
-	this->operations[0xB6] = [](GameBoy* gb)
+	this->operations_[0xB6] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->_or(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// OR A
-	this->operations[0xB7] = [](GameBoy* gb)
+	this->operations_[0xB7] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->registers.a);
+		gb->get_cpu()->_or(gb->get_cpu()->registers.a);
 	};
 
 	// CP B
-	this->operations[0xB8] = [](GameBoy* gb)
+	this->operations_[0xB8] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.b);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.b);
 	};
 
 	// CP C
-	this->operations[0xB9] = [](GameBoy* gb)
+	this->operations_[0xB9] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.c);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.c);
 	};
 
 	// CP D
-	this->operations[0xBA] = [](GameBoy* gb)
+	this->operations_[0xBA] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.d);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.d);
 	};
 
 	// CP E
-	this->operations[0xBB] = [](GameBoy* gb)
+	this->operations_[0xBB] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.e);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.e);
 	};
 
 	// CP H
-	this->operations[0xBC] = [](GameBoy* gb)
+	this->operations_[0xBC] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.h);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.h);
 	};
 
 	// CP L
-	this->operations[0xBD] = [](GameBoy* gb)
+	this->operations_[0xBD] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.l);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.l);
 	};
 
 	// CP (HL)
-	this->operations[0xBE] = [](GameBoy* gb)
+	this->operations_[0xBE] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getMMU()->readByte(gb->getCPU()->registers.hl));
+		gb->get_cpu()->cp(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl));
 	};
 
 	// CP A
-	this->operations[0xBF] = [](GameBoy* gb)
+	this->operations_[0xBF] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->registers.a);
+		gb->get_cpu()->cp(gb->get_cpu()->registers.a);
 	};
 
 	// RET NZ
-	this->operations[0xC0] = [](GameBoy* gb)
+	this->operations_[0xC0] = [](game_boy* gb)
 	{
-		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
+		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->registers.pc = gb->get_cpu()->stack_pop_word();
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// POP BC
-	this->operations[0xC1] = [](GameBoy* gb)
+	this->operations_[0xC1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.bc = gb->getCPU()->stackPopWord();
+		gb->get_cpu()->registers.bc = gb->get_cpu()->stack_pop_word();
 	};
 
 	// JP NZ,nn
-	this->operations[0xC2] = [](GameBoy* gb)
+	this->operations_[0xC2] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->getCPU()->readProgramWord();
-		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
+		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// JP nn
-	this->operations[0xC3] = [](GameBoy* gb)
+	this->operations_[0xC3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.pc = gb->getCPU()->readProgramWord();
+		gb->get_cpu()->registers.pc = gb->get_cpu()->read_program_word();
 	};
 
 	// CALL NZ,nn
-	this->operations[0xC4] = [](GameBoy* gb)
+	this->operations_[0xC4] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->getCPU()->readProgramWord();
-		if (!(gb->getCPU()->registers.f & FLAG_ZERO))
+		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		if (!(gb->get_cpu()->registers.f & flag_zero))
 		{
-			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
-			gb->getCPU()->registers.pc = callLoc;
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
+			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// PUSH BC
-	this->operations[0xC5] = [](GameBoy* gb)
+	this->operations_[0xC5] = [](game_boy* gb)
 	{
-		gb->getCPU()->stackPushWord(gb->getCPU()->registers.bc);
+		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.bc);
 	};
 
 	// ADD A,n
-	this->operations[0xC6] = [](GameBoy* gb)
+	this->operations_[0xC6] = [](game_boy* gb)
 	{
-		gb->getCPU()->add(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->add(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 0
-	this->operations[0xC7] = [](GameBoy* gb)
+	this->operations_[0xC7] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x00);
+		gb->get_cpu()->execute_rst(0x00);
 	};
 
 	// RET Z
-	this->operations[0xC8] = [](GameBoy* gb)
+	this->operations_[0xC8] = [](game_boy* gb)
 	{
-		if (gb->getCPU()->registers.f & FLAG_ZERO)
+		if (gb->get_cpu()->registers.f & flag_zero)
 		{
-			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->registers.pc = gb->get_cpu()->stack_pop_word();
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// RET
-	this->operations[0xC9] = [](GameBoy* gb)
+	this->operations_[0xC9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
+		gb->get_cpu()->registers.pc = gb->get_cpu()->stack_pop_word();
 	};
 
 	// JP Z,nn
-	this->operations[0xCA] = [](GameBoy* gb)
+	this->operations_[0xCA] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->getCPU()->readProgramWord();
-		if (gb->getCPU()->registers.f & FLAG_ZERO)
+		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		if (gb->get_cpu()->registers.f & flag_zero)
 		{
-			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// Ext ops
-	this->operations[0xCB] = [](GameBoy* gb)
+	this->operations_[0xCB] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeExt(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->execute_ext(gb->get_cpu()->read_program_byte());
 		// TODO: Check if timing needs 4 extra ticks to the additional 8/16 ticks of the extop
 	};
 
 	// CALL Z,nn
-	this->operations[0xCC] = [](GameBoy* gb)
+	this->operations_[0xCC] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->getCPU()->readProgramWord();
-		if (gb->getCPU()->registers.f & FLAG_ZERO)
+		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		if (gb->get_cpu()->registers.f & flag_zero)
 		{
-			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
-			gb->getCPU()->registers.pc = callLoc;
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
+			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 	
 	// CALL nn
-	this->operations[0xCD] = [](GameBoy* gb)
+	this->operations_[0xCD] = [](game_boy* gb)
 	{
-		gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc + 2);
-		gb->getCPU()->registers.pc = gb->getCPU()->readProgramWord();
+		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc + 2);
+		gb->get_cpu()->registers.pc = gb->get_cpu()->read_program_word();
 	};
 
 	// ADC A,n
-	this->operations[0xCE] = [](GameBoy* gb)
+	this->operations_[0xCE] = [](game_boy* gb)
 	{
-		gb->getCPU()->adc(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->adc(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 8
-	this->operations[0xCF] = [](GameBoy* gb)
+	this->operations_[0xCF] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x08);
+		gb->get_cpu()->execute_rst(0x08);
 	};
 
 	// RET NC
-	this->operations[0xD0] = [](GameBoy* gb)
+	this->operations_[0xD0] = [](game_boy* gb)
 	{
-		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
+		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
-			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->registers.pc = gb->get_cpu()->stack_pop_word();
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// POP DE
-	this->operations[0xD1] = [](GameBoy* gb)
+	this->operations_[0xD1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.de = gb->getCPU()->stackPopWord();
+		gb->get_cpu()->registers.de = gb->get_cpu()->stack_pop_word();
 	};
 
 	// JP NC,nn
-	this->operations[0xD2] = [](GameBoy* gb)
+	this->operations_[0xD2] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->getCPU()->readProgramWord();
-		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
+		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
-			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// CALL NC,nn
-	this->operations[0xD4] = [](GameBoy* gb)
+	this->operations_[0xD4] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->getCPU()->readProgramWord();
-		if (!(gb->getCPU()->registers.f & FLAG_CARRY))
+		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		if (!(gb->get_cpu()->registers.f & flag_carry))
 		{
-			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
-			gb->getCPU()->registers.pc = callLoc;
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
+			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// PUSH DE
-	this->operations[0xD5] = [](GameBoy* gb)
+	this->operations_[0xD5] = [](game_boy* gb)
 	{
-		gb->getCPU()->stackPushWord(gb->getCPU()->registers.de);
+		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.de);
 	};
 
 	// SUB A,n
-	this->operations[0xD6] = [](GameBoy* gb)
+	this->operations_[0xD6] = [](game_boy* gb)
 	{
-		gb->getCPU()->sub(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->sub(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 10
-	this->operations[0xD7] = [](GameBoy* gb)
+	this->operations_[0xD7] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x10);
+		gb->get_cpu()->execute_rst(0x10);
 	};
 
 	// RET C
-	this->operations[0xD8] = [](GameBoy* gb)
+	this->operations_[0xD8] = [](game_boy* gb)
 	{
-		if (gb->getCPU()->registers.f & FLAG_CARRY)
+		if (gb->get_cpu()->registers.f & flag_carry)
 		{
-			gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->registers.pc = gb->get_cpu()->stack_pop_word();
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// RETI
-	this->operations[0xD9] = [](GameBoy* gb)
+	this->operations_[0xD9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getCPU()->savRegisters.a;
-		gb->getCPU()->registers.b = gb->getCPU()->savRegisters.b;
-		gb->getCPU()->registers.c = gb->getCPU()->savRegisters.c;
-		gb->getCPU()->registers.d = gb->getCPU()->savRegisters.d;
-		gb->getCPU()->registers.e = gb->getCPU()->savRegisters.e;
-		gb->getCPU()->registers.f = gb->getCPU()->savRegisters.f;
-		gb->getCPU()->registers.h = gb->getCPU()->savRegisters.h;
-		gb->getCPU()->registers.l = gb->getCPU()->savRegisters.l;
+		gb->get_cpu()->registers.a = gb->get_cpu()->sav_registers_.a;
+		gb->get_cpu()->registers.b = gb->get_cpu()->sav_registers_.b;
+		gb->get_cpu()->registers.c = gb->get_cpu()->sav_registers_.c;
+		gb->get_cpu()->registers.d = gb->get_cpu()->sav_registers_.d;
+		gb->get_cpu()->registers.e = gb->get_cpu()->sav_registers_.e;
+		gb->get_cpu()->registers.f = gb->get_cpu()->sav_registers_.f;
+		gb->get_cpu()->registers.h = gb->get_cpu()->sav_registers_.h;
+		gb->get_cpu()->registers.l = gb->get_cpu()->sav_registers_.l;
 
-		gb->getCPU()->ime = true;
-		gb->getCPU()->registers.pc = gb->getCPU()->stackPopWord();
+		gb->get_cpu()->ime_ = true;
+		gb->get_cpu()->registers.pc = gb->get_cpu()->stack_pop_word();
 	};
 
 	// JP C,nn
-	this->operations[0xDA] = [](GameBoy* gb)
+	this->operations_[0xDA] = [](game_boy* gb)
 	{
-		unsigned short jumpLoc = gb->getCPU()->readProgramWord();
-		if (gb->getCPU()->registers.f & FLAG_CARRY)
+		unsigned short jumpLoc = gb->get_cpu()->read_program_word();
+		if (gb->get_cpu()->registers.f & flag_carry)
 		{
-			gb->getCPU()->registers.pc = jumpLoc;
-			gb->getCPU()->registers.m++;
+			gb->get_cpu()->registers.pc = jumpLoc;
+			gb->get_cpu()->registers.m++;
 		}
 	};
 
 	// CALL C,nn
-	this->operations[0xDC] = [](GameBoy* gb)
+	this->operations_[0xDC] = [](game_boy* gb)
 	{
-		unsigned short callLoc = gb->getCPU()->readProgramWord();
-		if (gb->getCPU()->registers.f & FLAG_CARRY)
+		unsigned short callLoc = gb->get_cpu()->read_program_word();
+		if (gb->get_cpu()->registers.f & flag_carry)
 		{
-			gb->getCPU()->stackPushWord(gb->getCPU()->registers.pc);
-			gb->getCPU()->registers.pc = callLoc;
-			gb->getCPU()->registers.m += 3;
+			gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
+			gb->get_cpu()->registers.pc = callLoc;
+			gb->get_cpu()->registers.m += 3;
 		}
 	};
 
 	// SBC A,n
-	this->operations[0xDE] = [](GameBoy* gb)
+	this->operations_[0xDE] = [](game_boy* gb)
 	{
-		gb->getCPU()->sbc(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->sbc(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 18
-	this->operations[0xDF] = [](GameBoy* gb)
+	this->operations_[0xDF] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x18);
+		gb->get_cpu()->execute_rst(0x18);
 	};
 
 	// LDH (n),A
-	this->operations[0xE0] = [](GameBoy* gb)
+	this->operations_[0xE0] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(0xFF00 | gb->getCPU()->readProgramByte(), gb->getCPU()->registers.a);
+		gb->get_mmu()->write_byte(0xFF00 | gb->get_cpu()->read_program_byte(), gb->get_cpu()->registers.a);
 	};
 
 	// POP HL
-	this->operations[0xE1] = [](GameBoy* gb)
+	this->operations_[0xE1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.hl = gb->getCPU()->stackPopWord();
+		gb->get_cpu()->registers.hl = gb->get_cpu()->stack_pop_word();
 	};
 
 	// LDH (C),A
-	this->operations[0xE2] = [](GameBoy* gb)
+	this->operations_[0xE2] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(0xFF00 | gb->getCPU()->registers.c, gb->getCPU()->registers.a);
+		gb->get_mmu()->write_byte(0xFF00 | gb->get_cpu()->registers.c, gb->get_cpu()->registers.a);
 	};
 
 	// PUSH HL
-	this->operations[0xE5] = [](GameBoy* gb)
+	this->operations_[0xE5] = [](game_boy* gb)
 	{
-		gb->getCPU()->stackPushWord(gb->getCPU()->registers.hl);
+		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.hl);
 	};
 
 	// AND n
-	this->operations[0xE6] = [](GameBoy* gb)
+	this->operations_[0xE6] = [](game_boy* gb)
 	{
-		gb->getCPU()->_and(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->_and(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 20
-	this->operations[0xE7] = [](GameBoy* gb)
+	this->operations_[0xE7] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x20);
+		gb->get_cpu()->execute_rst(0x20);
 	};
 
 	// ADD SP,d
-	this->operations[0xE8] = [](GameBoy* gb)
+	this->operations_[0xE8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.f = 0;
+		gb->get_cpu()->registers.f = 0;
 
-		unsigned short value = gb->getCPU()->readProgramByte();
-		int result = gb->getCPU()->registers.sp + value;
+		unsigned short value = gb->get_cpu()->read_program_byte();
+		int result = gb->get_cpu()->registers.sp + value;
 
-		gb->getCPU()->registers.f = 0;
-		if (((gb->getCPU()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100) gb->getCPU()->registers.f |= FLAG_CARRY;
-		if (((gb->getCPU()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10) gb->getCPU()->registers.f |= FLAG_HALF_CARRY;
+		gb->get_cpu()->registers.f = 0;
+		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100) gb->get_cpu()->registers.f |= flag_carry;
+		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10) gb->get_cpu()->registers.f |= flag_half_carry;
 
-		gb->getCPU()->registers.sp = static_cast<unsigned short>(result & 0xFFFF);
+		gb->get_cpu()->registers.sp = static_cast<unsigned short>(result & 0xFFFF);
 	};
 
 	// JP (HL)
-	this->operations[0xE9] = [](GameBoy* gb)
+	this->operations_[0xE9] = [](game_boy* gb)
 	{
 		//gb->getCPU()->registers.pc = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->registers.pc = gb->getCPU()->registers.hl;
+		gb->get_cpu()->registers.pc = gb->get_cpu()->registers.hl;
 	};
 
 	// LD (nn),A
-	this->operations[0xEA] = [](GameBoy* gb)
+	this->operations_[0xEA] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->readProgramWord(), gb->getCPU()->registers.a);
+		gb->get_mmu()->write_byte(gb->get_cpu()->read_program_word(), gb->get_cpu()->registers.a);
 	};
 
 	// XOR n
-	this->operations[0xEE] = [](GameBoy* gb)
+	this->operations_[0xEE] = [](game_boy* gb)
 	{
-		gb->getCPU()->_xor(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->_xor(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 28
-	this->operations[0xEF] = [](GameBoy* gb)
+	this->operations_[0xEF] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x28);
+		gb->get_cpu()->execute_rst(0x28);
 	};
 
 	// LDH A,(n)
-	this->operations[0xF0] = [](GameBoy* gb)
+	this->operations_[0xF0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(0xFF00 | gb->getCPU()->readProgramByte());
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(0xFF00 | gb->get_cpu()->read_program_byte());
 	};
 
 	// POP AF
-	this->operations[0xF1] = [](GameBoy* gb)
+	this->operations_[0xF1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.af = gb->getCPU()->stackPopWord();
-		gb->getCPU()->registers.f &= 0xF0;
+		gb->get_cpu()->registers.af = gb->get_cpu()->stack_pop_word();
+		gb->get_cpu()->registers.f &= 0xF0;
 	};
 
 	// LDH A,(C)
-	this->operations[0xF2] = [](GameBoy* gb)
+	this->operations_[0xF2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(0xFF00 | gb->getCPU()->registers.c);
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(0xFF00 | gb->get_cpu()->registers.c);
 	};
 
 	// DI
-	this->operations[0xF3] = [](GameBoy* gb)
+	this->operations_[0xF3] = [](game_boy* gb)
 	{
-		gb->getCPU()->ime = false;
+		gb->get_cpu()->ime_ = false;
 	};
 
 	// PUSH AF
-	this->operations[0xF5] = [](GameBoy* gb)
+	this->operations_[0xF5] = [](game_boy* gb)
 	{
-		gb->getCPU()->stackPushWord(gb->getCPU()->registers.af);
+		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.af);
 	};
 
 	// OR n
-	this->operations[0xF6] = [](GameBoy* gb)
+	this->operations_[0xF6] = [](game_boy* gb)
 	{
-		gb->getCPU()->_or(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->_or(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 30
-	this->operations[0xF7] = [](GameBoy* gb)
+	this->operations_[0xF7] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x30);
+		gb->get_cpu()->execute_rst(0x30);
 	};
 
 	// LD SP,HL
-	this->operations[0xF9] = [](GameBoy* gb)
+	this->operations_[0xF9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.sp = gb->getCPU()->registers.hl;
+		gb->get_cpu()->registers.sp = gb->get_cpu()->registers.hl;
 	};
 
 	// LD A,(nn)
-	this->operations[0xFA] = [](GameBoy* gb)
+	this->operations_[0xFA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a = gb->getMMU()->readByte(gb->getCPU()->readProgramWord());
+		gb->get_cpu()->registers.a = gb->get_mmu()->read_byte(gb->get_cpu()->read_program_word());
 	};
 
 	// EI
-	this->operations[0xFB] = [](GameBoy* gb)
+	this->operations_[0xFB] = [](game_boy* gb)
 	{
-		gb->getCPU()->ime = true;
+		gb->get_cpu()->ime_ = true;
 	};
 
 	// CP n
-	this->operations[0xFE] = [](GameBoy* gb)
+	this->operations_[0xFE] = [](game_boy* gb)
 	{
-		gb->getCPU()->cp(gb->getCPU()->readProgramByte());
+		gb->get_cpu()->cp(gb->get_cpu()->read_program_byte());
 	};
 
 	// RST 38
-	this->operations[0xFF] = [](GameBoy* gb)
+	this->operations_[0xFF] = [](game_boy* gb)
 	{
-		gb->getCPU()->executeRst(0x38);
+		gb->get_cpu()->execute_rst(0x38);
 	};
 }
 
-void CPU::setupExtOperations()
+void cpu::setup_ext_operations()
 {
-	this->extOperations[0x00] = [](GameBoy* gb)
+	this->ext_operations_[0x00] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.b);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x01] = [](GameBoy* gb)
+	this->ext_operations_[0x01] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.c);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x02] = [](GameBoy* gb)
+	this->ext_operations_[0x02] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.d);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x03] = [](GameBoy* gb)
+	this->ext_operations_[0x03] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.e);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x04] = [](GameBoy* gb)
+	this->ext_operations_[0x04] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.h);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x05] = [](GameBoy* gb)
+	this->ext_operations_[0x05] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.l);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x06] = [](GameBoy* gb)
+	this->ext_operations_[0x06] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->rlc(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rlc(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x07] = [](GameBoy* gb)
+	this->ext_operations_[0x07] = [](game_boy* gb)
 	{
-		gb->getCPU()->rlc(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x08] = [](GameBoy* gb)
+	this->ext_operations_[0x08] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.b);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x09] = [](GameBoy* gb)
+	this->ext_operations_[0x09] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.c);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x0A] = [](GameBoy* gb)
+	this->ext_operations_[0x0A] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.d);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x0B] = [](GameBoy* gb)
+	this->ext_operations_[0x0B] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.e);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x0C] = [](GameBoy* gb)
+	this->ext_operations_[0x0C] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.h);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x0D] = [](GameBoy* gb)
+	this->ext_operations_[0x0D] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.l);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x0E] = [](GameBoy* gb)
+	this->ext_operations_[0x0E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->rrc(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rrc(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x0F] = [](GameBoy* gb)
+	this->ext_operations_[0x0F] = [](game_boy* gb)
 	{
-		gb->getCPU()->rrc(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x10] = [](GameBoy* gb)
+	this->ext_operations_[0x10] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.b);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x11] = [](GameBoy* gb)
+	this->ext_operations_[0x11] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.c);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x12] = [](GameBoy* gb)
+	this->ext_operations_[0x12] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.d);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x13] = [](GameBoy* gb)
+	this->ext_operations_[0x13] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.e);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x14] = [](GameBoy* gb)
+	this->ext_operations_[0x14] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.h);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x15] = [](GameBoy* gb)
+	this->ext_operations_[0x15] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.l);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x16] = [](GameBoy* gb)
+	this->ext_operations_[0x16] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->rl(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rl(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x17] = [](GameBoy* gb)
+	this->ext_operations_[0x17] = [](game_boy* gb)
 	{
-		gb->getCPU()->rl(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x18] = [](GameBoy* gb)
+	this->ext_operations_[0x18] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.b);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x19] = [](GameBoy* gb)
+	this->ext_operations_[0x19] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.c);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x1A] = [](GameBoy* gb)
+	this->ext_operations_[0x1A] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.d);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x1B] = [](GameBoy* gb)
+	this->ext_operations_[0x1B] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.e);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x1C] = [](GameBoy* gb)
+	this->ext_operations_[0x1C] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.h);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x1D] = [](GameBoy* gb)
+	this->ext_operations_[0x1D] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.l);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x1E] = [](GameBoy* gb)
+	this->ext_operations_[0x1E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->rr(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->rr(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x1F] = [](GameBoy* gb)
+	this->ext_operations_[0x1F] = [](game_boy* gb)
 	{
-		gb->getCPU()->rr(&gb->getCPU()->registers.a);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x20] = [](GameBoy* gb)
+	this->ext_operations_[0x20] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.b);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x21] = [](GameBoy* gb)
+	this->ext_operations_[0x21] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.c);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x22] = [](GameBoy* gb)
+	this->ext_operations_[0x22] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.d);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x23] = [](GameBoy* gb)
+	this->ext_operations_[0x23] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.e);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x24] = [](GameBoy* gb)
+	this->ext_operations_[0x24] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.h);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x25] = [](GameBoy* gb)
+	this->ext_operations_[0x25] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.l);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x26] = [](GameBoy* gb)
+	this->ext_operations_[0x26] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->sla(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->sla(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x27] = [](GameBoy* gb)
+	this->ext_operations_[0x27] = [](game_boy* gb)
 	{
-		gb->getCPU()->sla(&gb->getCPU()->registers.a);
+		gb->get_cpu()->sla(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x28] = [](GameBoy* gb)
+	this->ext_operations_[0x28] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.b);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x29] = [](GameBoy* gb)
+	this->ext_operations_[0x29] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.c);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x2A] = [](GameBoy* gb)
+	this->ext_operations_[0x2A] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.d);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x2B] = [](GameBoy* gb)
+	this->ext_operations_[0x2B] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.e);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x2C] = [](GameBoy* gb)
+	this->ext_operations_[0x2C] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.h);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x2D] = [](GameBoy* gb)
+	this->ext_operations_[0x2D] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.l);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x2E] = [](GameBoy* gb)
+	this->ext_operations_[0x2E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->sra(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->sra(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x2F] = [](GameBoy* gb)
+	this->ext_operations_[0x2F] = [](game_boy* gb)
 	{
-		gb->getCPU()->sra(&gb->getCPU()->registers.a);
+		gb->get_cpu()->sra(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x30] = [](GameBoy* gb)
+	this->ext_operations_[0x30] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.b);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x31] = [](GameBoy* gb)
+	this->ext_operations_[0x31] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.c);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x32] = [](GameBoy* gb)
+	this->ext_operations_[0x32] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.d);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x33] = [](GameBoy* gb)
+	this->ext_operations_[0x33] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.e);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x34] = [](GameBoy* gb)
+	this->ext_operations_[0x34] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.h);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x35] = [](GameBoy* gb)
+	this->ext_operations_[0x35] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.l);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x36] = [](GameBoy* gb)
+	this->ext_operations_[0x36] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->swap(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->swap(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x37] = [](GameBoy* gb)
+	this->ext_operations_[0x37] = [](game_boy* gb)
 	{
-		gb->getCPU()->swap(&gb->getCPU()->registers.a);
+		gb->get_cpu()->swap(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x38] = [](GameBoy* gb)
+	this->ext_operations_[0x38] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.b);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.b);
 	};
 
-	this->extOperations[0x39] = [](GameBoy* gb)
+	this->ext_operations_[0x39] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.c);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.c);
 	};
 
-	this->extOperations[0x3A] = [](GameBoy* gb)
+	this->ext_operations_[0x3A] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.d);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.d);
 	};
 
-	this->extOperations[0x3B] = [](GameBoy* gb)
+	this->ext_operations_[0x3B] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.e);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.e);
 	};
 
-	this->extOperations[0x3C] = [](GameBoy* gb)
+	this->ext_operations_[0x3C] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.h);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.h);
 	};
 
-	this->extOperations[0x3D] = [](GameBoy* gb)
+	this->ext_operations_[0x3D] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.l);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.l);
 	};
 
-	this->extOperations[0x3E] = [](GameBoy* gb)
+	this->ext_operations_[0x3E] = [](game_boy* gb)
 	{
-		unsigned char hlVal = gb->getMMU()->readByte(gb->getCPU()->registers.hl);
-		gb->getCPU()->srl(&hlVal);
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, hlVal);
+		unsigned char hlVal = gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->srl(&hlVal);
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, hlVal);
 	};
 
-	this->extOperations[0x3F] = [](GameBoy* gb)
+	this->ext_operations_[0x3F] = [](game_boy* gb)
 	{
-		gb->getCPU()->srl(&gb->getCPU()->registers.a);
+		gb->get_cpu()->srl(&gb->get_cpu()->registers.a);
 	};
 
-	this->extOperations[0x40] = [](GameBoy* gb)
+	this->ext_operations_[0x40] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 0);
 	};
 
-	this->extOperations[0x41] = [](GameBoy* gb)
+	this->ext_operations_[0x41] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 0);
 	};
 
-	this->extOperations[0x42] = [](GameBoy* gb)
+	this->ext_operations_[0x42] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 0);
 	};
 
-	this->extOperations[0x43] = [](GameBoy* gb)
+	this->ext_operations_[0x43] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 0);
 	};
 
-	this->extOperations[0x44] = [](GameBoy* gb)
+	this->ext_operations_[0x44] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 0);
 	};
 
-	this->extOperations[0x45] = [](GameBoy* gb)
+	this->ext_operations_[0x45] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 0);
 	};
 
-	this->extOperations[0x46] = [](GameBoy* gb)
+	this->ext_operations_[0x46] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 0);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 0);
 	};
 
-	this->extOperations[0x47] = [](GameBoy* gb)
+	this->ext_operations_[0x47] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 0);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 0);
 	};
 
-	this->extOperations[0x48] = [](GameBoy* gb)
+	this->ext_operations_[0x48] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 1);
 	};
 
-	this->extOperations[0x49] = [](GameBoy* gb)
+	this->ext_operations_[0x49] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 1);
 	};
 
-	this->extOperations[0x4A] = [](GameBoy* gb)
+	this->ext_operations_[0x4A] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 1);
 	};
 
-	this->extOperations[0x4B] = [](GameBoy* gb)
+	this->ext_operations_[0x4B] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 1);
 	};
 
-	this->extOperations[0x4C] = [](GameBoy* gb)
+	this->ext_operations_[0x4C] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 1);
 	};
 
-	this->extOperations[0x4D] = [](GameBoy* gb)
+	this->ext_operations_[0x4D] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 1);
 	};
 
-	this->extOperations[0x4E] = [](GameBoy* gb)
+	this->ext_operations_[0x4E] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 1);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 1);
 	};
 
-	this->extOperations[0x4F] = [](GameBoy* gb)
+	this->ext_operations_[0x4F] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 1);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 1);
 	};
 
-	this->extOperations[0x50] = [](GameBoy* gb)
+	this->ext_operations_[0x50] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 2);
 	};
 
-	this->extOperations[0x51] = [](GameBoy* gb)
+	this->ext_operations_[0x51] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 2);
 	};
 
-	this->extOperations[0x52] = [](GameBoy* gb)
+	this->ext_operations_[0x52] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 2);
 	};
 
-	this->extOperations[0x53] = [](GameBoy* gb)
+	this->ext_operations_[0x53] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 2);
 	};
 
-	this->extOperations[0x54] = [](GameBoy* gb)
+	this->ext_operations_[0x54] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 2);
 	};
 
-	this->extOperations[0x55] = [](GameBoy* gb)
+	this->ext_operations_[0x55] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 2);
 	};
 
-	this->extOperations[0x56] = [](GameBoy* gb)
+	this->ext_operations_[0x56] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 2);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 2);
 	};
 
-	this->extOperations[0x57] = [](GameBoy* gb)
+	this->ext_operations_[0x57] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 2);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 2);
 	};
 
-	this->extOperations[0x58] = [](GameBoy* gb)
+	this->ext_operations_[0x58] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 3);
 	};
 
-	this->extOperations[0x59] = [](GameBoy* gb)
+	this->ext_operations_[0x59] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 3);
 	};
 
-	this->extOperations[0x5A] = [](GameBoy* gb)
+	this->ext_operations_[0x5A] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 3);
 	};
 
-	this->extOperations[0x5B] = [](GameBoy* gb)
+	this->ext_operations_[0x5B] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 3);
 	};
 
-	this->extOperations[0x5C] = [](GameBoy* gb)
+	this->ext_operations_[0x5C] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 3);
 	};
 
-	this->extOperations[0x5D] = [](GameBoy* gb)
+	this->ext_operations_[0x5D] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 3);
 	};
 
-	this->extOperations[0x5E] = [](GameBoy* gb)
+	this->ext_operations_[0x5E] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 3);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 3);
 	};
 
-	this->extOperations[0x5F] = [](GameBoy* gb)
+	this->ext_operations_[0x5F] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 3);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 3);
 	};
 
-	this->extOperations[0x60] = [](GameBoy* gb)
+	this->ext_operations_[0x60] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 4);
 	};
 
-	this->extOperations[0x61] = [](GameBoy* gb)
+	this->ext_operations_[0x61] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 4);
 	};
 
-	this->extOperations[0x62] = [](GameBoy* gb)
+	this->ext_operations_[0x62] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 4);
 	};
 
-	this->extOperations[0x63] = [](GameBoy* gb)
+	this->ext_operations_[0x63] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 4);
 	};
 
-	this->extOperations[0x64] = [](GameBoy* gb)
+	this->ext_operations_[0x64] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 4);
 	};
 
-	this->extOperations[0x65] = [](GameBoy* gb)
+	this->ext_operations_[0x65] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 4);
 	};
 
-	this->extOperations[0x66] = [](GameBoy* gb)
+	this->ext_operations_[0x66] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 4);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 4);
 	};
 
-	this->extOperations[0x67] = [](GameBoy* gb)
+	this->ext_operations_[0x67] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 4);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 4);
 	};
 
-	this->extOperations[0x68] = [](GameBoy* gb)
+	this->ext_operations_[0x68] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 5);
 	};
 
-	this->extOperations[0x69] = [](GameBoy* gb)
+	this->ext_operations_[0x69] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 5);
 	};
 
-	this->extOperations[0x6A] = [](GameBoy* gb)
+	this->ext_operations_[0x6A] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 5);
 	};
 
-	this->extOperations[0x6B] = [](GameBoy* gb)
+	this->ext_operations_[0x6B] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 5);
 	};
 
-	this->extOperations[0x6C] = [](GameBoy* gb)
+	this->ext_operations_[0x6C] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 5);
 	};
 
-	this->extOperations[0x6D] = [](GameBoy* gb)
+	this->ext_operations_[0x6D] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 5);
 	};
 
-	this->extOperations[0x6E] = [](GameBoy* gb)
+	this->ext_operations_[0x6E] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 5);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 5);
 	};
 
-	this->extOperations[0x6F] = [](GameBoy* gb)
+	this->ext_operations_[0x6F] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 5);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 5);
 	};
 
-	this->extOperations[0x70] = [](GameBoy* gb)
+	this->ext_operations_[0x70] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 6);
 	};
 
-	this->extOperations[0x71] = [](GameBoy* gb)
+	this->ext_operations_[0x71] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 6);
 	};
 
-	this->extOperations[0x72] = [](GameBoy* gb)
+	this->ext_operations_[0x72] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 6);
 	};
 
-	this->extOperations[0x73] = [](GameBoy* gb)
+	this->ext_operations_[0x73] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 6);
 	};
 
-	this->extOperations[0x74] = [](GameBoy* gb)
+	this->ext_operations_[0x74] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 6);
 	};
 
-	this->extOperations[0x75] = [](GameBoy* gb)
+	this->ext_operations_[0x75] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 6);
 	};
 
-	this->extOperations[0x76] = [](GameBoy* gb)
+	this->ext_operations_[0x76] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 6);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 6);
 	};
 
-	this->extOperations[0x77] = [](GameBoy* gb)
+	this->ext_operations_[0x77] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 6);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 6);
 	};
 
-	this->extOperations[0x78] = [](GameBoy* gb)
+	this->ext_operations_[0x78] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.b, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.b, 7);
 	};
 
-	this->extOperations[0x79] = [](GameBoy* gb)
+	this->ext_operations_[0x79] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.c, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.c, 7);
 	};
 
-	this->extOperations[0x7A] = [](GameBoy* gb)
+	this->ext_operations_[0x7A] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.d, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.d, 7);
 	};
 
-	this->extOperations[0x7B] = [](GameBoy* gb)
+	this->ext_operations_[0x7B] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.e, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.e, 7);
 	};
 
-	this->extOperations[0x7C] = [](GameBoy* gb)
+	this->ext_operations_[0x7C] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.h, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.h, 7);
 	};
 
-	this->extOperations[0x7D] = [](GameBoy* gb)
+	this->ext_operations_[0x7D] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.l, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.l, 7);
 	};
 
-	this->extOperations[0x7E] = [](GameBoy* gb)
+	this->ext_operations_[0x7E] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getMMU()->readByte(gb->getCPU()->registers.hl), 7);
+		gb->get_cpu()->bit(gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl), 7);
 	};
 
-	this->extOperations[0x7F] = [](GameBoy* gb)
+	this->ext_operations_[0x7F] = [](game_boy* gb)
 	{
-		gb->getCPU()->bit(gb->getCPU()->registers.a, 7);
+		gb->get_cpu()->bit(gb->get_cpu()->registers.a, 7);
 	};
 
-	this->extOperations[0x80] = [](GameBoy* gb)
+	this->ext_operations_[0x80] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 0);
+		gb->get_cpu()->registers.b &= ~(1 << 0);
 	};
 
-	this->extOperations[0x81] = [](GameBoy* gb)
+	this->ext_operations_[0x81] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 0);
+		gb->get_cpu()->registers.c &= ~(1 << 0);
 	};
 
-	this->extOperations[0x82] = [](GameBoy* gb)
+	this->ext_operations_[0x82] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 0);
+		gb->get_cpu()->registers.d &= ~(1 << 0);
 	};
 
-	this->extOperations[0x83] = [](GameBoy* gb)
+	this->ext_operations_[0x83] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 0);
+		gb->get_cpu()->registers.e &= ~(1 << 0);
 	};
 
-	this->extOperations[0x84] = [](GameBoy* gb)
+	this->ext_operations_[0x84] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 0);
+		gb->get_cpu()->registers.h &= ~(1 << 0);
 	};
 
-	this->extOperations[0x85] = [](GameBoy* gb)
+	this->ext_operations_[0x85] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 0);
+		gb->get_cpu()->registers.l &= ~(1 << 0);
 	};
 
-	this->extOperations[0x86] = [](GameBoy* gb)
+	this->ext_operations_[0x86] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 0));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 0));
 	};
 
-	this->extOperations[0x87] = [](GameBoy* gb)
+	this->ext_operations_[0x87] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 0);
+		gb->get_cpu()->registers.a &= ~(1 << 0);
 	};
 
-	this->extOperations[0x88] = [](GameBoy* gb)
+	this->ext_operations_[0x88] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 1);
+		gb->get_cpu()->registers.b &= ~(1 << 1);
 	};
 
-	this->extOperations[0x89] = [](GameBoy* gb)
+	this->ext_operations_[0x89] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 1);
+		gb->get_cpu()->registers.c &= ~(1 << 1);
 	};
 
-	this->extOperations[0x8A] = [](GameBoy* gb)
+	this->ext_operations_[0x8A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 1);
+		gb->get_cpu()->registers.d &= ~(1 << 1);
 	};
 
-	this->extOperations[0x8B] = [](GameBoy* gb)
+	this->ext_operations_[0x8B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 1);
+		gb->get_cpu()->registers.e &= ~(1 << 1);
 	};
 
-	this->extOperations[0x8C] = [](GameBoy* gb)
+	this->ext_operations_[0x8C] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 1);
+		gb->get_cpu()->registers.h &= ~(1 << 1);
 	};
 
-	this->extOperations[0x8D] = [](GameBoy* gb)
+	this->ext_operations_[0x8D] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 1);
+		gb->get_cpu()->registers.l &= ~(1 << 1);
 	};
 
-	this->extOperations[0x8E] = [](GameBoy* gb)
+	this->ext_operations_[0x8E] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 1));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 1));
 	};
 
-	this->extOperations[0x8F] = [](GameBoy* gb)
+	this->ext_operations_[0x8F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 1);
+		gb->get_cpu()->registers.a &= ~(1 << 1);
 	};
 
-	this->extOperations[0x90] = [](GameBoy* gb)
+	this->ext_operations_[0x90] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 2);
+		gb->get_cpu()->registers.b &= ~(1 << 2);
 	};
 
-	this->extOperations[0x91] = [](GameBoy* gb)
+	this->ext_operations_[0x91] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 2);
+		gb->get_cpu()->registers.c &= ~(1 << 2);
 	};
 
-	this->extOperations[0x92] = [](GameBoy* gb)
+	this->ext_operations_[0x92] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 2);
+		gb->get_cpu()->registers.d &= ~(1 << 2);
 	};
 
-	this->extOperations[0x93] = [](GameBoy* gb)
+	this->ext_operations_[0x93] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 2);
+		gb->get_cpu()->registers.e &= ~(1 << 2);
 	};
 
-	this->extOperations[0x94] = [](GameBoy* gb)
+	this->ext_operations_[0x94] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 2);
+		gb->get_cpu()->registers.h &= ~(1 << 2);
 	};
 
-	this->extOperations[0x95] = [](GameBoy* gb)
+	this->ext_operations_[0x95] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 2);
+		gb->get_cpu()->registers.l &= ~(1 << 2);
 	};
 
-	this->extOperations[0x96] = [](GameBoy* gb)
+	this->ext_operations_[0x96] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 2));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 2));
 	};
 
-	this->extOperations[0x97] = [](GameBoy* gb)
+	this->ext_operations_[0x97] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 2);
+		gb->get_cpu()->registers.a &= ~(1 << 2);
 	};
 
-	this->extOperations[0x98] = [](GameBoy* gb)
+	this->ext_operations_[0x98] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 3);
+		gb->get_cpu()->registers.b &= ~(1 << 3);
 	};
 
-	this->extOperations[0x99] = [](GameBoy* gb)
+	this->ext_operations_[0x99] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 3);
+		gb->get_cpu()->registers.c &= ~(1 << 3);
 	};
 
-	this->extOperations[0x9A] = [](GameBoy* gb)
+	this->ext_operations_[0x9A] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 3);
+		gb->get_cpu()->registers.d &= ~(1 << 3);
 	};
 
-	this->extOperations[0x9B] = [](GameBoy* gb)
+	this->ext_operations_[0x9B] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 3);
+		gb->get_cpu()->registers.e &= ~(1 << 3);
 	};
 
-	this->extOperations[0x9C] = [](GameBoy* gb)
+	this->ext_operations_[0x9C] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 3);
+		gb->get_cpu()->registers.h &= ~(1 << 3);
 	};
 
-	this->extOperations[0x9D] = [](GameBoy* gb)
+	this->ext_operations_[0x9D] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 3);
+		gb->get_cpu()->registers.l &= ~(1 << 3);
 	};
 
-	this->extOperations[0x9E] = [](GameBoy* gb)
+	this->ext_operations_[0x9E] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 3));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 3));
 	};
 
-	this->extOperations[0x9F] = [](GameBoy* gb)
+	this->ext_operations_[0x9F] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 3);
+		gb->get_cpu()->registers.a &= ~(1 << 3);
 	};
 
-	this->extOperations[0xA0] = [](GameBoy* gb)
+	this->ext_operations_[0xA0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 4);
+		gb->get_cpu()->registers.b &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA1] = [](GameBoy* gb)
+	this->ext_operations_[0xA1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 4);
+		gb->get_cpu()->registers.c &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA2] = [](GameBoy* gb)
+	this->ext_operations_[0xA2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 4);
+		gb->get_cpu()->registers.d &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA3] = [](GameBoy* gb)
+	this->ext_operations_[0xA3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 4);
+		gb->get_cpu()->registers.e &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA4] = [](GameBoy* gb)
+	this->ext_operations_[0xA4] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 4);
+		gb->get_cpu()->registers.h &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA5] = [](GameBoy* gb)
+	this->ext_operations_[0xA5] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 4);
+		gb->get_cpu()->registers.l &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA6] = [](GameBoy* gb)
+	this->ext_operations_[0xA6] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 4));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 4));
 	};
 
-	this->extOperations[0xA7] = [](GameBoy* gb)
+	this->ext_operations_[0xA7] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 4);
+		gb->get_cpu()->registers.a &= ~(1 << 4);
 	};
 
-	this->extOperations[0xA8] = [](GameBoy* gb)
+	this->ext_operations_[0xA8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 5);
+		gb->get_cpu()->registers.b &= ~(1 << 5);
 	};
 
-	this->extOperations[0xA9] = [](GameBoy* gb)
+	this->ext_operations_[0xA9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 5);
+		gb->get_cpu()->registers.c &= ~(1 << 5);
 	};
 
-	this->extOperations[0xAA] = [](GameBoy* gb)
+	this->ext_operations_[0xAA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 5);
+		gb->get_cpu()->registers.d &= ~(1 << 5);
 	};
 
-	this->extOperations[0xAB] = [](GameBoy* gb)
+	this->ext_operations_[0xAB] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 5);
+		gb->get_cpu()->registers.e &= ~(1 << 5);
 	};
 
-	this->extOperations[0xAC] = [](GameBoy* gb)
+	this->ext_operations_[0xAC] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 5);
+		gb->get_cpu()->registers.h &= ~(1 << 5);
 	};
 
-	this->extOperations[0xAD] = [](GameBoy* gb)
+	this->ext_operations_[0xAD] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 5);
+		gb->get_cpu()->registers.l &= ~(1 << 5);
 	};
 
-	this->extOperations[0xAE] = [](GameBoy* gb)
+	this->ext_operations_[0xAE] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 5));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 5));
 	};
 
-	this->extOperations[0xAF] = [](GameBoy* gb)
+	this->ext_operations_[0xAF] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 5);
+		gb->get_cpu()->registers.a &= ~(1 << 5);
 	};
 
-	this->extOperations[0xB0] = [](GameBoy* gb)
+	this->ext_operations_[0xB0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 6);
+		gb->get_cpu()->registers.b &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB1] = [](GameBoy* gb)
+	this->ext_operations_[0xB1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 6);
+		gb->get_cpu()->registers.c &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB2] = [](GameBoy* gb)
+	this->ext_operations_[0xB2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 6);
+		gb->get_cpu()->registers.d &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB3] = [](GameBoy* gb)
+	this->ext_operations_[0xB3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 6);
+		gb->get_cpu()->registers.e &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB4] = [](GameBoy* gb)
+	this->ext_operations_[0xB4] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 6);
+		gb->get_cpu()->registers.h &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB5] = [](GameBoy* gb)
+	this->ext_operations_[0xB5] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 6);
+		gb->get_cpu()->registers.l &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB6] = [](GameBoy* gb)
+	this->ext_operations_[0xB6] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 6));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 6));
 	};
 
-	this->extOperations[0xB7] = [](GameBoy* gb)
+	this->ext_operations_[0xB7] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 6);
+		gb->get_cpu()->registers.a &= ~(1 << 6);
 	};
 
-	this->extOperations[0xB8] = [](GameBoy* gb)
+	this->ext_operations_[0xB8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b &= ~(1 << 7);
+		gb->get_cpu()->registers.b &= ~(1 << 7);
 	};
 
-	this->extOperations[0xB9] = [](GameBoy* gb)
+	this->ext_operations_[0xB9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c &= ~(1 << 7);
+		gb->get_cpu()->registers.c &= ~(1 << 7);
 	};
 
-	this->extOperations[0xBA] = [](GameBoy* gb)
+	this->ext_operations_[0xBA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d &= ~(1 << 7);
+		gb->get_cpu()->registers.d &= ~(1 << 7);
 	};
 
-	this->extOperations[0xBB] = [](GameBoy* gb)
+	this->ext_operations_[0xBB] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e &= ~(1 << 7);
+		gb->get_cpu()->registers.e &= ~(1 << 7);
 	};
 
-	this->extOperations[0xBC] = [](GameBoy* gb)
+	this->ext_operations_[0xBC] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h &= ~(1 << 7);
+		gb->get_cpu()->registers.h &= ~(1 << 7);
 	};
 
-	this->extOperations[0xBD] = [](GameBoy* gb)
+	this->ext_operations_[0xBD] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l &= ~(1 << 7);
+		gb->get_cpu()->registers.l &= ~(1 << 7);
 	};
 
-	this->extOperations[0xBE] = [](GameBoy* gb)
+	this->ext_operations_[0xBE] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) & ~(1 << 7));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) & ~(1 << 7));
 	};
 
-	this->extOperations[0xBF] = [](GameBoy* gb)
+	this->ext_operations_[0xBF] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a &= ~(1 << 7);
+		gb->get_cpu()->registers.a &= ~(1 << 7);
 	};
 
-	this->extOperations[0xC0] = [](GameBoy* gb)
+	this->ext_operations_[0xC0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 0;
+		gb->get_cpu()->registers.b |= 1 << 0;
 	};
 
-	this->extOperations[0xC1] = [](GameBoy* gb)
+	this->ext_operations_[0xC1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 0;
+		gb->get_cpu()->registers.c |= 1 << 0;
 	};
 
-	this->extOperations[0xC2] = [](GameBoy* gb)
+	this->ext_operations_[0xC2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 0;
+		gb->get_cpu()->registers.d |= 1 << 0;
 	};
 
-	this->extOperations[0xC3] = [](GameBoy* gb)
+	this->ext_operations_[0xC3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 0;
+		gb->get_cpu()->registers.e |= 1 << 0;
 	};
 
-	this->extOperations[0xC4] = [](GameBoy* gb)
+	this->ext_operations_[0xC4] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 0;
+		gb->get_cpu()->registers.h |= 1 << 0;
 	};
 
-	this->extOperations[0xC5] = [](GameBoy* gb)
+	this->ext_operations_[0xC5] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 0;
+		gb->get_cpu()->registers.l |= 1 << 0;
 	};
 
-	this->extOperations[0xC6] = [](GameBoy* gb)
+	this->ext_operations_[0xC6] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 0));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 0));
 	};
 
-	this->extOperations[0xC7] = [](GameBoy* gb)
+	this->ext_operations_[0xC7] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 0;
+		gb->get_cpu()->registers.a |= 1 << 0;
 	};
 
-	this->extOperations[0xC8] = [](GameBoy* gb)
+	this->ext_operations_[0xC8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 1;
+		gb->get_cpu()->registers.b |= 1 << 1;
 	};
 
-	this->extOperations[0xC9] = [](GameBoy* gb)
+	this->ext_operations_[0xC9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 1;
+		gb->get_cpu()->registers.c |= 1 << 1;
 	};
 
-	this->extOperations[0xCA] = [](GameBoy* gb)
+	this->ext_operations_[0xCA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 1;
+		gb->get_cpu()->registers.d |= 1 << 1;
 	};
 
-	this->extOperations[0xCB] = [](GameBoy* gb)
+	this->ext_operations_[0xCB] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 1;
+		gb->get_cpu()->registers.e |= 1 << 1;
 	};
 
-	this->extOperations[0xCC] = [](GameBoy* gb)
+	this->ext_operations_[0xCC] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 1;
+		gb->get_cpu()->registers.h |= 1 << 1;
 	};
 
-	this->extOperations[0xCD] = [](GameBoy* gb)
+	this->ext_operations_[0xCD] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 1;
+		gb->get_cpu()->registers.l |= 1 << 1;
 	};
 
-	this->extOperations[0xCE] = [](GameBoy* gb)
+	this->ext_operations_[0xCE] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 1));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 1));
 	};
 
-	this->extOperations[0xCF] = [](GameBoy* gb)
+	this->ext_operations_[0xCF] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 1;
+		gb->get_cpu()->registers.a |= 1 << 1;
 	};
 
-	this->extOperations[0xD0] = [](GameBoy* gb)
+	this->ext_operations_[0xD0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 2;
+		gb->get_cpu()->registers.b |= 1 << 2;
 	};
 
-	this->extOperations[0xD1] = [](GameBoy* gb)
+	this->ext_operations_[0xD1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 2;
+		gb->get_cpu()->registers.c |= 1 << 2;
 	};
 
-	this->extOperations[0xD2] = [](GameBoy* gb)
+	this->ext_operations_[0xD2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 2;
+		gb->get_cpu()->registers.d |= 1 << 2;
 	};
 
-	this->extOperations[0xD3] = [](GameBoy* gb)
+	this->ext_operations_[0xD3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 2;
+		gb->get_cpu()->registers.e |= 1 << 2;
 	};
 
-	this->extOperations[0xD4] = [](GameBoy* gb)
+	this->ext_operations_[0xD4] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 2;
+		gb->get_cpu()->registers.h |= 1 << 2;
 	};
 
-	this->extOperations[0xD5] = [](GameBoy* gb)
+	this->ext_operations_[0xD5] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 2;
+		gb->get_cpu()->registers.l |= 1 << 2;
 	};
 
-	this->extOperations[0xD6] = [](GameBoy* gb)
+	this->ext_operations_[0xD6] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 2));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 2));
 	};
 
-	this->extOperations[0xD7] = [](GameBoy* gb)
+	this->ext_operations_[0xD7] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 2;
+		gb->get_cpu()->registers.a |= 1 << 2;
 	};
 
-	this->extOperations[0xD8] = [](GameBoy* gb)
+	this->ext_operations_[0xD8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 3;
+		gb->get_cpu()->registers.b |= 1 << 3;
 	};
 
-	this->extOperations[0xD9] = [](GameBoy* gb)
+	this->ext_operations_[0xD9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 3;
+		gb->get_cpu()->registers.c |= 1 << 3;
 	};
 
-	this->extOperations[0xDA] = [](GameBoy* gb)
+	this->ext_operations_[0xDA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 3;
+		gb->get_cpu()->registers.d |= 1 << 3;
 	};
 
-	this->extOperations[0xDB] = [](GameBoy* gb)
+	this->ext_operations_[0xDB] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 3;
+		gb->get_cpu()->registers.e |= 1 << 3;
 	};
 
-	this->extOperations[0xDC] = [](GameBoy* gb)
+	this->ext_operations_[0xDC] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 3;
+		gb->get_cpu()->registers.h |= 1 << 3;
 	};
 
-	this->extOperations[0xDD] = [](GameBoy* gb)
+	this->ext_operations_[0xDD] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 3;
+		gb->get_cpu()->registers.l |= 1 << 3;
 	};
 
-	this->extOperations[0xDE] = [](GameBoy* gb)
+	this->ext_operations_[0xDE] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 3));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 3));
 	};
 
-	this->extOperations[0xDF] = [](GameBoy* gb)
+	this->ext_operations_[0xDF] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 3;
+		gb->get_cpu()->registers.a |= 1 << 3;
 	};
 
-	this->extOperations[0xE0] = [](GameBoy* gb)
+	this->ext_operations_[0xE0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 4;
+		gb->get_cpu()->registers.b |= 1 << 4;
 	};
 
-	this->extOperations[0xE1] = [](GameBoy* gb)
+	this->ext_operations_[0xE1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 4;
+		gb->get_cpu()->registers.c |= 1 << 4;
 	};
 
-	this->extOperations[0xE2] = [](GameBoy* gb)
+	this->ext_operations_[0xE2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 4;
+		gb->get_cpu()->registers.d |= 1 << 4;
 	};
 
-	this->extOperations[0xE3] = [](GameBoy* gb)
+	this->ext_operations_[0xE3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 4;
+		gb->get_cpu()->registers.e |= 1 << 4;
 	};
 
-	this->extOperations[0xE4] = [](GameBoy* gb)
+	this->ext_operations_[0xE4] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 4;
+		gb->get_cpu()->registers.h |= 1 << 4;
 	};
 
-	this->extOperations[0xE5] = [](GameBoy* gb)
+	this->ext_operations_[0xE5] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 4;
+		gb->get_cpu()->registers.l |= 1 << 4;
 	};
 
-	this->extOperations[0xE6] = [](GameBoy* gb)
+	this->ext_operations_[0xE6] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 4));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 4));
 	};
 
-	this->extOperations[0xE7] = [](GameBoy* gb)
+	this->ext_operations_[0xE7] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 4;
+		gb->get_cpu()->registers.a |= 1 << 4;
 	};
 
-	this->extOperations[0xE8] = [](GameBoy* gb)
+	this->ext_operations_[0xE8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 5;
+		gb->get_cpu()->registers.b |= 1 << 5;
 	};
 
-	this->extOperations[0xE9] = [](GameBoy* gb)
+	this->ext_operations_[0xE9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 5;
+		gb->get_cpu()->registers.c |= 1 << 5;
 	};
 
-	this->extOperations[0xEA] = [](GameBoy* gb)
+	this->ext_operations_[0xEA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 5;
+		gb->get_cpu()->registers.d |= 1 << 5;
 	};
 
-	this->extOperations[0xEB] = [](GameBoy* gb)
+	this->ext_operations_[0xEB] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 5;
+		gb->get_cpu()->registers.e |= 1 << 5;
 	};
 
-	this->extOperations[0xEC] = [](GameBoy* gb)
+	this->ext_operations_[0xEC] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 5;
+		gb->get_cpu()->registers.h |= 1 << 5;
 	};
 
-	this->extOperations[0xED] = [](GameBoy* gb)
+	this->ext_operations_[0xED] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 5;
+		gb->get_cpu()->registers.l |= 1 << 5;
 	};
 
-	this->extOperations[0xEE] = [](GameBoy* gb)
+	this->ext_operations_[0xEE] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 5));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 5));
 	};
 
-	this->extOperations[0xEF] = [](GameBoy* gb)
+	this->ext_operations_[0xEF] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 5;
+		gb->get_cpu()->registers.a |= 1 << 5;
 	};
 
-	this->extOperations[0xF0] = [](GameBoy* gb)
+	this->ext_operations_[0xF0] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 6;
+		gb->get_cpu()->registers.b |= 1 << 6;
 	};
 
-	this->extOperations[0xF1] = [](GameBoy* gb)
+	this->ext_operations_[0xF1] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 6;
+		gb->get_cpu()->registers.c |= 1 << 6;
 	};
 
-	this->extOperations[0xF2] = [](GameBoy* gb)
+	this->ext_operations_[0xF2] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 6;
+		gb->get_cpu()->registers.d |= 1 << 6;
 	};
 
-	this->extOperations[0xF3] = [](GameBoy* gb)
+	this->ext_operations_[0xF3] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 6;
+		gb->get_cpu()->registers.e |= 1 << 6;
 	};
 
-	this->extOperations[0xF4] = [](GameBoy* gb)
+	this->ext_operations_[0xF4] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 6;
+		gb->get_cpu()->registers.h |= 1 << 6;
 	};
 
-	this->extOperations[0xF5] = [](GameBoy* gb)
+	this->ext_operations_[0xF5] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 6;
+		gb->get_cpu()->registers.l |= 1 << 6;
 	};
 
-	this->extOperations[0xF6] = [](GameBoy* gb)
+	this->ext_operations_[0xF6] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 6));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 6));
 	};
 
-	this->extOperations[0xF7] = [](GameBoy* gb)
+	this->ext_operations_[0xF7] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 6;
+		gb->get_cpu()->registers.a |= 1 << 6;
 	};
 
-	this->extOperations[0xF8] = [](GameBoy* gb)
+	this->ext_operations_[0xF8] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.b |= 1 << 7;
+		gb->get_cpu()->registers.b |= 1 << 7;
 	};
 
-	this->extOperations[0xF9] = [](GameBoy* gb)
+	this->ext_operations_[0xF9] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.c |= 1 << 7;
+		gb->get_cpu()->registers.c |= 1 << 7;
 	};
 
-	this->extOperations[0xFA] = [](GameBoy* gb)
+	this->ext_operations_[0xFA] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.d |= 1 << 7;
+		gb->get_cpu()->registers.d |= 1 << 7;
 	};
 
-	this->extOperations[0xFB] = [](GameBoy* gb)
+	this->ext_operations_[0xFB] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.e |= 1 << 7;
+		gb->get_cpu()->registers.e |= 1 << 7;
 	};
 
-	this->extOperations[0xFC] = [](GameBoy* gb)
+	this->ext_operations_[0xFC] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.h |= 1 << 7;
+		gb->get_cpu()->registers.h |= 1 << 7;
 	};
 
-	this->extOperations[0xFD] = [](GameBoy* gb)
+	this->ext_operations_[0xFD] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.l |= 1 << 7;
+		gb->get_cpu()->registers.l |= 1 << 7;
 	};
 
-	this->extOperations[0xFE] = [](GameBoy* gb)
+	this->ext_operations_[0xFE] = [](game_boy* gb)
 	{
-		gb->getMMU()->writeByte(gb->getCPU()->registers.hl, gb->getMMU()->readByte(gb->getCPU()->registers.hl) | (1 << 7));
+		gb->get_mmu()->write_byte(gb->get_cpu()->registers.hl, gb->get_mmu()->read_byte(gb->get_cpu()->registers.hl) | (1 << 7));
 	};
 
-	this->extOperations[0xFF] = [](GameBoy* gb)
+	this->ext_operations_[0xFF] = [](game_boy* gb)
 	{
-		gb->getCPU()->registers.a |= 1 << 7;
+		gb->get_cpu()->registers.a |= 1 << 7;
 	};
 }
 
-void CPU::addHL(unsigned short value)
+void cpu::add_hl(unsigned short value)
 {
 	int result = this->registers.hl + value;
 
-	this->registers.f &= FLAG_ZERO;
-	if (result & 0x10000) this->registers.f |= FLAG_CARRY;
-	if ((this->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) this->registers.f |= FLAG_HALF_CARRY;
+	this->registers.f &= flag_zero;
+	if (result & 0x10000) this->registers.f |= flag_carry;
+	if ((this->registers.hl ^ value ^ (result & 0xFFFF)) & 0x1000) this->registers.f |= flag_half_carry;
 
 	this->registers.hl = static_cast<unsigned short>(result & 0xFFFF);
 }
 
-void CPU::inc(unsigned char* reg)
+void cpu::inc(unsigned char* reg)
 {
 	(*reg)++;
-	this->registers.f &= FLAG_CARRY;
-	if ((*reg & 0x0F) == 0x00) this->registers.f |= FLAG_HALF_CARRY;
-	if (!*reg) this->registers.f |= FLAG_ZERO;
+	this->registers.f &= flag_carry;
+	if ((*reg & 0x0F) == 0x00) this->registers.f |= flag_half_carry;
+	if (!*reg) this->registers.f |= flag_zero;
 }
 
-void CPU::dec(unsigned char* reg)
+void cpu::dec(unsigned char* reg)
 {
 	(*reg)--;
-	this->registers.f &= FLAG_CARRY;
-	if ((*reg & 0x0F) == 0x0F) this->registers.f |= FLAG_HALF_CARRY;
-	if (!*reg) this->registers.f |= FLAG_ZERO;
-	this->registers.f |= FLAG_NEGATIVE;
+	this->registers.f &= flag_carry;
+	if ((*reg & 0x0F) == 0x0F) this->registers.f |= flag_half_carry;
+	if (!*reg) this->registers.f |= flag_zero;
+	this->registers.f |= flag_negative;
 }
 
-void CPU::add(unsigned char reg)
+void cpu::add(unsigned char reg)
 {
 	char value = reg;
 	unsigned int result = this->registers.a + value;
@@ -3025,274 +3025,274 @@ void CPU::add(unsigned char reg)
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 
 	this->registers.f = 0;
-	if ((carrybits & 0x100) != 0) this->registers.f |= FLAG_CARRY;
-	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
-	if ((carrybits & 0x10) != 0) this->registers.f |= FLAG_HALF_CARRY;
+	if ((carrybits & 0x100) != 0) this->registers.f |= flag_carry;
+	if (!this->registers.a) this->registers.f |= flag_zero;
+	if ((carrybits & 0x10) != 0) this->registers.f |= flag_half_carry;
 }
 
-void CPU::adc(unsigned char reg)
+void cpu::adc(unsigned char reg)
 {
-	int carry = (this->registers.f & FLAG_CARRY) ? 1 : 0;
+	int carry = (this->registers.f & flag_carry) ? 1 : 0;
 
 	int value = reg + carry;
 	int result = this->registers.a + value;
 
 	this->registers.f = 0;
-	if (result > 0xFF) this->registers.f |= FLAG_CARRY;
-	if (!result) this->registers.f |= FLAG_ZERO;
-	if (((this->registers.a & 0x0F) + (reg & 0x0F) + carry) > 0x0F) this->registers.f |= FLAG_HALF_CARRY;
+	if (result > 0xFF) this->registers.f |= flag_carry;
+	if (!result) this->registers.f |= flag_zero;
+	if (((this->registers.a & 0x0F) + (reg & 0x0F) + carry) > 0x0F) this->registers.f |= flag_half_carry;
 
 	this->registers.a = static_cast<unsigned char>(result & 0xFF);
 }
 
-void CPU::sbc(unsigned char reg)
+void cpu::sbc(unsigned char reg)
 {
-	int carry = (this->registers.f & FLAG_CARRY) ? 1 : 0;
+	int carry = (this->registers.f & flag_carry) ? 1 : 0;
 	int result = this->registers.a - reg - carry;
 
-	this->registers.f = FLAG_NEGATIVE;
-	if(!(result & 0xFF)) this->registers.f |= FLAG_ZERO;
-	if (result < 0) this->registers.f |= FLAG_CARRY;
-	if (((this->registers.a & 0x0F) - (reg & 0x0F) - carry) < 0) this->registers.f |= FLAG_HALF_CARRY;
+	this->registers.f = flag_negative;
+	if(!(result & 0xFF)) this->registers.f |= flag_zero;
+	if (result < 0) this->registers.f |= flag_carry;
+	if (((this->registers.a & 0x0F) - (reg & 0x0F) - carry) < 0) this->registers.f |= flag_half_carry;
 
 	this->registers.a = static_cast<unsigned char>(result);
 }
 
-void CPU::sub(unsigned char reg)
+void cpu::sub(unsigned char reg)
 {
 	char value = reg;
 	unsigned int result = this->registers.a - value;
 	int carrybits = this->registers.a ^ value ^ result;
 
-	this->registers.f = FLAG_NEGATIVE;
-	if ((carrybits & 0x100) != 0) this->registers.f |= FLAG_CARRY;
-	if ((carrybits & 0x10) != 0) this->registers.f |= FLAG_HALF_CARRY;
-	if (!result) this->registers.f |= FLAG_ZERO;
+	this->registers.f = flag_negative;
+	if ((carrybits & 0x100) != 0) this->registers.f |= flag_carry;
+	if ((carrybits & 0x10) != 0) this->registers.f |= flag_half_carry;
+	if (!result) this->registers.f |= flag_zero;
 
 	this->registers.a = static_cast<unsigned char>(result);
 }
 
-void CPU::_and(unsigned char reg)
+void cpu::_and(unsigned char reg)
 {
-	this->registers.f = FLAG_HALF_CARRY;
+	this->registers.f = flag_half_carry;
 
 	this->registers.a &= reg;
-	if (!this->registers.a) this->registers.f |= FLAG_ZERO;
+	if (!this->registers.a) this->registers.f |= flag_zero;
 }
 
-void CPU::_xor(unsigned char reg)
+void cpu::_xor(unsigned char reg)
 {
 	this->registers.a ^= reg;
-	this->registers.f = this->registers.a ? 0 : FLAG_ZERO;
+	this->registers.f = this->registers.a ? 0 : flag_zero;
 }
 
-void CPU::_or(unsigned char reg)
+void cpu::_or(unsigned char reg)
 {
 	this->registers.a |= reg;
-	this->registers.f = this->registers.a ? 0 : FLAG_ZERO;
+	this->registers.f = this->registers.a ? 0 : flag_zero;
 }
 
-void CPU::cp(unsigned char reg)
+void cpu::cp(unsigned char reg)
 {
-	this->registers.f = FLAG_NEGATIVE;
-	if (this->registers.a < reg) this->registers.f |= FLAG_CARRY;
-	if (this->registers.a == reg) this->registers.f |= FLAG_ZERO;
-	if (((this->registers.a - reg) & 0xF) > (this->registers.a & 0xF)) this->registers.f |= FLAG_HALF_CARRY;
+	this->registers.f = flag_negative;
+	if (this->registers.a < reg) this->registers.f |= flag_carry;
+	if (this->registers.a == reg) this->registers.f |= flag_zero;
+	if (((this->registers.a - reg) & 0xF) > (this->registers.a & 0xF)) this->registers.f |= flag_half_carry;
 }
 
-void CPU::bit(unsigned char reg, unsigned char _bit)
+void cpu::bit(unsigned char reg, unsigned char _bit)
 {
-	this->registers.f &= ~(FLAG_ZERO | FLAG_NEGATIVE);
-	this->registers.f |= FLAG_HALF_CARRY;
-	if (((reg >> _bit) & 0x01) == 0) this->registers.f |= FLAG_ZERO;
+	this->registers.f &= ~(flag_zero | flag_negative);
+	this->registers.f |= flag_half_carry;
+	if (((reg >> _bit) & 0x01) == 0) this->registers.f |= flag_zero;
 }
 
-void CPU::rlc(unsigned char* reg)
+void cpu::rlc(unsigned char* reg)
 {
 	bool carry = (*reg & 0x80) == 0x80;
 	*reg <<= 1;
 	*reg |= carry ? 0x01 : 0;
 
-	this->registers.f = carry ? FLAG_CARRY : 0;
-	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
+	this->registers.f = carry ? flag_carry : 0;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
 }
 
-void CPU::rrc(unsigned char* reg)
+void cpu::rrc(unsigned char* reg)
 {
 	bool carry = *reg & 0x01;
 	*reg >>= 1;
 	*reg |= carry ? 0x80 : 0;
 
-	this->registers.f = carry ? FLAG_CARRY : 0;
-	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
+	this->registers.f = carry ? flag_carry : 0;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
 }
 
-void CPU::rl(unsigned char* reg)
+void cpu::rl(unsigned char* reg)
 {
-	unsigned char carry = (this->registers.f & FLAG_CARRY) ? 1 : 0;
-	this->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
+	unsigned char carry = (this->registers.f & flag_carry) ? 1 : 0;
+	this->registers.f = (*reg & 0x80) ? flag_carry : 0;
 
 	*reg <<= 1;
 	*reg |= carry;
 
-	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
 }
 
-void CPU::rr(unsigned char* reg)
+void cpu::rr(unsigned char* reg)
 {
-	unsigned char carry = (this->registers.f & FLAG_CARRY) ? 0x80 : 0;
-	this->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	unsigned char carry = (this->registers.f & flag_carry) ? 0x80 : 0;
+	this->registers.f = (*reg & 0x01) ? flag_carry : 0;
 
 	*reg >>= 1;
 	*reg |= carry;
 
-	if (!*reg && reg != &this->registers.a) this->registers.f |= FLAG_ZERO;
+	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
 }
 
-void CPU::sla(unsigned char* reg)
+void cpu::sla(unsigned char* reg)
 {
-	this->registers.f = (*reg & 0x80) ? FLAG_CARRY : 0;
+	this->registers.f = (*reg & 0x80) ? flag_carry : 0;
 	*reg <<= 1;
-	if (!*reg) this->registers.f |= FLAG_ZERO;
+	if (!*reg) this->registers.f |= flag_zero;
 }
 
-void CPU::sra(unsigned char* reg)
+void cpu::sra(unsigned char* reg)
 {
 	unsigned char carry = (*reg & 0x80);
-	this->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	this->registers.f = (*reg & 0x01) ? flag_carry : 0;
 	*reg >>= 1;
 	*reg |= carry;
-	if (!*reg) this->registers.f |= FLAG_ZERO;
+	if (!*reg) this->registers.f |= flag_zero;
 }
 
-void CPU::swap(unsigned char* reg)
+void cpu::swap(unsigned char* reg)
 {
 	*reg = ((*reg & 0x0F) << 4) | ((*reg >> 4) & 0x0F);
-	this->registers.f = !*reg ? FLAG_ZERO : 0;
+	this->registers.f = !*reg ? flag_zero : 0;
 }
 
-void CPU::srl(unsigned char* reg)
+void cpu::srl(unsigned char* reg)
 {
-	this->registers.f = (*reg & 0x01) ? FLAG_CARRY : 0;
+	this->registers.f = (*reg & 0x01) ? flag_carry : 0;
 	*reg >>= 1;
-	if (!*reg) this->registers.f |= FLAG_ZERO;
+	if (!*reg) this->registers.f |= flag_zero;
 }
 
-void CPU::executeRst(unsigned short num)
+void cpu::execute_rst(unsigned short num)
 {
-	std::memcpy(&this->savRegisters, &this->registers, sizeof this->registers);
-	this->stackPushWord(this->registers.pc);
+	std::memcpy(&this->sav_registers_, &this->registers, sizeof this->registers);
+	this->stack_push_word(this->registers.pc);
 	this->registers.pc = num;
 	this->registers.m += 4;
 }
 
-unsigned char CPU::readProgramByte()
+unsigned char cpu::read_program_byte()
 {
 	unsigned short addr = this->registers.pc++;
 	this->registers.pc &= 0xFFFF;
-	return this->gb->getMMU()->readByte(addr);
+	return this->gb_->get_mmu()->read_byte(addr);
 }
 
-unsigned short CPU::readProgramWord()
+unsigned short cpu::read_program_word()
 {
-	unsigned short low = this->readProgramByte();
-	unsigned short high = this->readProgramByte();
+	unsigned short low = this->read_program_byte();
+	unsigned short high = this->read_program_byte();
 	return low | (high << 8);
 }
 
-void CPU::stackPushWord(unsigned short value)
+void cpu::stack_push_word(unsigned short value)
 {
 	this->registers.sp -= 2;
-	this->gb->getMMU()->writeWord(this->registers.sp, value);
+	this->gb_->get_mmu()->write_word(this->registers.sp, value);
 }
 
-void CPU::stackPushByte(unsigned char value)
+void cpu::stack_push_byte(unsigned char value)
 {
 	this->registers.sp -= 1;
-	this->gb->getMMU()->writeByte(this->registers.sp, value);
+	this->gb_->get_mmu()->write_byte(this->registers.sp, value);
 }
 
-unsigned short CPU::stackPopWord()
+unsigned short cpu::stack_pop_word()
 {
-	unsigned short value = this->gb->getMMU()->readWord(this->registers.sp);
+	unsigned short value = this->gb_->get_mmu()->read_word(this->registers.sp);
 	this->registers.sp += 2;
 	return value;
 }
 
-unsigned char CPU::stackPopByte()
+unsigned char cpu::stack_pop_byte()
 {
-	unsigned char value = this->gb->getMMU()->readByte(this->registers.sp);
+	unsigned char value = this->gb_->get_mmu()->read_byte(this->registers.sp);
 	this->registers.sp += 1;
 	return value;
 }
 
-bool CPU::execute()
+bool cpu::execute()
 {
 	unsigned short pc = this->registers.pc;
 
-	unsigned char instruction = this->halted ? 0 : this->readProgramByte();
+	unsigned char instruction = this->halted_ ? 0 : this->read_program_byte();
 
-	auto operation = this->operations[instruction];
+	auto operation = this->operations_[instruction];
 
 	if(operation)
 	{
 		try
 		{
-			if (!this->halted)
+			if (!this->halted_)
 			{
 #ifdef DEBUG_OPS
 				printf("Operation %X (%X) execution |\taf= %04X\tbc= %04X\tde= %04X\thl= %04X\tsp= %04X\tpc= %04X\n", instruction, pc, this->registers.af, this->registers.bc, this->registers.de, this->registers.hl, this->registers.sp, pc);
 #endif
 
-				operation(this->gb);
+				operation(this->gb_);
 			}
 
-			this->registers.m += (CPU::OperationTicks[instruction] / 2);
-			this->timer.increment(this->gb);
+			this->registers.m += (cpu::operation_ticks[instruction] / 2);
+			this->timer.increment(this->gb_);
 
-			if (this->ime && this->gb->getMMU()->iE && this->gb->getMMU()->iF)
+			if (this->ime_ && this->gb_->get_mmu()->i_e && this->gb_->get_mmu()->i_f)
 			{
-				this->halted = false;
-				this->ime = false;
+				this->halted_ = false;
+				this->ime_ = false;
 
-				unsigned char ifired = this->gb->getMMU()->iE & this->gb->getMMU()->iF;
+				unsigned char ifired = this->gb_->get_mmu()->i_e & this->gb_->get_mmu()->i_f;
 				if (ifired & 1) // VBlank
 				{
-					this->gb->getMMU()->iF &= 0xFE;
-					this->executeRst(0x40);
+					this->gb_->get_mmu()->i_f &= 0xFE;
+					this->execute_rst(0x40);
 				}
 				else if (ifired & 2) // LCDStat
 				{
-					this->gb->getMMU()->iF &= 0xFD;
-					this->executeRst(0x48);
+					this->gb_->get_mmu()->i_f &= 0xFD;
+					this->execute_rst(0x48);
 				}
 				else if (ifired & 4) // Timer
 				{
-					this->gb->getMMU()->iF &= 0xFB;
-					this->executeRst(0x50);
+					this->gb_->get_mmu()->i_f &= 0xFB;
+					this->execute_rst(0x50);
 				}
 				else if (ifired & 8) // Serial
 				{
-					this->gb->getMMU()->iF &= 0xF7;
-					this->executeRst(0x58);
+					this->gb_->get_mmu()->i_f &= 0xF7;
+					this->execute_rst(0x58);
 				}
 				else if (ifired & 16) // Joypad
 				{
-					this->gb->getMMU()->iF &= 0xEF;
-					this->executeRst(0x60);
+					this->gb_->get_mmu()->i_f &= 0xEF;
+					this->execute_rst(0x60);
 				}
 				else
 				{
-					this->ime = true;
+					this->ime_ = true;
 				}
 			}
 
-			this->timer.increment(this->gb);
+			this->timer.increment(this->gb_);
 
-			if (!this->gb->getGPU()->working()) return false;
-			this->gb->getGPU()->frame();
+			if (!this->gb_->get_gpu()->working()) return false;
+			this->gb_->get_gpu()->frame();
 
-			if(this->registers.pc == 0x100) this->gb->getMMU()->markBiosPass();
+			if(this->registers.pc == 0x100) this->gb_->get_mmu()->mark_bios_pass();
 			return true;
 		}
 		catch(std::exception e)
@@ -3312,16 +3312,16 @@ bool CPU::execute()
 	return false;
 }
 
-void CPU::executeExt(unsigned char instruction)
+void cpu::execute_ext(unsigned char instruction)
 {
-	auto extOp = this->extOperations[instruction];
+	auto extOp = this->ext_operations_[instruction];
 
 	if (extOp)
 	{
 		try
 		{
-			extOp(this->gb);
-			this->registers.m += (CPU::ExtOperationTicks[instruction] / 4);
+			extOp(this->gb_);
+			this->registers.m += (cpu::ext_operation_ticks[instruction] / 4);
 
 #ifdef DEBUG_OPS
 			printf("Extended operation %X (%X) executed\n", instruction, this->registers.pc);
@@ -3345,7 +3345,7 @@ void CPU::executeExt(unsigned char instruction)
 	throw std::exception();
 }
 
-void CPU::skipBIOS()
+void cpu::skip_bios()
 {
 	this->registers.af = 0x01B0;
 	this->registers.bc = 0x0013;
@@ -3354,37 +3354,37 @@ void CPU::skipBIOS()
 	this->registers.sp = 0xFFFE;
 	this->registers.pc = 0x100;
 
-	this->gb->getMMU()->markBiosPass();
+	this->gb_->get_mmu()->mark_bios_pass();
 
-	this->gb->getMMU()->writeByte(0xFF05, 0x00);
-	this->gb->getMMU()->writeByte(0xFF06, 0x00);
-	this->gb->getMMU()->writeByte(0xFF07, 0x00);
-	this->gb->getMMU()->writeByte(0xFF10, 0x80);
-	this->gb->getMMU()->writeByte(0xFF11, 0xBF);
-	this->gb->getMMU()->writeByte(0xFF12, 0xF3);
-	this->gb->getMMU()->writeByte(0xFF14, 0xBF);
-	this->gb->getMMU()->writeByte(0xFF16, 0x3F);
-	this->gb->getMMU()->writeByte(0xFF17, 0x00);
-	this->gb->getMMU()->writeByte(0xFF19, 0xBF);
-	this->gb->getMMU()->writeByte(0xFF1A, 0x7F);
-	this->gb->getMMU()->writeByte(0xFF1B, 0xFF);
-	this->gb->getMMU()->writeByte(0xFF1C, 0x9F);
-	this->gb->getMMU()->writeByte(0xFF1E, 0xBF);
-	this->gb->getMMU()->writeByte(0xFF20, 0xFF);
-	this->gb->getMMU()->writeByte(0xFF21, 0x00);
-	this->gb->getMMU()->writeByte(0xFF22, 0x00);
-	this->gb->getMMU()->writeByte(0xFF23, 0xBF);
-	this->gb->getMMU()->writeByte(0xFF24, 0x77);
-	this->gb->getMMU()->writeByte(0xFF25, 0xF3);
-	this->gb->getMMU()->writeByte(0xFF26, 0xF1);
-	this->gb->getMMU()->writeByte(0xFF40, 0x91);
-	this->gb->getMMU()->writeByte(0xFF42, 0x00);
-	this->gb->getMMU()->writeByte(0xFF43, 0x00);
-	this->gb->getMMU()->writeByte(0xFF45, 0x00);
-	this->gb->getMMU()->writeByte(0xFF47, 0xFC);
-	this->gb->getMMU()->writeByte(0xFF48, 0xFF);
-	this->gb->getMMU()->writeByte(0xFF49, 0xFF);
-	this->gb->getMMU()->writeByte(0xFF4A, 0x00);
-	this->gb->getMMU()->writeByte(0xFF4B, 0x00);
-	this->gb->getMMU()->writeByte(0xFFFF, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF05, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF06, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF07, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF10, 0x80);
+	this->gb_->get_mmu()->write_byte(0xFF11, 0xBF);
+	this->gb_->get_mmu()->write_byte(0xFF12, 0xF3);
+	this->gb_->get_mmu()->write_byte(0xFF14, 0xBF);
+	this->gb_->get_mmu()->write_byte(0xFF16, 0x3F);
+	this->gb_->get_mmu()->write_byte(0xFF17, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF19, 0xBF);
+	this->gb_->get_mmu()->write_byte(0xFF1A, 0x7F);
+	this->gb_->get_mmu()->write_byte(0xFF1B, 0xFF);
+	this->gb_->get_mmu()->write_byte(0xFF1C, 0x9F);
+	this->gb_->get_mmu()->write_byte(0xFF1E, 0xBF);
+	this->gb_->get_mmu()->write_byte(0xFF20, 0xFF);
+	this->gb_->get_mmu()->write_byte(0xFF21, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF22, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF23, 0xBF);
+	this->gb_->get_mmu()->write_byte(0xFF24, 0x77);
+	this->gb_->get_mmu()->write_byte(0xFF25, 0xF3);
+	this->gb_->get_mmu()->write_byte(0xFF26, 0xF1);
+	this->gb_->get_mmu()->write_byte(0xFF40, 0x91);
+	this->gb_->get_mmu()->write_byte(0xFF42, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF43, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF45, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF47, 0xFC);
+	this->gb_->get_mmu()->write_byte(0xFF48, 0xFF);
+	this->gb_->get_mmu()->write_byte(0xFF49, 0xFF);
+	this->gb_->get_mmu()->write_byte(0xFF4A, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFF4B, 0x00);
+	this->gb_->get_mmu()->write_byte(0xFFFF, 0x00);
 }

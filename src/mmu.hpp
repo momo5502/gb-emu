@@ -1,63 +1,62 @@
 #pragma once
 
-struct Rom;
-class CPU;
+struct gb_rom;
+class cpu;
 
-class MBC
+struct mbc
 {
-public:
-	int romBank = 0;
-	int ramBank = 0;
-	int ramOn = 0;
+	int rom_bank = 0;
+	int ram_bank = 0;
+	int ram_on = 0;
 	int mode = 0;
 };
 
-class MMU
+class mmu
 {
 public:
-	MMU(GameBoy* gameBoy);
-	~MMU();
+	mmu(game_boy* game_boy);
+	~mmu();
 
-	void loadRom(std::basic_string<unsigned char> data);
+	void load_rom(std::basic_string<unsigned char> data);
 
-	unsigned char readByte(unsigned short address);
-	unsigned short readWord(unsigned short address);
+	unsigned char read_byte(unsigned short address);
+	unsigned short read_word(unsigned short address);
 
-	void writeByte(unsigned short address, unsigned char value);
-	void writeWord(unsigned short address, unsigned short value);
+	void write_byte(unsigned short address, unsigned char value);
+	void write_word(unsigned short address, unsigned short value);
 
-	unsigned char* getMemoryPtr(unsigned short address);
+	unsigned char* get_memory_ptr(unsigned short address);
 
-	void controlMBC(unsigned short address, unsigned char value);
+	void control_mbc(unsigned short address, unsigned char value);
 
-	void markBiosPass();
+	void mark_bios_pass();
 
 	unsigned char vram[0x2000];
 	unsigned char eram[0x8000];
 	unsigned char wram[0x2000];
 	unsigned char zram[0x7F];
 
-	unsigned char iF;
-	unsigned char iE;
+	unsigned char i_f;
+	unsigned char i_e;
 
-	unsigned int romOffset = 0x4000;
-	unsigned int ramOffset = 0x0000;
-	unsigned char cartridgeType = 0;
+	unsigned int rom_offset = 0x4000;
+	unsigned int ram_offset = 0x0000;
+	unsigned char cartridge_type = 0;
 
-	MBC mbc[4];
+	mbc mbc[4];
 
-	Rom* getRom();
+	gb_rom* get_rom();
 
 private:
-	static unsigned char Bios[256];
+	static unsigned char bios_[256];
 
-	std::basic_string<unsigned char> rom;
+	std::basic_string<unsigned char> rom_;
 
-	unsigned char oam[160];
+	unsigned char oam_[160];
 
-	unsigned char zero[2];
+	unsigned char zero_[2];
 
-	bool passedBios;
+	bool passed_bios_;
 
-	GameBoy* gb;
+	game_boy* gb_;
 };

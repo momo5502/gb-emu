@@ -1,35 +1,35 @@
 #include "std_include.hpp"
 
-GameBoy::GameBoy() : joypad(this), cpu(this), mmu(this), gpu(this)
+game_boy::game_boy() : joypad_(this), cpu_(this), mmu_(this), gpu_(this)
 {
 
 }
 
-GameBoy::~GameBoy()
+game_boy::~game_boy()
 {
 
 }
 
-void GameBoy::run()
+void game_boy::run()
 {
 	while (this->frame());
-	this->gpu.closeWindow();
+	this->gpu_.close_window();
 }
 
-void GameBoy::skipBIOS()
+void game_boy::skip_bios()
 {
-	this->cpu.skipBIOS();
+	this->cpu_.skip_bios();
 }
 
-bool GameBoy::frame()
+bool game_boy::frame()
 {
-	unsigned int endTick = this->cpu.registers.m + 17556;
+	unsigned int endTick = this->cpu_.registers.m + 17556;
 
 	auto start = std::chrono::high_resolution_clock::now();
 
-	while (this->cpu.registers.m < endTick)
+	while (this->cpu_.registers.m < endTick)
 	{
-		if (!this->cpu.execute())
+		if (!this->cpu_.execute())
 		{
 			return false;
 		}
@@ -45,16 +45,16 @@ bool GameBoy::frame()
 	return true;
 }
 
-void GameBoy::loadRom(std::string data)
+void game_boy::load_rom(std::string data)
 {
-	this->mmu.loadRom(std::basic_string<unsigned char>(data.begin(), data.end()));
+	this->mmu_.load_rom(std::basic_string<unsigned char>(data.begin(), data.end()));
 
-	if (data.size() >= sizeof(Rom))
+	if (data.size() >= sizeof(gb_rom))
 	{
-		Rom* rom = reinterpret_cast<Rom*>(data.data());
+		gb_rom* rom = reinterpret_cast<gb_rom*>(data.data());
 
 		std::string romName(rom->title, 16);
 		while (!romName.empty() && !romName.back()) romName.pop_back();
-		this->gpu.setTitle(romName);
+		this->gpu_.set_title(romName);
 	}
 }

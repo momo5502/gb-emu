@@ -2,35 +2,36 @@
 
 #include <Windows.h>
 
-class GameBoy;
 #define GB_WIDTH (160)
 #define GB_HEIGHT (144)
 
 #define WM_KILL_WINDOW (WM_USER+0)
 
-class GPU
+class game_boy;
+
+class gpu
 {
 public:
-	GPU(GameBoy* gameBoy);
-	~GPU();
+	gpu(game_boy* game_boy);
+	~gpu();
 
 	void frame();
 	bool working();
 
-	unsigned char* getMemoryPtr(unsigned short address);
-	void updateTile(unsigned short address);
-	void updateObject(unsigned short address, unsigned char value);
-	void closeWindow();
+	unsigned char* get_memory_ptr(unsigned short address);
+	void update_tile(unsigned short address);
+	void update_object(unsigned short address, unsigned char value);
+	void close_window();
 
-	void setTitle(std::string title);
+	void set_title(std::string title);
 
-	bool isWindowActive();
+	bool is_window_active();
 
 private:
-	struct Memory
+	struct memory
 	{
 		unsigned char flags;
-		unsigned char lcdStatus;
+		unsigned char lcd_status;
 		unsigned char yscrl;
 		unsigned char xscrl;
 		unsigned char curline;
@@ -41,84 +42,78 @@ private:
 		unsigned char reg[0xFF];
 	};
 
-	struct Object
+	struct object
 	{
 		int y;
 		int x;
 		int tile;
 		int palette;
-		int xFlip;
-		int yFlip;
+		int x_flip;
+		int y_flip;
 		int priority;
 	};
 
-	enum GBColor : unsigned char
+	enum gb_color : unsigned char
 	{
-		GBC_WHITE = 0,
-		GBC_LIGHT_GRAY = 1,
-		GBC_DARK_GRAY = 2,
-		GBC_BLACK = 3,
+		gbc_white = 0,
+		gbc_light_gray = 1,
+		gbc_dark_gray = 2,
+		gbc_black = 3,
 	};
 
-	enum Mode
+	enum mode
 	{
-		MODE_HBLANK = 0,
-		MODE_VBLANK = 1,
-		MODE_OAM = 2,
-		MODE_VRAM = 3
+		mode_hblank = 0,
+		mode_vblank = 1,
+		mode_oam = 2,
+		mode_vram = 3
 	};
 
-	struct GBCPixelQuad
+	struct gbc_pixel_quad
 	{
-		GBColor _1 : 2;
-		GBColor _2 : 2;
-		GBColor _3 : 2;
-		GBColor _4 : 2;
+		gb_color _1 : 2;
+		gb_color _2 : 2;
+		gb_color _3 : 2;
+		gb_color _4 : 2;
 	};
 
-	enum Flags
+	enum flags
 	{
-		FLAG_BACKGROUND_ON = (1 << 0),
-		FLAG_SPRITES_ON = (1 << 1),
-		FLAG_SPRITES_SIZE = (1 << 2),
-		FLAG_ALT_TILE_MAP = (1 << 3),
-		FLAG_ALT_TILE_SET = (1 << 4),
-		FLAG_WINDOW_ON = (1 << 5),
-		FLAG_ALT_WINDOW_TILE_MAP = (1 << 6),
-		FLAG_DISPLAY_ON = (1 << 7)
+		flag_background_on = (1 << 0),
+		flag_sprites_on = (1 << 1),
+		flag_sprites_size = (1 << 2),
+		flag_alt_tile_map = (1 << 3),
+		flag_alt_tile_set = (1 << 4),
+		flag_window_on = (1 << 5),
+		flag_alt_window_tile_map = (1 << 6),
+		flag_display_on = (1 << 7)
 	};
 
-	struct D3DTLVERTEX
-	{
-		float x, y, z, rhw;
-		float tu, tv;
-	};
+	HWND window_;
 
-	HWND window;
+	game_boy* gb_;
 
-	GameBoy* gb;
+	mode mode_;
+	memory mem_{};
+	unsigned int clock_;
+	unsigned int last_time_ = 0;
 
-	Mode mode;
-	Memory mem;
-	unsigned int clock;
-	unsigned int lastTime = 0;
+	std::thread window_thread_;
 
-	std::thread windowThread;
+	COLORREF screen_buffer_[GB_WIDTH * GB_HEIGHT]{};
+	unsigned char tiles_[512][8][8]{};
+	object objects_[40]{};
 
-	COLORREF screenBuffer[GB_WIDTH * GB_HEIGHT];
-	unsigned char tiles[512][8][8];
-	Object objects[40];
+	inline COLORREF get_color_from_palette(unsigned int palette, unsigned int index);
 
-	inline COLORREF getColorFromPalette(unsigned int palette, unsigned int index);
+	static inline COLORREF get_gb_color(gb_color pixel);
+	static inline COLORREF get_gb_color(unsigned char pixel);
 
-	static inline COLORREF GetGBColor(GBColor pixel);
-	static inline COLORREF GetGBColor(unsigned char pixel);
+	static LRESULT CALLBACK window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param);
+	LRESULT window_proc(UINT message, WPARAM w_param, LPARAM l_param);
 
-	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	LRESULT windowProc(UINT message, WPARAM wParam, LPARAM lParam);
+	void render_screen();
+	void render_texture();
 
-	void renderScreen();
-	void renderTexture();
-
-	void windowRunner();
+	void window_runner();
 };

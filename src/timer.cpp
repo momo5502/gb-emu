@@ -1,28 +1,28 @@
 #include "std_include.hpp"
 
-Timer::Timer() : div(0), tma(0), tima(0), tac(0), mainClock(0), subClock(0), divClock(0)
+timer::timer() : div(0), tma(0), tima(0), tac(0), main_clock(0), sub_clock(0), div_clock(0)
 {
 
 }
 
-Timer::~Timer()
+timer::~timer()
 {
 
 }
 
-void Timer::increment(GameBoy* gb)
+void timer::increment(game_boy* gb)
 {
-	this->subClock += gb->getCPU()->registers.m;
+	this->sub_clock += gb->get_cpu()->registers.m;
 
-	if(this->subClock > 3)
+	if(this->sub_clock > 3)
 	{
-		this->mainClock++;
-		this->subClock -= 4;
+		this->main_clock++;
+		this->sub_clock -= 4;
 
-		this->divClock++;
-		if(this->divClock == 16)
+		this->div_clock++;
+		if(this->div_clock == 16)
 		{
-			this->divClock = 0;
+			this->div_clock = 0;
 			this->div++;
 			this->div &= 0xFF;
 		}
@@ -33,19 +33,19 @@ void Timer::increment(GameBoy* gb)
 		switch(this->tac & 3)
 		{
 		case 0:
-			if (this->mainClock >= 64) this->step(gb);
+			if (this->main_clock >= 64) this->step(gb);
 			break;
 
 		case 1:
-			if (this->mainClock >= 1) this->step(gb);
+			if (this->main_clock >= 1) this->step(gb);
 			break;
 
 		case 2:
-			if (this->mainClock >= 4) this->step(gb);
+			if (this->main_clock >= 4) this->step(gb);
 			break;
 
 		case 3:
-			if (this->mainClock >= 16) this->step(gb);
+			if (this->main_clock >= 16) this->step(gb);
 			break;
 
 		default:
@@ -54,14 +54,14 @@ void Timer::increment(GameBoy* gb)
 	}
 }
 
-void Timer::step(GameBoy* gb)
+void timer::step(game_boy* gb)
 {
 	this->tima++;
-	this->mainClock = 0;
+	this->main_clock = 0;
 
 	if(this->tima > 0xFF)
 	{
 		this->tima = this->tma;
-		if(gb->getMMU()->iE & 4) gb->getMMU()->iF |= 4;
+		if(gb->get_mmu()->i_e & 4) gb->get_mmu()->i_f |= 4;
 	}
 }

@@ -1,25 +1,25 @@
 #pragma once
 
-class GameBoy;
-class CPU;
+class game_boy;
+class cpu;
 
-class Timer
+class timer
 {
 public:
-	Timer();
-	~Timer();
+	timer();
+	~timer();
 
-	void increment(GameBoy* gb);
+	void increment(game_boy* gb);
 
 	unsigned int div;
 	unsigned int tma;
 	unsigned int tima;
 	unsigned int tac;
 
-	unsigned int mainClock;
-	unsigned int subClock;
-	unsigned int divClock;
+	unsigned int main_clock;
+	unsigned int sub_clock;
+	unsigned int div_clock;
 
 private:
-	void step(GameBoy* gb);
+	void step(game_boy* gb);
 };

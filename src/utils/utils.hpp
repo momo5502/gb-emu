@@ -1,13 +1,14 @@
 #pragma once
 
-#define ZeroObject(x) ZeroMemory(&(x), sizeof(x))
+#define zero_object(x) ZeroMemory(&(x), sizeof(x))
 
-namespace Utils
+namespace utils
 {
-	const char *VA(const char *fmt, ...);
-	bool ReadFile(std::string name, std::string& data);
+	const char* va(const char* fmt, ...);
+	bool read_file(const std::string& name, std::string& data);
 
-	template <typename T> void Merge(std::vector<T>* target, T* source, size_t length)
+	template <typename T>
+	void merge(std::vector<T>* target, T* source, const size_t length)
 	{
 		if (source)
 		{
@@ -18,9 +19,10 @@ namespace Utils
 		}
 	}
 
-	template <typename T> void Merge(std::vector<T>* target, std::vector<T> source)
+	template <typename T>
+	void merge(std::vector<T>* target, std::vector<T> source)
 	{
-		for (auto &entry : source)
+		for (auto& entry : source)
 		{
 			target->push_back(entry);
 		}

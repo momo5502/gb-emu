@@ -1,6 +1,6 @@
 #include "std_include.hpp"
 
-int _main(int argc, char* argv[])
+int main(const int argc, char* argv[])
 {
 #ifdef DEBUG
 	AllocConsole();
@@ -25,7 +25,7 @@ int _main(int argc, char* argv[])
 	}
 
 	std::string data;
-	if (!Utils::ReadFile(argv[1], data))
+	if (!utils::read_file(argv[1], data))
 	{
 		printf("Failed to open %s", argv[1]);
 		return 1;
@@ -33,10 +33,10 @@ int _main(int argc, char* argv[])
 
 	printf("Loaded game!\n");
 
-	GameBoy gameBoy;
-	gameBoy.loadRom(data);
-	gameBoy.skipBIOS();
-	gameBoy.run();
+	game_boy game_boy;
+	game_boy.load_rom(data);
+	game_boy.skip_bios();
+	game_boy.run();
 
 	printf("Terminated!\n");
 
@@ -46,5 +46,5 @@ int _main(int argc, char* argv[])
 
 int __stdcall WinMain(HINSTANCE, HINSTANCE, char*, int)
 {
-    return _main(__argc, __argv);
+    return main(__argc, __argv);
 }

@@ -1,26 +1,26 @@
 #include "std_include.hpp"
 
-GPU::GPU(GameBoy* gameBoy) : window(nullptr), gb(gameBoy), mode(MODE_HBLANK), clock(0)
+gpu::gpu(game_boy* game_boy) : window_(nullptr), gb_(game_boy), mode_(mode_hblank), clock_(0)
 {
-	ZeroObject(this->mem);
-	ZeroObject(this->tiles);
-	ZeroObject(this->screenBuffer);
-	ZeroObject(this->objects);
+	zero_object(this->mem_);
+	zero_object(this->tiles_);
+	zero_object(this->screen_buffer_);
+	zero_object(this->objects_);
 
-	this->windowThread = std::thread([this]
+	this->window_thread_ = std::thread([this]
 	{
-		this->windowRunner();
+		this->window_runner();
 	});
 	while(!this->working()) std::this_thread::sleep_for(1ms);
 }
 
-void GPU::windowRunner()
+void gpu::window_runner()
 {
 	WNDCLASSEX wc;
-	ZeroObject(wc);
+	zero_object(wc);
 	wc.cbSize = sizeof(wc);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = GPU::WindowProc;
+	wc.lpfnWndProc = gpu::window_proc;
 	wc.hInstance = GetModuleHandle(nullptr);
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(102));
@@ -34,9 +34,9 @@ void GPU::windowRunner()
 	int width = GB_WIDTH * scale;
 	int height = GB_HEIGHT * scale;
 
-	this->window = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+	this->window_ = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
-	SetWindowLongPtrA(this->window, GWLP_USERDATA, LONG_PTR(this));
+	SetWindowLongPtrA(this->window_, GWLP_USERDATA, LONG_PTR(this));
 
 	MSG msg;
 	while (this->working())
@@ -53,75 +53,75 @@ void GPU::windowRunner()
 	}
 }
 
-void GPU::renderTexture()
+void gpu::render_texture()
 {
 	RECT rect;
-	GetClientRect(this->window, &rect);
+	GetClientRect(this->window_, &rect);
 
-	HDC hdc = GetDC(this->window);
+	HDC hdc = GetDC(this->window_);
 	HDC src = CreateCompatibleDC(hdc);
-	HBITMAP map = CreateBitmap(GB_WIDTH, GB_HEIGHT, 1, 8 * 4, this->screenBuffer);
+	HBITMAP map = CreateBitmap(GB_WIDTH, GB_HEIGHT, 1, 8 * 4, this->screen_buffer_);
 
 	SelectObject(src, map);
 	StretchBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, src, 0, 0, GB_WIDTH, GB_HEIGHT, SRCCOPY);
 
 	DeleteDC(src);
 	DeleteObject(map);
-	ReleaseDC(this->window, hdc);
+	ReleaseDC(this->window_, hdc);
 }
 
-void GPU::renderScreen()
+void gpu::render_screen()
 {
 	unsigned char scanrow[GB_WIDTH] = { 0 };
 
-	if (this->mem.flags & FLAG_BACKGROUND_ON)
+	if (this->mem_.flags & flag_background_on)
 	{
-		unsigned short linebase = GB_WIDTH * this->mem.curline;
-		unsigned short mapbase = ((this->mem.flags & FLAG_ALT_TILE_MAP) ? 0x1C00 : 0x1800) + ((((this->mem.curline + this->mem.yscrl) & 255) >> 3) << 5);
-		unsigned char y = (this->mem.curline + this->mem.yscrl) & 7;
-		unsigned char x = this->mem.xscrl & 7;
-		unsigned char t = (this->mem.xscrl >> 3) & 31;
+		unsigned short linebase = GB_WIDTH * this->mem_.curline;
+		unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.curline + this->mem_.yscrl) & 255) >> 3) << 5);
+		unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
+		unsigned char x = this->mem_.xscrl & 7;
+		unsigned char t = (this->mem_.xscrl >> 3) & 31;
 
-		unsigned short tile = this->gb->getMMU()->vram[mapbase + t];
+		unsigned short tile = this->gb_->get_mmu()->vram[mapbase + t];
 		for(int i = 0; i < GB_WIDTH; ++i)
 		{
-			if(this->mem.flags & FLAG_ALT_TILE_SET){}
+			if(this->mem_.flags & flag_alt_tile_set){}
 			else tile = 0x100 + static_cast<char>(tile);
 
-			scanrow[i] = this->tiles[tile][y][x];
-			this->screenBuffer[linebase + i] = this->getColorFromPalette(0, scanrow[i]);
+			scanrow[i] = this->tiles_[tile][y][x];
+			this->screen_buffer_[linebase + i] = this->get_color_from_palette(0, scanrow[i]);
 
 			x++;
 			if (x == 8)
 			{
 				t = (t + 1) & 31;
 				x = 0;
-				tile = this->gb->getMMU()->vram[mapbase + t];
+				tile = this->gb_->get_mmu()->vram[mapbase + t];
 			}
 		}
 	}
-	if (this->mem.flags & FLAG_SPRITES_ON)
+	if (this->mem_.flags & flag_sprites_on)
 	{
 		for (int i = 0; i < 40; i++)
 		{
-			auto obj = this->objects[i];
+			auto obj = this->objects_[i];
 
 			// Check if this sprite falls on this scanline
-			if (obj.y <= this->mem.curline && (obj.y + 8) > this->mem.curline)
+			if (obj.y <= this->mem_.curline && (obj.y + 8) > this->mem_.curline)
 			{
 				// Where to render on the canvas
-				auto canvasoffs = (this->mem.curline * 160 + obj.x);
+				auto canvasoffs = (this->mem_.curline * 160 + obj.x);
 
 				// If the sprite is Y-flipped,
 				// use the opposite side of the tile
 				unsigned char* tilerow;
-				if (obj.yFlip)
+				if (obj.y_flip)
 				{
-					tilerow = this->tiles[obj.tile][7 - (this->mem.curline - obj.y)];
+					tilerow = this->tiles_[obj.tile][7 - (this->mem_.curline - obj.y)];
 				}
 				else
 				{
-					tilerow = this->tiles[obj.tile][this->mem.curline - obj.y];
+					tilerow = this->tiles_[obj.tile][this->mem_.curline - obj.y];
 				}
 
 				for (int x = 0; x < 8; x++)
@@ -130,13 +130,13 @@ void GPU::renderScreen()
 					// if it's not colour 0 (transparent), AND
 					// if this sprite has priority OR shows under the bg
 					// then render the pixel
-					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && tilerow[obj.xFlip ? (7 - x) : x] && (obj.priority || !scanrow[obj.x + x]))
+					if ((obj.x + x) >= 0 && (obj.x + x) < 160 && tilerow[obj.x_flip ? (7 - x) : x] && (obj.priority || !scanrow[obj.x + x]))
 					{
 						// If the sprite is X-flipped,
 						// write pixels in reverse order
-						auto colour = this->getColorFromPalette(1 + (obj.palette != 0), tilerow[obj.xFlip ? (7 - x) : x]);
+						auto colour = this->get_color_from_palette(1 + (obj.palette != 0), tilerow[obj.x_flip ? (7 - x) : x]);
 
-						this->screenBuffer[canvasoffs] = colour;
+						this->screen_buffer_[canvasoffs] = colour;
 						canvasoffs++;
 					}
 				}
@@ -145,76 +145,76 @@ void GPU::renderScreen()
 	}
 }
 
-void GPU::frame()
+void gpu::frame()
 {
-	int time = this->gb->getCPU()->registers.m;
-	this->clock += time - this->lastTime;
-	this->lastTime = time;
+	int time = this->gb_->get_cpu()->registers.m;
+	this->clock_ += time - this->last_time_;
+	this->last_time_ = time;
 
-	switch (this->mode)
+	switch (this->mode_)
 	{
-		case MODE_HBLANK:
+		case mode_hblank:
 		{
-			if(this->clock >= 51)
+			if(this->clock_ >= 51)
 			{
-				this->clock -= 51;
-				this->mem.curline++;
+				this->clock_ -= 51;
+				this->mem_.curline++;
 
-				if(this->mem.curline == GB_HEIGHT)
+				if(this->mem_.curline == GB_HEIGHT)
 				{
-					this->mode = MODE_VBLANK;
-					this->renderTexture();
-					if(this->gb->getMMU()->iE & 1) this->gb->getMMU()->iF |= 1;
-					if (this->mem.lcdStatus & (1 << 4) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
+					this->mode_ = mode_vblank;
+					this->render_texture();
+					if(this->gb_->get_mmu()->i_e & 1) this->gb_->get_mmu()->i_f |= 1;
+					if (this->mem_.lcd_status & (1 << 4) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
 				}
 				else
 				{
-					this->mode = MODE_OAM;
-					if (this->mem.lcdStatus & (1 << 5) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
+					this->mode_ = mode_oam;
+					if (this->mem_.lcd_status & (1 << 5) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
 				}
 			}
 			break;
 		}
 
-		case MODE_VBLANK:
+		case mode_vblank:
 		{
-			if(this->clock >= 114)
+			if(this->clock_ >= 114)
 			{
-				this->clock -= 114;
-				this->mem.curline++;
+				this->clock_ -= 114;
+				this->mem_.curline++;
 
-				if(this->mem.curline > 153)
+				if(this->mem_.curline > 153)
 				{
-					this->mode = MODE_OAM;
-					this->mem.curline = 0;
+					this->mode_ = mode_oam;
+					this->mem_.curline = 0;
 
-					if (this->mem.lcdStatus & (1 << 5) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
+					if (this->mem_.lcd_status & (1 << 5) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
 				}
 			}
 			break;
 		}
 
-		case MODE_OAM:
+		case mode_oam:
 		{
-			if(this->clock >= 20)
+			if(this->clock_ >= 20)
 			{
-				this->clock -= 20;
-				this->mode = MODE_VRAM;
+				this->clock_ -= 20;
+				this->mode_ = mode_vram;
 			}
 			break;
 		}
 
-		case MODE_VRAM:
+		case mode_vram:
 		{
-			if(this->clock >= 43)
+			if(this->clock_ >= 43)
 			{
-				this->clock -= 43;
-				this->mode = MODE_HBLANK;
-				if (this->mem.lcdStatus & (1 << 3) && this->gb->getMMU()->iE & 2) this->gb->getMMU()->iF |= 2;
+				this->clock_ -= 43;
+				this->mode_ = mode_hblank;
+				if (this->mem_.lcd_status & (1 << 3) && this->gb_->get_mmu()->i_e & 2) this->gb_->get_mmu()->i_f |= 2;
 
-				if(this->mem.flags & FLAG_DISPLAY_ON)
+				if(this->mem_.flags & flag_display_on)
 				{
-					this->renderScreen();
+					this->render_screen();
 				}
 			}
 			break;
@@ -222,22 +222,22 @@ void GPU::frame()
 	}
 }
 
-bool GPU::working()
+bool gpu::working()
 {
-	return (IsWindow(this->window) != FALSE);
+	return (IsWindow(this->window_) != FALSE);
 }
 
-unsigned char* GPU::getMemoryPtr(unsigned short address)
+unsigned char* gpu::get_memory_ptr(unsigned short address)
 {
 	address -= 0xFF40;
 
-	if (address < sizeof(this->mem))
+	if (address < sizeof(this->mem_))
 	{
-		auto pointer = reinterpret_cast<unsigned char*>(&this->mem) + address;
+		auto pointer = reinterpret_cast<unsigned char*>(&this->mem_) + address;
 
-		if (pointer == &this->mem.lcdStatus)
+		if (pointer == &this->mem_.lcd_status)
 		{
-			this->mem.lcdStatus = static_cast<unsigned char>(this->mode | (this->mem.curline == this->mem.raster ? 0 : 0));
+			this->mem_.lcd_status = static_cast<unsigned char>(this->mode_ | (this->mem_.curline == this->mem_.raster ? 0 : 0));
 		}
 
 		return pointer;
@@ -246,7 +246,7 @@ unsigned char* GPU::getMemoryPtr(unsigned short address)
 	return nullptr;
 }
 
-void GPU::updateObject(unsigned short address, unsigned char value)
+void gpu::update_object(unsigned short address, unsigned char value)
 {
 	int obj = (address - 0xFE00) >> 2;
 	if (obj < 40)
@@ -254,26 +254,26 @@ void GPU::updateObject(unsigned short address, unsigned char value)
 		switch (address & 3)
 		{
 			// Y-coordinate
-		case 0: this->objects[obj].y = value - 16; break;
+		case 0: this->objects_[obj].y = value - 16; break;
 
 			// X-coordinate
-		case 1: this->objects[obj].x = value - 8; break;
+		case 1: this->objects_[obj].x = value - 8; break;
 
 			// Data tile
-		case 2: this->objects[obj].tile = value; break;
+		case 2: this->objects_[obj].tile = value; break;
 
 			// Options
 		case 3:
-			this->objects[obj].palette = (value & 0x10) ? 1 : 0;
-			this->objects[obj].xFlip = (value & 0x20) ? 1 : 0;
-			this->objects[obj].yFlip = (value & 0x40) ? 1 : 0;
-			this->objects[obj].priority = (value & 0x80) ? 1 : 0;
+			this->objects_[obj].palette = (value & 0x10) ? 1 : 0;
+			this->objects_[obj].x_flip = (value & 0x20) ? 1 : 0;
+			this->objects_[obj].y_flip = (value & 0x40) ? 1 : 0;
+			this->objects_[obj].priority = (value & 0x80) ? 1 : 0;
 			break;
 		}
 	}
 }
 
-void GPU::updateTile(unsigned short addr)
+void gpu::update_tile(unsigned short addr)
 {
 	addr &= ~1;
 	unsigned short saddr = addr;
@@ -284,100 +284,100 @@ void GPU::updateTile(unsigned short addr)
 	{
 		sx = 1 << (7 - x);
 
-		unsigned char var = (this->gb->getMMU()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
-		var |= (this->gb->getMMU()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
+		unsigned char var = (this->gb_->get_mmu()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
+		var |= (this->gb_->get_mmu()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
 		var &= 3;
 
-		this->tiles[tile][y][x] = var;
+		this->tiles_[tile][y][x] = var;
 	}
 }
 
-COLORREF GPU::getColorFromPalette(unsigned int palette, unsigned int index)
+COLORREF gpu::get_color_from_palette(unsigned int palette, unsigned int index)
 {
 	if (palette > 3 || index > 4) return 0;
 
-	GPU::GBCPixelQuad* quad = reinterpret_cast<GPU::GBCPixelQuad*>(&this->mem.palette[palette]);
+	gpu::gbc_pixel_quad* quad = reinterpret_cast<gpu::gbc_pixel_quad*>(&this->mem_.palette[palette]);
 
-	GPU::GBColor color;
+	gpu::gb_color color;
 	switch (index)
 	{
 	case 0: color = quad->_1; break;
 	case 1: color = quad->_2; break;
 	case 2: color = quad->_3; break;
 	case 3: color = quad->_4; break;
-	default: color = GBC_WHITE; break;
+	default: color = gbc_white; break;
 	}
 
-	return GPU::GetGBColor(color);
+	return gpu::get_gb_color(color);
 }
 
-COLORREF GPU::GetGBColor(GPU::GBColor pixel)
+COLORREF gpu::get_gb_color(gpu::gb_color pixel)
 {
 	switch(pixel)
 	{
-	case GBC_BLACK: return RGB(0, 0, 0);
-	case GBC_DARK_GRAY: return RGB(192, 192, 192);
-	case GBC_LIGHT_GRAY: return RGB(96, 96, 96);
-	case GBC_WHITE: return RGB(255, 255, 255);
+	case gbc_black: return RGB(0, 0, 0);
+	case gbc_dark_gray: return RGB(192, 192, 192);
+	case gbc_light_gray: return RGB(96, 96, 96);
+	case gbc_white: return RGB(255, 255, 255);
 	}
 	return 0;
 }
 
-COLORREF GPU::GetGBColor(unsigned char pixel)
+COLORREF gpu::get_gb_color(unsigned char pixel)
 {
-	return GPU::GetGBColor(*reinterpret_cast<GPU::GBColor*>(&pixel));
+	return gpu::get_gb_color(*reinterpret_cast<gpu::gb_color*>(&pixel));
 }
 
-LRESULT GPU::windowProc(UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT gpu::window_proc(UINT message, WPARAM w_param, LPARAM l_param)
 {
 	switch (message)
 	{
 		case WM_SIZE:
 		{
-			this->renderTexture();
+			this->render_texture();
 			break;
 		}
 
 		case WM_KILL_WINDOW:
 		{
-			DestroyWindow(this->window);
+			DestroyWindow(this->window_);
 			return 0;
 		}
 
 		default: break;
 	}
 
-	return DefWindowProc(this->window, message, wParam, lParam);
+	return DefWindowProc(this->window_, message, w_param, l_param);
 }
 
-LRESULT CALLBACK GPU::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK gpu::window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param)
 {
-	GPU* gpu = reinterpret_cast<GPU*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-	if (gpu) return gpu->windowProc(message, wParam, lParam);
-	return DefWindowProc(hWnd, message, wParam, lParam);
+	gpu* gpu_ = reinterpret_cast<gpu*>(GetWindowLongPtr(h_wnd, GWLP_USERDATA));
+	if (gpu_) return gpu_->window_proc(message, w_param, l_param);
+	return DefWindowProc(h_wnd, message, w_param, l_param);
 }
 
-GPU::~GPU()
+gpu::~gpu()
 {
-	this->closeWindow();
-	if(this->windowThread.joinable()) this->windowThread.join();
+	this->close_window();
+	if(this->window_thread_.joinable()) this->window_thread_.join();
 }
 
-void GPU::closeWindow()
+void gpu::close_window()
 {
 	if (this->working())
 	{
-		SendMessageA(this->window, WM_KILL_WINDOW, NULL, NULL);
-		this->window = nullptr;
+		SendMessageA(this->window_, WM_KILL_WINDOW, NULL, NULL);
+		this->window_ = nullptr;
 	}
 }
 
-void GPU::setTitle(std::string title)
+void gpu::set_title(std::string title)
 {
-	if(this->working()) SetWindowTextA(this->window, Utils::VA("GB-EMU - %s", title.data()));
+	if(this->working()) SetWindowTextA(this->window_, utils::va("GB-EMU - %s", title.data()));
 }
 
-bool GPU::isWindowActive()
+bool gpu::is_window_active()
 {
-	return this->window && GetForegroundWindow() == this->window;
+	return this->window_ && GetForegroundWindow() == this->window_;
 }

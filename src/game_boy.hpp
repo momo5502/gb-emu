@@ -1,45 +1,45 @@
 #pragma once
 
-struct Rom
+struct gb_rom
 {
 	unsigned char padding[0x100];
-	unsigned char entryPoint[4];
+	unsigned char entry_point[4];
 	unsigned char logo[48];
 	char title[16];
 	unsigned short publisher;
-	unsigned char sgbFlag;
-	unsigned char cartridgeType;
-	unsigned char romSize;
-	unsigned char ramSize;
+	unsigned char sgb_flag;
+	unsigned char cartridge_type;
+	unsigned char rom_size;
+	unsigned char ram_size;
 	unsigned char destination;
-	unsigned char oldPublisher;
-	unsigned char romVersion;
-	unsigned char headerChecksum;
-	unsigned short globalChecksum;
+	unsigned char old_publisher;
+	unsigned char rom_version;
+	unsigned char header_checksum;
+	unsigned short global_checksum;
 };
 
-class GameBoy
+class game_boy
 {
 public:
-	GameBoy();
-	~GameBoy();
+	game_boy();
+	~game_boy();
 
-	MMU* getMMU() { return &this->mmu; }
-	GPU* getGPU() { return &this->gpu; }
-	CPU* getCPU() { return &this->cpu; }
-	Joypad* getJoypad() { return &this->joypad; }
+	mmu* get_mmu() { return &this->mmu_; }
+	gpu* get_gpu() { return &this->gpu_; }
+	cpu* get_cpu() { return &this->cpu_; }
+	joypad* get_joypad() { return &this->joypad_; }
 
-	void loadRom(std::string data);
+	void load_rom(std::string data);
 	void run();
 
-	void skipBIOS();
+	void skip_bios();
 
 private:
 
-	Joypad joypad;
-	CPU cpu;
-	MMU mmu;
-	GPU gpu;
+	joypad joypad_;
+	cpu cpu_;
+	mmu mmu_;
+	gpu gpu_;
 
 	bool frame();
 };

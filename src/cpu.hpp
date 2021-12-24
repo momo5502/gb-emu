@@ -1,18 +1,18 @@
 #pragma once
 
-class GameBoy;
+class game_boy;
 
-enum Flags
+enum flags
 {
-	FLAG_ZERO = 0x80,
-	FLAG_NEGATIVE = 0x40,
-	FLAG_HALF_CARRY = 0x20,
-	FLAG_CARRY = 0x10,
+	flag_zero = 0x80,
+	flag_negative = 0x40,
+	flag_half_carry = 0x20,
+	flag_carry = 0x10,
 };
 
 #pragma warning(push)
 #pragma warning(disable: 4201)
-struct Registers
+struct cpu_registers
 {
 	union
 	{
@@ -65,50 +65,50 @@ struct Registers
 };
 #pragma warning(pop)
 
-class CPU
+class cpu
 {
 public:
-	typedef void(*Operation)(GameBoy*);
+	typedef void(*operation)(game_boy*);
 
-	CPU(GameBoy* gameBoy);
-	~CPU();
+	cpu(game_boy* game_boy);
+	~cpu();
 
-	void stackPushWord(unsigned short value);
-	void stackPushByte(unsigned char value);
+	void stack_push_word(unsigned short value);
+	void stack_push_byte(unsigned char value);
 
-	unsigned short stackPopWord();
-	unsigned char stackPopByte();
+	unsigned short stack_pop_word();
+	unsigned char stack_pop_byte();
 
-	unsigned char readProgramByte();
-	unsigned short readProgramWord();
+	unsigned char read_program_byte();
+	unsigned short read_program_word();
 
 	bool execute();
-	void executeExt(unsigned char instruction);
+	void execute_ext(unsigned char instruction);
 
-	Registers registers;
-	Timer timer;
+	cpu_registers registers;
+	timer timer;
 
-	void skipBIOS();
+	void skip_bios();
 
 private:
-	Operation operations[0x100];
-	static const unsigned char OperationTicks[0x100];
+	operation operations_[0x100];
+	static const unsigned char operation_ticks[0x100];
 
-	Operation extOperations[0x100];
-	static const unsigned char ExtOperationTicks[0x100];
+	operation ext_operations_[0x100];
+	static const unsigned char ext_operation_ticks[0x100];
 
-	bool ime;
-	GameBoy* gb;
-	Registers savRegisters;
+	bool ime_;
+	game_boy* gb_;
+	cpu_registers sav_registers_;
 
-	bool halted = false;
+	bool halted_ = false;
 
-	void setupOperations();
-	void setupExtOperations();
+	void setup_operations();
+	void setup_ext_operations();
 
-	void executeRst(unsigned short num);
+	void execute_rst(unsigned short num);
 
-	void addHL(unsigned short reg);
+	void add_hl(unsigned short value);
 
 	void inc(unsigned char* reg);
 	void dec(unsigned char* reg);
