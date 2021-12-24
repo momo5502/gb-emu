@@ -11,8 +11,10 @@ enum flags
 	flag_carry = 0x10,
 };
 
+#ifdef _WIN32
 #pragma warning(push)
 #pragma warning(disable: 4201)
+#endif
 struct cpu_registers
 {
 	union
@@ -64,7 +66,9 @@ struct cpu_registers
 
 	unsigned int m;
 };
+#ifdef _WIN32
 #pragma warning(pop)
+#endif
 
 class cpu
 {

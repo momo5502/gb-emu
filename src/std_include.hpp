@@ -6,16 +6,12 @@
 
 #include <cstdio>
 #include <cstring>
-#include <conio.h>
 
-#pragma warning(push)
-#pragma warning(disable: 4244)
 #include <map>
 #include <string>
 #include <vector>
 #include <thread>
 #include <fstream>
-#pragma warning(pop)
 
 using namespace std::literals;
 
