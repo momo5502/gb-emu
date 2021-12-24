@@ -24,7 +24,7 @@ int main(const int argc, char* argv[])
 		return 1;
 	}
 
-	std::string data;
+	std::vector<uint8_t> data{};
 	if (!utils::read_file(argv[1], data))
 	{
 		printf("Failed to open %s", argv[1]);
@@ -33,7 +33,7 @@ int main(const int argc, char* argv[])
 
 	printf("Loaded game!\n");
 
-	game_boy game_boy;
+	game_boy game_boy{};
 	game_boy.load_rom(data);
 	game_boy.skip_bios();
 	game_boy.run();

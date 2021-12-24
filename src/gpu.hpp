@@ -16,7 +16,7 @@ public:
 	~gpu();
 
 	void frame();
-	bool working();
+	bool working() const;
 
 	unsigned char* get_memory_ptr(unsigned short address);
 	void update_tile(unsigned short address);
@@ -110,10 +110,10 @@ private:
 	static inline COLORREF get_gb_color(unsigned char pixel);
 
 	static LRESULT CALLBACK window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param);
-	LRESULT window_proc(UINT message, WPARAM w_param, LPARAM l_param);
+	LRESULT window_proc(UINT message, WPARAM w_param, LPARAM l_param) const;
 
 	void render_screen();
-	void render_texture();
+	void render_texture() const;
 
 	void window_runner();
 };

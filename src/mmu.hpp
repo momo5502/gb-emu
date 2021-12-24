@@ -17,7 +17,7 @@ public:
 	mmu(game_boy* game_boy);
 	~mmu();
 
-	void load_rom(std::basic_string<unsigned char> data);
+	void load_rom(std::vector<uint8_t> data);
 
 	unsigned char read_byte(unsigned short address);
 	unsigned short read_word(unsigned short address);
@@ -50,7 +50,7 @@ public:
 private:
 	static unsigned char bios_[256];
 
-	std::basic_string<unsigned char> rom_;
+	std::vector<uint8_t> rom_;
 
 	unsigned char oam_[160];
 

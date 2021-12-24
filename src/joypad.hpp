@@ -6,7 +6,7 @@ class joypad
 {
 public:
 	joypad(game_boy* game_boy);
-	~joypad();
+	~joypad() = default;
 
 	unsigned char read() const;
 	void write(unsigned char val);

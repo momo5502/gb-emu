@@ -19,7 +19,7 @@ namespace utils
 		return dest;
 	}
 
-	bool read_file(const std::string& name, std::string& data)
+	bool read_file(const std::string& name, std::vector<uint8_t>& data)
 	{
 		std::ifstream stream(name, std::ios::binary);
 		if (stream.is_open())
@@ -33,7 +33,7 @@ namespace utils
 				data.clear();
 				data.resize(size_t(size));
 
-				stream.read(const_cast<char*>(data.data()), size);
+				stream.read(reinterpret_cast<char*>(data.data()), size);
 				return true;
 			}
 		}

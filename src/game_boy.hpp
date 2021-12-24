@@ -29,7 +29,7 @@ public:
 	cpu* get_cpu() { return &this->cpu_; }
 	joypad* get_joypad() { return &this->joypad_; }
 
-	void load_rom(std::string data);
+	void load_rom(std::vector<uint8_t> data);
 	void run();
 
 	void skip_bios();

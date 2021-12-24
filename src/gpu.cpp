@@ -31,8 +31,8 @@ void gpu::window_runner()
 
 	const int scale = 3;
 
-	int width = GB_WIDTH * scale;
-	int height = GB_HEIGHT * scale;
+	const int width = GB_WIDTH * scale;
+	const int height = GB_HEIGHT * scale;
 
 	this->window_ = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
 	                                CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -54,14 +54,14 @@ void gpu::window_runner()
 	}
 }
 
-void gpu::render_texture()
+void gpu::render_texture() const
 {
 	RECT rect;
 	GetClientRect(this->window_, &rect);
 
-	HDC hdc = GetDC(this->window_);
-	HDC src = CreateCompatibleDC(hdc);
-	HBITMAP map = CreateBitmap(GB_WIDTH, GB_HEIGHT, 1, 8 * 4, this->screen_buffer_);
+	const HDC hdc = GetDC(this->window_);
+	const HDC src = CreateCompatibleDC(hdc);
+	const HBITMAP map = CreateBitmap(GB_WIDTH, GB_HEIGHT, 1, 8 * 4, this->screen_buffer_);
 
 	SelectObject(src, map);
 	StretchBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, src, 0, 0, GB_WIDTH, GB_HEIGHT, SRCCOPY);
@@ -77,10 +77,10 @@ void gpu::render_screen()
 
 	if (this->mem_.flags & flag_background_on)
 	{
-		unsigned short linebase = GB_WIDTH * this->mem_.curline;
-		unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.curline +
+		const unsigned short linebase = GB_WIDTH * this->mem_.curline;
+		const unsigned short mapbase = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800) + ((((this->mem_.curline +
 			this->mem_.yscrl) & 255) >> 3) << 5);
-		unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
+		const unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
 		unsigned char x = this->mem_.xscrl & 7;
 		unsigned char t = (this->mem_.xscrl >> 3) & 31;
 
@@ -108,7 +108,7 @@ void gpu::render_screen()
 	{
 		for (int i = 0; i < 40; i++)
 		{
-			auto obj = this->objects_[i];
+			const auto obj = this->objects_[i];
 
 			// Check if this sprite falls on this scanline
 			if (obj.y <= this->mem_.curline && (obj.y + 8) > this->mem_.curline)
@@ -139,8 +139,8 @@ void gpu::render_screen()
 					{
 						// If the sprite is X-flipped,
 						// write pixels in reverse order
-						auto colour = this->get_color_from_palette(1 + (obj.palette != 0),
-						                                           tilerow[obj.x_flip ? (7 - x) : x]);
+						const auto colour = this->get_color_from_palette(1 + (obj.palette != 0),
+						                                                 tilerow[obj.x_flip ? (7 - x) : x]);
 
 						this->screen_buffer_[canvasoffs] = colour;
 						canvasoffs++;
@@ -153,7 +153,7 @@ void gpu::render_screen()
 
 void gpu::frame()
 {
-	int time = this->gb_->get_cpu()->registers.m;
+	const int time = this->gb_->get_cpu()->registers.m;
 	this->clock_ += time - this->last_time_;
 	this->last_time_ = time;
 
@@ -234,7 +234,7 @@ void gpu::frame()
 	}
 }
 
-bool gpu::working()
+bool gpu::working() const
 {
 	return (IsWindow(this->window_) != FALSE);
 }
@@ -245,7 +245,7 @@ unsigned char* gpu::get_memory_ptr(unsigned short address)
 
 	if (address < sizeof(this->mem_))
 	{
-		auto pointer = reinterpret_cast<unsigned char*>(&this->mem_) + address;
+		const auto pointer = reinterpret_cast<unsigned char*>(&this->mem_) + address;
 
 		if (pointer == &this->mem_.lcd_status)
 		{
@@ -260,9 +260,9 @@ unsigned char* gpu::get_memory_ptr(unsigned short address)
 	return nullptr;
 }
 
-void gpu::update_object(unsigned short address, unsigned char value)
+void gpu::update_object(const unsigned short address, const unsigned char value)
 {
-	int obj = (address - 0xFE00) >> 2;
+	const int obj = (address - 0xFE00) >> 2;
 	if (obj < 40)
 	{
 		switch (address & 3)
@@ -293,13 +293,12 @@ void gpu::update_object(unsigned short address, unsigned char value)
 void gpu::update_tile(unsigned short addr)
 {
 	addr &= ~1;
-	unsigned short saddr = addr;
-	unsigned short tile = (addr >> 4) & 511;
-	unsigned short y = (addr >> 1) & 7;
-	unsigned short sx;
+	const unsigned short saddr = addr;
+	const unsigned short tile = (addr >> 4) & 511;
+	const unsigned short y = (addr >> 1) & 7;
 	for (unsigned short x = 0; x < 8; x++)
 	{
-		sx = 1 << (7 - x);
+		const unsigned short sx = 1 << (7 - x);
 
 		unsigned char var = (this->gb_->get_mmu()->vram[saddr & 0x1FFF] & sx) ? 1 : 0;
 		var |= (this->gb_->get_mmu()->vram[saddr & 0x1FFF + 1] & sx) ? 2 : 0;
@@ -309,11 +308,11 @@ void gpu::update_tile(unsigned short addr)
 	}
 }
 
-COLORREF gpu::get_color_from_palette(unsigned int palette, unsigned int index)
+COLORREF gpu::get_color_from_palette(const unsigned int palette, const unsigned int index)
 {
 	if (palette > 3 || index > 4) return 0;
 
-	gpu::gbc_pixel_quad* quad = reinterpret_cast<gpu::gbc_pixel_quad*>(&this->mem_.palette[palette]);
+	auto* quad = reinterpret_cast<gpu::gbc_pixel_quad*>(&this->mem_.palette[palette]);
 
 	gpu::gb_color color;
 	switch (index)
@@ -333,7 +332,7 @@ COLORREF gpu::get_color_from_palette(unsigned int palette, unsigned int index)
 	return gpu::get_gb_color(color);
 }
 
-COLORREF gpu::get_gb_color(gpu::gb_color pixel)
+COLORREF gpu::get_gb_color(const gpu::gb_color pixel)
 {
 	switch (pixel)
 	{
@@ -350,7 +349,7 @@ COLORREF gpu::get_gb_color(unsigned char pixel)
 	return gpu::get_gb_color(*reinterpret_cast<gpu::gb_color*>(&pixel));
 }
 
-LRESULT gpu::window_proc(UINT message, WPARAM w_param, LPARAM l_param)
+LRESULT gpu::window_proc(const UINT message, const WPARAM w_param, const LPARAM l_param) const
 {
 	switch (message)
 	{
@@ -372,9 +371,9 @@ LRESULT gpu::window_proc(UINT message, WPARAM w_param, LPARAM l_param)
 	return DefWindowProc(this->window_, message, w_param, l_param);
 }
 
-LRESULT CALLBACK gpu::window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param)
+LRESULT CALLBACK gpu::window_proc(const HWND h_wnd, const UINT message, const WPARAM w_param, const LPARAM l_param)
 {
-	gpu* gpu_ = reinterpret_cast<gpu*>(GetWindowLongPtr(h_wnd, GWLP_USERDATA));
+	auto* gpu_ = reinterpret_cast<gpu*>(GetWindowLongPtr(h_wnd, GWLP_USERDATA));
 	if (gpu_) return gpu_->window_proc(message, w_param, l_param);
 	return DefWindowProc(h_wnd, message, w_param, l_param);
 }

@@ -36,9 +36,9 @@ gb_rom* mmu::get_rom()
 	return reinterpret_cast<gb_rom*>(this->rom_.data());
 }
 
-void mmu::load_rom(const std::basic_string<unsigned char> data)
+void mmu::load_rom(std::vector<uint8_t> data)
 {
-	this->rom_ = data;
+	this->rom_ = std::move(data);
 	this->cartridge_type = this->get_rom()->cartridge_type;
 }
 

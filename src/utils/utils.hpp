@@ -5,7 +5,7 @@
 namespace utils
 {
 	const char* va(const char* fmt, ...);
-	bool read_file(const std::string& name, std::string& data);
+	bool read_file(const std::string& name, std::vector<uint8_t>& data);
 
 	template <typename T>
 	void merge(std::vector<T>* target, T* source, const size_t length)

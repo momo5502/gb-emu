@@ -4,7 +4,6 @@ joypad::joypad(game_boy* game_boy) : gb_(game_boy), column_(0)
 {
 }
 
-joypad::~joypad() = default;
 
 unsigned char joypad::read() const
 {

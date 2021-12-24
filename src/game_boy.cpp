@@ -44,16 +44,18 @@ bool game_boy::frame()
 	return true;
 }
 
-void game_boy::load_rom(std::string data)
+void game_boy::load_rom(std::vector<uint8_t> data)
 {
-	this->mmu_.load_rom(std::basic_string<unsigned char>(data.begin(), data.end()));
-
-	if (data.size() >= sizeof(gb_rom))
+	if (data.size() < sizeof(gb_rom))
 	{
-		auto* rom = reinterpret_cast<gb_rom*>(data.data());
-
-		std::string rom_name(rom->title, 16);
-		while (!rom_name.empty() && !rom_name.back()) rom_name.pop_back();
-		this->gpu_.set_title(rom_name);
+		throw std::runtime_error("Invalid rom");
 	}
+
+	auto* rom = reinterpret_cast<const gb_rom*>(data.data());
+
+	std::string rom_name(rom->title, 16);
+	while (!rom_name.empty() && !rom_name.back()) rom_name.pop_back();
+	this->gpu_.set_title(rom_name);
+
+	this->mmu_.load_rom(std::move(data));
 }
