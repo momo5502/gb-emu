@@ -43,8 +43,8 @@ workspace "gb-emu"
 		}
 
 		-- Pre-compiled header
-		pchheader "STDInclude.hpp" -- must be exactly same as used in #include directives
-		pchsource "src/STDInclude.cpp" -- real path
+		pchheader "std_include.hpp" -- must be exactly same as used in #include directives
+		pchsource "src/std_include.cpp" -- real path
 		buildoptions { "/Zm100 -Zm100" }
 
 		vpaths {
