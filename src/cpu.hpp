@@ -21,50 +21,50 @@ struct cpu_registers
 	{
 		struct
 		{
-			unsigned char f;
-			unsigned char a;
+			uint8_t f;
+			uint8_t a;
 		};
 
-		unsigned short af;
+		uint16_t af;
 	};
 
 	union
 	{
 		struct
 		{
-			unsigned char c;
-			unsigned char b;
+			uint8_t c;
+			uint8_t b;
 		};
 
-		unsigned short bc;
+		uint16_t bc;
 	};
 
 	union
 	{
 		struct
 		{
-			unsigned char e;
-			unsigned char d;
+			uint8_t e;
+			uint8_t d;
 		};
 
-		unsigned short de;
+		uint16_t de;
 	};
 
 	union
 	{
 		struct
 		{
-			unsigned char l;
-			unsigned char h;
+			uint8_t l;
+			uint8_t h;
 		};
 
-		unsigned short hl;
+		uint16_t hl;
 	};
 
-	unsigned short sp;
-	unsigned short pc;
+	uint16_t sp;
+	uint16_t pc;
 
-	unsigned int m;
+	uint32_t m;
 };
 #ifdef _WIN32
 #pragma warning(pop)
@@ -78,17 +78,17 @@ public:
 	cpu(game_boy* game_boy);
 	~cpu();
 
-	void stack_push_word(unsigned short value);
-	void stack_push_byte(unsigned char value);
+	void stack_push_word(uint16_t value);
+	void stack_push_byte(uint8_t value);
 
-	unsigned short stack_pop_word();
-	unsigned char stack_pop_byte();
+	uint16_t stack_pop_word();
+	uint8_t stack_pop_byte();
 
-	unsigned char read_program_byte();
-	unsigned short read_program_word();
+	uint8_t read_program_byte();
+	uint16_t read_program_word();
 
 	bool execute();
-	void execute_ext(unsigned char instruction);
+	void execute_ext(uint8_t instruction);
 
 	cpu_registers registers;
 	timer timer;
@@ -97,10 +97,10 @@ public:
 
 private:
 	operation operations_[0x100];
-	static const unsigned char operation_ticks[0x100];
+	static const uint8_t operation_ticks[0x100];
 
 	operation ext_operations_[0x100];
-	static const unsigned char ext_operation_ticks[0x100];
+	static const uint8_t ext_operation_ticks[0x100];
 
 	bool ime_;
 	game_boy* gb_;
@@ -111,32 +111,32 @@ private:
 	void setup_operations();
 	void setup_ext_operations();
 
-	void execute_rst(unsigned short num);
+	void execute_rst(uint16_t num);
 
-	void add_hl(unsigned short value);
+	void add_hl(uint16_t value);
 
-	void inc(unsigned char* reg);
-	void dec(unsigned char* reg);
-	void add(unsigned char reg);
-	void sub(unsigned char reg);
-	void _and(unsigned char reg);
-	void _xor(unsigned char reg);
-	void _or(unsigned char reg);
-	void cp(unsigned char reg);
-	void adc(unsigned char reg);
-	void sbc(unsigned char reg);
+	void inc(uint8_t* reg);
+	void dec(uint8_t* reg);
+	void add(uint8_t reg);
+	void sub(uint8_t reg);
+	void _and(uint8_t reg);
+	void _xor(uint8_t reg);
+	void _or(uint8_t reg);
+	void cp(uint8_t reg);
+	void adc(uint8_t reg);
+	void sbc(uint8_t reg);
 
-	void bit(unsigned char reg, unsigned char _bit);
+	void bit(uint8_t reg, uint8_t _bit);
 
-	void rlc(unsigned char* reg);
-	void rrc(unsigned char* reg);
+	void rlc(uint8_t* reg);
+	void rrc(uint8_t* reg);
 
-	void rl(unsigned char* reg);
-	void rr(unsigned char* reg);
+	void rl(uint8_t* reg);
+	void rr(uint8_t* reg);
 
-	void sla(unsigned char* reg);
-	void sra(unsigned char* reg);
+	void sla(uint8_t* reg);
+	void sra(uint8_t* reg);
 
-	void swap(unsigned char* reg);
-	void srl(unsigned char* reg);
+	void swap(uint8_t* reg);
+	void srl(uint8_t* reg);
 };

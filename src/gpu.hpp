@@ -11,38 +11,38 @@ public:
 
 	void frame();
 
-	unsigned char* get_memory_ptr(unsigned short address);
-	void update_tile(unsigned short address);
-	void update_object(unsigned short address, unsigned char value);
+	uint8_t* get_memory_ptr(uint16_t address);
+	void update_tile(uint16_t address);
+	void update_object(uint16_t address, uint8_t value);
 	void set_is_color_gb(bool value);
 
 private:
 	struct memory
 	{
-		unsigned char flags;
-		unsigned char lcd_status;
-		unsigned char yscrl;
-		unsigned char xscrl;
-		unsigned char curline;
-		unsigned char raster;
-		unsigned char unk;
-		unsigned char palette[3];
+		uint8_t flags;
+		uint8_t lcd_status;
+		uint8_t yscrl;
+		uint8_t xscrl;
+		uint8_t curline;
+		uint8_t raster;
+		uint8_t unk;
+		uint8_t palette[3];
 
-		unsigned char reg[0xFF];
+		uint8_t reg[0xFF];
 	};
 
 	struct object
 	{
-		int y;
-		int x;
-		int tile;
-		int palette;
-		int x_flip;
-		int y_flip;
-		int priority;
+		int32_t y;
+		int32_t x;
+		int32_t tile;
+		int32_t palette;
+		int32_t x_flip;
+		int32_t y_flip;
+		int32_t priority;
 	};
 
-	enum gb_color : unsigned char
+	enum gb_color : uint8_t
 	{
 		gbc_white = 0,
 		gbc_light_gray = 1,
@@ -82,18 +82,18 @@ private:
 
 	mode mode_;
 	memory mem_{};
-	unsigned int clock_;
-	unsigned int last_time_ = 0;
+	uint32_t clock_;
+	uint32_t last_time_ = 0;
 	bool is_color_gb {false};
 
 	color screen_buffer_[GB_WIDTH * GB_HEIGHT]{};
-	unsigned char tiles_[512][8][8]{};
+	uint8_t tiles_[512][8][8]{};
 	object objects_[40]{};
 
-	inline color get_color_from_palette(unsigned int palette, unsigned int index);
+	inline color get_color_from_palette(uint32_t palette, uint32_t index);
 
 	static inline color get_gb_color(gb_color pixel);
-	static inline color get_gb_color(unsigned char pixel);
+	static inline color get_gb_color(uint8_t pixel);
 
 	void render_screen();
 	void render_texture() const;

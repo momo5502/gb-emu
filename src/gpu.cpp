@@ -20,25 +20,25 @@ void gpu::render_texture() const
 
 void gpu::render_screen()
 {
-	unsigned char scanrow[GB_WIDTH] = {0};
+	uint8_t scanrow[GB_WIDTH] = {0};
 
 	if (this->mem_.flags & flag_background_on)
 	{
-		const unsigned short linebase = GB_WIDTH * this->mem_.curline;
-		const unsigned short mapaddress = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800);
-		const unsigned short mapbase = mapaddress + ((((this->mem_.curline +
+		const uint16_t linebase = GB_WIDTH * this->mem_.curline;
+		const uint16_t mapaddress = ((this->mem_.flags & flag_alt_tile_map) ? 0x1C00 : 0x1800);
+		const uint16_t mapbase = mapaddress + ((((this->mem_.curline +
 			this->mem_.yscrl) & 255) >> 3) << 5);
-		const unsigned char y = (this->mem_.curline + this->mem_.yscrl) & 7;
-		unsigned char x = this->mem_.xscrl & 7;
-		unsigned char t = (this->mem_.xscrl >> 3) & 31;
+		const uint8_t y = (this->mem_.curline + this->mem_.yscrl) & 7;
+		uint8_t x = this->mem_.xscrl & 7;
+		uint8_t t = (this->mem_.xscrl >> 3) & 31;
 
-		unsigned short tile = this->gb_->get_mmu()->vram[mapbase + t];
-		for (int i = 0; i < GB_WIDTH; ++i)
+		uint16_t tile = this->gb_->get_mmu()->vram[mapbase + t];
+		for (int32_t i = 0; i < GB_WIDTH; ++i)
 		{
 			if (this->mem_.flags & flag_alt_tile_set)
 			{
 			}
-			else tile = 0x100 + static_cast<char>(tile);
+			else tile = 0x100 + static_cast<int8_t>(tile);
 
 			scanrow[i] = this->tiles_[tile][y][x];
 			this->screen_buffer_[linebase + i] = this->get_color_from_palette(0, scanrow[i]);
@@ -54,7 +54,7 @@ void gpu::render_screen()
 	}
 	if (this->mem_.flags & flag_sprites_on)
 	{
-		for (int i = 0; i < 40; i++)
+		for (int32_t i = 0; i < 40; i++)
 		{
 			const auto obj = this->objects_[i];
 
@@ -66,7 +66,7 @@ void gpu::render_screen()
 
 				// If the sprite is Y-flipped,
 				// use the opposite side of the tile
-				unsigned char* tilerow;
+				uint8_t* tilerow;
 				if (obj.y_flip)
 				{
 					tilerow = this->tiles_[obj.tile][7 - (this->mem_.curline - obj.y)];
@@ -76,7 +76,7 @@ void gpu::render_screen()
 					tilerow = this->tiles_[obj.tile][this->mem_.curline - obj.y];
 				}
 
-				for (int x = 0; x < 8; x++)
+				for (int32_t x = 0; x < 8; x++)
 				{
 					// If this pixel is still on-screen, AND
 					// if it's not colour 0 (transparent), AND
@@ -106,7 +106,7 @@ void gpu::render_screen()
 
 void gpu::frame()
 {
-	const int time = this->gb_->get_cpu()->registers.m;
+	const int32_t time = this->gb_->get_cpu()->registers.m;
 	this->clock_ += time - this->last_time_;
 	this->last_time_ = time;
 
@@ -187,17 +187,17 @@ void gpu::frame()
 	}
 }
 
-unsigned char* gpu::get_memory_ptr(unsigned short address)
+uint8_t* gpu::get_memory_ptr(uint16_t address)
 {
 	address -= 0xFF40;
 
 	if (address < sizeof(this->mem_))
 	{
-		const auto pointer = reinterpret_cast<unsigned char*>(&this->mem_) + address;
+		const auto pointer = reinterpret_cast<uint8_t*>(&this->mem_) + address;
 
 		if (pointer == &this->mem_.lcd_status)
 		{
-			this->mem_.lcd_status = static_cast<unsigned char>(this->mode_ | (this->mem_.curline == this->mem_.raster
+			this->mem_.lcd_status = static_cast<uint8_t>(this->mode_ | (this->mem_.curline == this->mem_.raster
 				                                                                  ? 0
 				                                                                  : 0));
 		}
@@ -208,9 +208,9 @@ unsigned char* gpu::get_memory_ptr(unsigned short address)
 	return nullptr;
 }
 
-void gpu::update_object(const unsigned short address, const unsigned char value)
+void gpu::update_object(const uint16_t address, const uint8_t value)
 {
-	const int obj = (address - 0xFE00) >> 2;
+	const int32_t obj = (address - 0xFE00) >> 2;
 	if (obj < 40)
 	{
 		switch (address & 3)
@@ -243,16 +243,16 @@ void gpu::set_is_color_gb(const bool value)
 	this->is_color_gb = value;
 }
 
-void gpu::update_tile(unsigned short addr)
+void gpu::update_tile(uint16_t addr)
 {
 	addr &= 0x1ffe;
-	const unsigned short tile = (addr >> 4) & 511;
-	const unsigned short y = (addr >> 1) & 7;
-	for (unsigned short x = 0; x < 8; x++)
+	const uint16_t tile = (addr >> 4) & 511;
+	const uint16_t y = (addr >> 1) & 7;
+	for (uint16_t x = 0; x < 8; x++)
 	{
-		const unsigned short sx = 1 << (7 - x);
+		const uint16_t sx = 1 << (7 - x);
 
-		unsigned char var = (this->gb_->get_mmu()->vram[addr] & sx) ? 1 : 0;
+		uint8_t var = (this->gb_->get_mmu()->vram[addr] & sx) ? 1 : 0;
 		var |= (this->gb_->get_mmu()->vram[addr + 1] & sx) ? 2 : 0;
 		var &= 3;
 
@@ -260,7 +260,7 @@ void gpu::update_tile(unsigned short addr)
 	}
 }
 
-color gpu::get_color_from_palette(const unsigned int palette, const unsigned int index)
+color gpu::get_color_from_palette(const uint32_t palette, const uint32_t index)
 {
 	if (palette > 3 || index > 4) return color{0, 0, 0, 0};
 
@@ -296,7 +296,7 @@ color gpu::get_gb_color(const gpu::gb_color pixel)
 	return color{0, 0, 0, 0};
 }
 
-color gpu::get_gb_color(unsigned char pixel)
+color gpu::get_gb_color(uint8_t pixel)
 {
 	return gpu::get_gb_color(*reinterpret_cast<gpu::gb_color*>(&pixel));
 }

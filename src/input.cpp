@@ -7,9 +7,9 @@ input::input(game_boy* game_boy) : gb_(game_boy), column_(0)
 }
 
 
-unsigned char input::read() const
+uint8_t input::read() const
 {
-	unsigned char input = 0;
+	uint8_t input = 0;
 
 	if (this->column_ == 0x10)
 	{
@@ -37,7 +37,7 @@ unsigned char input::read() const
 	return input;
 }
 
-void input::write(const unsigned char val)
+void input::write(const uint8_t val)
 {
 	this->column_ = val & 0x30;
 }

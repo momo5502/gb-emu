@@ -8,8 +8,8 @@ public:
 	input(game_boy* game_boy);
 	~input() = default;
 
-	unsigned char read() const;
-	void write(unsigned char val);
+	uint8_t read() const;
+	void write(uint8_t val);
 
 private:
 	enum key_bits
@@ -40,5 +40,5 @@ private:
 	bool start() const;
 	bool select() const;
 
-	unsigned char column_;
+	uint8_t column_;
 };

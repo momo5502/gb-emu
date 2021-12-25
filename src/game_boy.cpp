@@ -36,7 +36,7 @@ void game_boy::turn_off()
 
 bool game_boy::frame()
 {
-	const unsigned int end_tick = this->cpu_.registers.m + 17556;
+	const uint32_t end_tick = this->cpu_.registers.m + 17556;
 
 	const auto start = std::chrono::high_resolution_clock::now();
 

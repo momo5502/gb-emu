@@ -6,7 +6,7 @@
 #include "utils/utils.hpp"
 
 
-unsigned char mmu::bios_[256] =
+uint8_t mmu::bios_[256] =
 {
 	0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
 	0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77, 0x77, 0x3E, 0xFC, 0xE0,
@@ -48,7 +48,7 @@ void mmu::load_rom(std::vector<uint8_t> data)
 	this->cartridge_type = this->get_rom()->cartridge_type;
 }
 
-unsigned char mmu::read_byte(const unsigned short address)
+uint8_t mmu::read_byte(const uint16_t address)
 {
 	if (const auto mem = this->get_memory_ptr(address))
 	{
@@ -63,14 +63,14 @@ unsigned char mmu::read_byte(const unsigned short address)
 	throw std::runtime_error("Nullptr dereferenced!");
 }
 
-unsigned short mmu::read_word(const unsigned short address)
+uint16_t mmu::read_word(const uint16_t address)
 {
-	const unsigned short low = this->read_byte(address);
-	const unsigned short high = this->read_byte(address + 1);
+	const uint16_t low = this->read_byte(address);
+	const uint16_t high = this->read_byte(address + 1);
 	return low | (high << 8);
 }
 
-void mmu::write_byte(const unsigned short address, const unsigned char value)
+void mmu::write_byte(const uint16_t address, const uint8_t value)
 {
 	this->control_mbc(address, value);
 	if (address < 0x8000) return;
@@ -81,7 +81,7 @@ void mmu::write_byte(const unsigned short address, const unsigned char value)
 
 		if (address == 0xFF46) // OAM DMA
 		{
-			for (unsigned short i = 0; i < 160; ++i)
+			for (uint16_t i = 0; i < 160; ++i)
 			{
 				const auto val = *this->get_memory_ptr((value << 8) + i);
 				this->oam_[i] = val;
@@ -113,7 +113,7 @@ void mmu::write_byte(const unsigned short address, const unsigned char value)
 	else throw std::runtime_error("Nullptr dereferenced!");
 }
 
-void mmu::write_word(const unsigned short address, const unsigned short value)
+void mmu::write_word(const uint16_t address, const uint16_t value)
 {
 	this->write_byte(address, value & 0xFF);
 	this->write_byte(address + 1, value >> 8);
@@ -124,7 +124,7 @@ void mmu::mark_bios_pass()
 	this->passed_bios_ = true;
 }
 
-void mmu::control_mbc(const unsigned short address, unsigned char value)
+void mmu::control_mbc(const uint16_t address, uint8_t value)
 {
 	switch (address & 0xF000)
 	{
@@ -197,7 +197,7 @@ void mmu::control_mbc(const unsigned short address, unsigned char value)
 	}
 }
 
-unsigned char* mmu::get_memory_ptr(const unsigned short address)
+uint8_t* mmu::get_memory_ptr(const uint16_t address)
 {
 	switch (address & 0xF000)
 	{
@@ -213,7 +213,7 @@ unsigned char* mmu::get_memory_ptr(const unsigned short address)
 			}
 
 			if (address >= this->rom_.size()) throw std::runtime_error("Rom not loaded!");
-			return &const_cast<unsigned char*>(this->rom_.data())[address];
+			return &const_cast<uint8_t*>(this->rom_.data())[address];
 		}
 
 		// ROM0
@@ -222,7 +222,7 @@ unsigned char* mmu::get_memory_ptr(const unsigned short address)
 	case 0x3000:
 		{
 			if (address >= this->rom_.size()) throw std::runtime_error("Rom not loaded!");
-			return &const_cast<unsigned char*>(this->rom_.data())[address];
+			return &const_cast<uint8_t*>(this->rom_.data())[address];
 		}
 
 		// ROM1
@@ -233,7 +233,7 @@ unsigned char* mmu::get_memory_ptr(const unsigned short address)
 		{
 			const size_t new_address = this->rom_offset + (address - 0x4000);
 			if (new_address >= this->rom_.size()) throw std::runtime_error("Rom not loaded!");
-			return &const_cast<unsigned char*>(this->rom_.data())[new_address];
+			return &const_cast<uint8_t*>(this->rom_.data())[new_address];
 		}
 
 		// VRAM
@@ -260,7 +260,7 @@ unsigned char* mmu::get_memory_ptr(const unsigned short address)
 
 	case 0xF000:
 		{
-			const unsigned short lh_addr = address & 0x0F00;
+			const uint16_t lh_addr = address & 0x0F00;
 			if (lh_addr == 0x0F00) // Zero page
 			{
 				if (address == 0xFFFF) return &this->i_e;
@@ -291,10 +291,10 @@ unsigned char* mmu::get_memory_ptr(const unsigned short address)
 					}
 
 					// Timer
-					if (address == 0xFF04) return reinterpret_cast<unsigned char*>(&this->gb_->get_cpu()->timer.div);
-					if (address == 0xFF05) return reinterpret_cast<unsigned char*>(&this->gb_->get_cpu()->timer.tima);
-					if (address == 0xFF06) return reinterpret_cast<unsigned char*>(&this->gb_->get_cpu()->timer.tma);
-					if (address == 0xFF07) return reinterpret_cast<unsigned char*>(&this->gb_->get_cpu()->timer.tac);
+					if (address == 0xFF04) return reinterpret_cast<uint8_t*>(&this->gb_->get_cpu()->timer.div);
+					if (address == 0xFF05) return reinterpret_cast<uint8_t*>(&this->gb_->get_cpu()->timer.tima);
+					if (address == 0xFF06) return reinterpret_cast<uint8_t*>(&this->gb_->get_cpu()->timer.tma);
+					if (address == 0xFF07) return reinterpret_cast<uint8_t*>(&this->gb_->get_cpu()->timer.tac);
 
 					// Others
 					if (address >= 0xFF08 && address <= 0xFF0E)

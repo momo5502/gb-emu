@@ -6,10 +6,10 @@ class game_boy;
 
 struct mbc
 {
-	int rom_bank = 0;
-	int ram_bank = 0;
-	int ram_on = 0;
-	int mode = 0;
+	int32_t rom_bank = 0;
+	int32_t ram_bank = 0;
+	int32_t ram_on = 0;
+	int32_t mode = 0;
 };
 
 class mmu
@@ -20,40 +20,40 @@ public:
 
 	void load_rom(std::vector<uint8_t> data);
 
-	unsigned char read_byte(unsigned short address);
-	unsigned short read_word(unsigned short address);
+	uint8_t read_byte(uint16_t address);
+	uint16_t read_word(uint16_t address);
 
-	void write_byte(unsigned short address, unsigned char value);
-	void write_word(unsigned short address, unsigned short value);
+	void write_byte(uint16_t address, uint8_t value);
+	void write_word(uint16_t address, uint16_t value);
 
-	unsigned char* get_memory_ptr(unsigned short address);
+	uint8_t* get_memory_ptr(uint16_t address);
 
-	void control_mbc(unsigned short address, unsigned char value);
+	void control_mbc(uint16_t address, uint8_t value);
 
 	void mark_bios_pass();
 
-	unsigned char vram[0x2000]{};
-	unsigned char eram[0x8000]{};
-	unsigned char wram[0x2000]{};
-	unsigned char zram[0x7F]{};
+	uint8_t vram[0x2000]{};
+	uint8_t eram[0x8000]{};
+	uint8_t wram[0x2000]{};
+	uint8_t zram[0x7F]{};
 
-	unsigned char i_f{};
-	unsigned char i_e{};
+	uint8_t i_f{};
+	uint8_t i_e{};
 
-	unsigned int rom_offset = 0x4000;
-	unsigned int ram_offset = 0x0000;
-	unsigned char cartridge_type = 0;
+	uint32_t rom_offset = 0x4000;
+	uint32_t ram_offset = 0x0000;
+	uint8_t cartridge_type = 0;
 
 	mbc mbc[4]{};
 
 	gb_rom* get_rom();
 
 private:
-	static unsigned char bios_[256];
+	static uint8_t bios_[256];
 
 	std::vector<uint8_t> rom_{};
-	unsigned char oam_[160]{};
-	unsigned char zero_[2]{};
+	uint8_t oam_[160]{};
+	uint8_t zero_[2]{};
 	bool passed_bios_{false};
 
 	game_boy* gb_;

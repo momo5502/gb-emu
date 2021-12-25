@@ -9,20 +9,20 @@
 
 struct gb_rom
 {
-	unsigned char padding[0x100];
-	unsigned char entry_point[4];
-	unsigned char logo[48];
+	uint8_t padding[0x100];
+	uint8_t entry_point[4];
+	uint8_t logo[48];
 	char title[16];
-	unsigned short publisher;
-	unsigned char sgb_flag;
-	unsigned char cartridge_type;
-	unsigned char rom_size;
-	unsigned char ram_size;
-	unsigned char destination;
-	unsigned char old_publisher;
-	unsigned char rom_version;
-	unsigned char header_checksum;
-	unsigned short global_checksum;
+	uint16_t publisher;
+	uint8_t sgb_flag;
+	uint8_t cartridge_type;
+	uint8_t rom_size;
+	uint8_t ram_size;
+	uint8_t destination;
+	uint8_t old_publisher;
+	uint8_t rom_version;
+	uint8_t header_checksum;
+	uint16_t global_checksum;
 };
 
 class game_boy

@@ -30,10 +30,10 @@ void display_win::window_runner()
 	wc.lpszClassName = L"GBAWindow";
 	RegisterClassEx(&wc);
 
-	const int scale = 3;
+	const int32_t scale = 3;
 
-	const int width = GB_WIDTH * scale;
-	const int height = GB_HEIGHT * scale;
+	const int32_t width = GB_WIDTH * scale;
+	const int32_t height = GB_HEIGHT * scale;
 
 	this->window_ = CreateWindowExA(NULL, "GBAWindow", "GB-EMU", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
 	                                CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
