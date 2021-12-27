@@ -171,7 +171,7 @@ void cpu::setup_operations()
 	// STOP
 	this->operations_[0x10] = [](game_boy*)
 	{
-		throw std::runtime_error("Stop not implemented!");
+		//throw std::runtime_error("Stop not implemented!");
 	};
 
 	// LD DE,nn
