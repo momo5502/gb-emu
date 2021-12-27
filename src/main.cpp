@@ -51,7 +51,9 @@ int main(const int argc, char* argv[])
 
 	printf("Terminated!\n");
 
+#ifndef DEBUG_OPS
 	_getch();
+#endif
 	return 0;
 }
 

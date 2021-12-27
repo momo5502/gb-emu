@@ -483,7 +483,7 @@ void cpu::setup_operations()
 	// ADD HL,SP
 	this->operations_[0x39] = [](game_boy* gb)
 	{
-		gb->get_cpu()->add_hl(gb->get_cpu()->registers.hl);
+		gb->get_cpu()->add_hl(gb->get_cpu()->registers.sp);
 	};
 
 	// LDD A,(HL)
@@ -1415,8 +1415,9 @@ void cpu::setup_operations()
 	// CALL nn
 	this->operations_[0xCD] = [](game_boy* gb)
 	{
-		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc + 2);
-		gb->get_cpu()->registers.pc = gb->get_cpu()->read_program_word();
+	        const uint16_t call_loc = gb->get_cpu()->read_program_word();
+		gb->get_cpu()->stack_push_word(gb->get_cpu()->registers.pc);
+		gb->get_cpu()->registers.pc = call_loc;
 	};
 
 	// ADC A,n
@@ -1588,9 +1589,7 @@ void cpu::setup_operations()
 	// ADD SP,d
 	this->operations_[0xE8] = [](game_boy* gb)
 	{
-		gb->get_cpu()->registers.f = 0;
-
-		const uint16_t value = gb->get_cpu()->read_program_byte();
+		const int8_t value = gb->get_cpu()->read_program_byte();
 		const int32_t result = gb->get_cpu()->registers.sp + value;
 
 		gb->get_cpu()->registers.f = 0;
@@ -1672,6 +1671,23 @@ void cpu::setup_operations()
 		gb->get_cpu()->execute_rst(0x30);
 	};
 
+	// LD HL,SP+r8
+	this->operations_[0xF8] = [](game_boy* gb)
+	{
+	        const int8_t value = gb->get_cpu()->read_program_byte();
+                const int32_t result = gb->get_cpu()->registers.sp + value;
+
+	  	gb->get_cpu()->registers.f = 0;
+		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100)
+			gb->get_cpu()->registers.f |=
+				flag_carry;
+		if (((gb->get_cpu()->registers.sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10)
+			gb->get_cpu()->registers.f |=
+				flag_half_carry;
+
+	        gb->get_cpu()->registers.hl = static_cast<uint16_t>(result & 0xffff);
+	};
+
 	// LD SP,HL
 	this->operations_[0xF9] = [](game_boy* gb)
 	{
@@ -1744,7 +1760,7 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x07] = [](game_boy* gb)
 	{
-		gb->get_cpu()->rlc(&gb->get_cpu()->registers.a);
+		gb->get_cpu()->rlc(&gb->get_cpu()->registers.a, false);
 	};
 
 	this->ext_operations_[0x08] = [](game_boy* gb)
@@ -1786,7 +1802,7 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x0F] = [](game_boy* gb)
 	{
-		gb->get_cpu()->rrc(&gb->get_cpu()->registers.a);
+		gb->get_cpu()->rrc(&gb->get_cpu()->registers.a, false);
 	};
 
 	this->ext_operations_[0x10] = [](game_boy* gb)
@@ -1828,7 +1844,7 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x17] = [](game_boy* gb)
 	{
-		gb->get_cpu()->rl(&gb->get_cpu()->registers.a);
+		gb->get_cpu()->rl(&gb->get_cpu()->registers.a, false);
 	};
 
 	this->ext_operations_[0x18] = [](game_boy* gb)
@@ -1870,7 +1886,7 @@ void cpu::setup_ext_operations()
 
 	this->ext_operations_[0x1F] = [](game_boy* gb)
 	{
-		gb->get_cpu()->rr(&gb->get_cpu()->registers.a);
+		gb->get_cpu()->rr(&gb->get_cpu()->registers.a, false);
 	};
 
 	this->ext_operations_[0x20] = [](game_boy* gb)
@@ -3062,17 +3078,16 @@ void cpu::add(const uint8_t reg)
 
 void cpu::adc(const uint8_t reg)
 {
-	const int32_t carry = (this->registers.f & flag_carry) ? 1 : 0;
-
-	const int32_t value = reg + carry;
-	const int32_t result = this->registers.a + value;
+	const uint32_t carry = (this->registers.f & flag_carry) ? 1 : 0;
+	const uint32_t result = this->registers.a + reg + carry;
+	const auto result_8 = static_cast<uint8_t>(result);
 
 	this->registers.f = 0;
 	if (result > 0xFF) this->registers.f |= flag_carry;
-	if (!result) this->registers.f |= flag_zero;
+	if (!result_8) this->registers.f |= flag_zero;
 	if (((this->registers.a & 0x0F) + (reg & 0x0F) + carry) > 0x0F) this->registers.f |= flag_half_carry;
 
-	this->registers.a = static_cast<uint8_t>(result & 0xFF);
+	this->registers.a = result_8;
 }
 
 void cpu::sbc(const uint8_t reg)
@@ -3093,13 +3108,14 @@ void cpu::sub(const uint8_t reg)
 	const int8_t value = reg;
 	const uint32_t result = this->registers.a - value;
 	const int32_t carrybits = this->registers.a ^ value ^ result;
+        const auto result_8 = static_cast<uint8_t>(result);
 
 	this->registers.f = flag_negative;
 	if ((carrybits & 0x100) != 0) this->registers.f |= flag_carry;
 	if ((carrybits & 0x10) != 0) this->registers.f |= flag_half_carry;
-	if (!result) this->registers.f |= flag_zero;
+	if (!result_8) this->registers.f |= flag_zero;
 
-	this->registers.a = static_cast<uint8_t>(result);
+	this->registers.a = result_8;
 }
 
 void cpu::_and(const uint8_t reg)
@@ -3137,27 +3153,27 @@ auto cpu::bit(const uint8_t reg, const uint8_t _bit) -> void
 	if (((reg >> _bit) & 0x01) == 0) this->registers.f |= flag_zero;
 }
 
-void cpu::rlc(uint8_t* reg)
+void cpu::rlc(uint8_t* reg, const bool check_a)
 {
 	const bool carry = (*reg & 0x80) == 0x80;
 	*reg <<= 1;
 	*reg |= carry ? 0x01 : 0;
 
 	this->registers.f = carry ? flag_carry : 0;
-	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
+	if (!*reg && (!check_a || reg != &this->registers.a)) this->registers.f |= flag_zero;
 }
 
-void cpu::rrc(uint8_t* reg)
+void cpu::rrc(uint8_t* reg, const bool check_a)
 {
 	const bool carry = *reg & 0x01;
 	*reg >>= 1;
 	*reg |= carry ? 0x80 : 0;
 
 	this->registers.f = carry ? flag_carry : 0;
-	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
+	if (!*reg && (!check_a || reg != &this->registers.a)) this->registers.f |= flag_zero;
 }
 
-void cpu::rl(uint8_t* reg)
+void cpu::rl(uint8_t* reg, const bool check_a)
 {
 	const uint8_t carry = (this->registers.f & flag_carry) ? 1 : 0;
 	this->registers.f = (*reg & 0x80) ? flag_carry : 0;
@@ -3165,10 +3181,10 @@ void cpu::rl(uint8_t* reg)
 	*reg <<= 1;
 	*reg |= carry;
 
-	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
+	if (!*reg && (!check_a || reg != &this->registers.a)) this->registers.f |= flag_zero;
 }
 
-void cpu::rr(uint8_t* reg)
+void cpu::rr(uint8_t* reg, const bool check_a)
 {
 	const uint8_t carry = (this->registers.f & flag_carry) ? 0x80 : 0;
 	this->registers.f = (*reg & 0x01) ? flag_carry : 0;
@@ -3176,7 +3192,7 @@ void cpu::rr(uint8_t* reg)
 	*reg >>= 1;
 	*reg |= carry;
 
-	if (!*reg && reg != &this->registers.a) this->registers.f |= flag_zero;
+	if (!*reg && (!check_a || reg != &this->registers.a)) this->registers.f |= flag_zero;
 }
 
 void cpu::sla(uint8_t* reg)
@@ -3197,7 +3213,7 @@ void cpu::sra(uint8_t* reg)
 
 void cpu::swap(uint8_t* reg)
 {
-	*reg = ((*reg & 0x0F) << 4) | ((*reg >> 4) & 0x0F);
+	*reg = static_cast<uint8_t>(((*reg & 0x0F) << 4) | ((*reg >> 4) & 0x0F));
 	this->registers.f = !*reg ? flag_zero : 0;
 }
 
@@ -3219,16 +3235,15 @@ void cpu::execute_rst(const uint16_t num)
 uint8_t cpu::read_program_byte()
 {
 	const uint16_t addr = this->registers.pc++;
-	printf("PRogByte: %hu\n", addr);
 	this->registers.pc &= 0xFFFF;
 	return this->gb_->get_mmu()->read_byte(addr);
 }
 
 uint16_t cpu::read_program_word()
 {
-	const uint16_t low = this->read_program_byte();
-	const uint16_t high = this->read_program_byte();
-	return low | (high << 8);
+	const uint32_t low = this->read_program_byte() & 0xFF;
+	const uint32_t high = this->read_program_byte() & 0xFF;
+	return static_cast<uint16_t>(low | (high << 8));
 }
 
 void cpu::stack_push_word(const uint16_t value)
