@@ -26,9 +26,9 @@ private:
 	bool working() const;
 
 	std::thread window_thread_;
-	
+
 	static LRESULT CALLBACK window_proc(HWND h_wnd, UINT message, WPARAM w_param, LPARAM l_param);
 	LRESULT window_proc(UINT message, WPARAM w_param, LPARAM l_param) const;
-	
+
 	void window_runner();
 };

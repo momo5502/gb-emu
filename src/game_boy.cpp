@@ -18,9 +18,9 @@ game_boy::~game_boy()
 
 void game_boy::serialize(utils::binary_buffer& buffer)
 {
-  this->cpu_.serialize(buffer);
-  this->mmu_.serialize(buffer);
-  this->gpu_.serialize(buffer);
+	this->cpu_.serialize(buffer);
+	this->mmu_.serialize(buffer);
+	this->gpu_.serialize(buffer);
 }
 
 void game_boy::run()
@@ -28,15 +28,15 @@ void game_boy::run()
 	this->off_ = false;
 	while (!this->off_ && this->frame())
 	{
-	    while(this->paused_)
-	    {
-	        if(this->off_ || !this->get_display()->is_on())
+		while (this->paused_)
 		{
-	            break;
-	        }
+			if (this->off_ || !this->get_display()->is_on())
+			{
+				break;
+			}
 
-	        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	    }
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
 	}
 }
 
@@ -52,12 +52,12 @@ void game_boy::turn_off()
 
 void game_boy::pause()
 {
-  this->paused_ = true;
+	this->paused_ = true;
 }
 
 void game_boy::resume()
 {
-  this->paused_ = false;
+	this->paused_ = false;
 }
 
 bool game_boy::is_paused()
