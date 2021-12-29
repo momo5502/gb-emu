@@ -64,17 +64,17 @@ int main(const int argc, char* argv[])
 
 	utils::binary_buffer binary_buffer{};
 	game_boy.serialize(binary_buffer);
-
+	/*
 	FILE* f{};
 	fopen_s(&f, was_loaded ? argv[1] : (argv[1] + ".sav"s).data(), "wb");
 	fwrite("LUL\0", 1, 4, f);
 	fwrite(binary_buffer.get_buffer().data(), 1, binary_buffer.get_buffer().size(), f);
 	fclose(f);
-
+	*/
 	printf("Terminated!\n");
 
 #ifndef DEBUG_OPS
-	_getch();
+	//_getch();
 #endif
 	return 0;
 }
