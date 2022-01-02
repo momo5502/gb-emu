@@ -101,6 +101,7 @@ public:
 private:
 	operation operations_[0x100]{};
 	static const uint8_t operation_ticks[0x100];
+	static const uint8_t operation_ticks_branched[0x100];
 
 	operation ext_operations_[0x100]{};
 	static const uint8_t ext_operation_ticks[0x100];
